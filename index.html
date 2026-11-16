@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BankBook &amp; CashBook — 2026 Ledger</title>
+  <title>Income &amp; Expenses 2026 — BankBook, CashBook &amp; Executive Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -47,11 +47,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-lg tracking-tight border border-white/15">
-          BC
+          IE
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-semibold leading-tight">BankBook &amp; CashBook</h1>
-          <p class="text-xs text-emerald-200/80">2026 Income &amp; Expenses Ledger</p>
+          <h1 class="text-base sm:text-lg font-semibold leading-tight">Income &amp; Expenses — 2026</h1>
+          <p class="text-xs text-emerald-200/80">BankBook, CashBook &amp; Executive Financial Cockpit</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@
     <nav class="bg-brand-900/60 border-t border-white/10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto gap-1 py-1.5" id="navTabs">
         <button data-tab="dashboard" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition bg-white text-brand-900">
-          Dashboard
+          Executive Dashboard
         </button>
         <button data-tab="bankbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-emerald-100 hover:bg-white/10">
           BankBook
@@ -91,53 +91,55 @@
     </nav>
   </header>
 
-  <!-- Sample Data Notice Banner -->
-  <div id="sampleBanner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs sm:text-sm px-4 py-2">
+  <!-- Synced Sheet Banner -->
+  <div id="sampleBanner" class="bg-emerald-50 border-b border-emerald-200 text-emerald-950 text-xs sm:text-sm px-4 py-2">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <span>Synced with <strong>Income &amp; Expenses - 2026</strong> (₹5,37,610 Bank Opening · 0 Cash Book entries · Book Collection ₹10,68,149 · Cheques Cleared ₹31,375).</span>
-      <button id="btnDismissBanner" type="button" class="text-amber-800 hover:text-amber-950 font-medium underline text-xs">Dismiss</button>
+      <span>Synced with <strong>Income &amp; Expenses - 2026 (Dashboard)</strong> — Bank Opening ₹5,37,610 · Cash in Hand ₹0 · Book Collection ₹10,68,149 · Cleared Cheques ₹31,375.</span>
+      <button id="btnDismissBanner" type="button" class="text-emerald-800 hover:text-emerald-950 font-medium underline text-xs">Dismiss</button>
     </div>
   </div>
 
   <!-- Main Content -->
   <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6">
 
-    <!-- KPI Strip (Always visible) -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" aria-label="Key Balances">
-      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Bank Balance</p>
-        <p id="kpiBank" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹0</p>
-        <p id="kpiBankSub" class="mt-1 text-xs text-slate-500">Opening: ₹0</p>
-      </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cash in Hand</p>
-        <p id="kpiCash" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹0</p>
-        <p id="kpiCashSub" class="mt-1 text-xs text-slate-500">Opening: ₹0</p>
-      </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Income</p>
-        <p id="kpiIncome" class="mt-1.5 text-xl sm:text-2xl font-bold text-emerald-700 tabular-nums">₹0</p>
-        <p id="kpiIncomeCount" class="mt-1 text-xs text-slate-500">0 credits</p>
-      </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Expenses</p>
-        <p id="kpiExpense" class="mt-1.5 text-xl sm:text-2xl font-bold text-rose-700 tabular-nums">₹0</p>
-        <p id="kpiExpenseCount" class="mt-1 text-xs text-slate-500">0 debits</p>
-      </div>
-      <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm">
-        <p class="text-xs font-medium text-emerald-200 uppercase tracking-wider">Combined Liquidity</p>
-        <p id="kpiTotal" class="mt-1.5 text-xl sm:text-2xl font-bold tabular-nums">₹0</p>
-        <p id="kpiNetFlow" class="mt-1 text-xs text-emerald-200">Net flow: ₹0</p>
-      </div>
-    </section>
-
-    <!-- TAB: DASHBOARD -->
+    <!-- TAB: EXECUTIVE DASHBOARD -->
     <section id="view-dashboard" class="tab-view space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+
+      <!-- 5 Executive KPI Cards (Mirrors Dashboard!B5:K7) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" aria-label="Executive KPIs">
+        <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm">
+          <p class="text-xs font-medium text-emerald-200 uppercase tracking-wider">Combined Liquidity</p>
+          <p id="kpiTotal" class="mt-1.5 text-xl sm:text-2xl font-bold tabular-nums">₹5,37,610</p>
+          <p id="kpiTotalSub" class="mt-1 text-xs text-emerald-200">Bank: ₹5,37,610 | Cash: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cash at Bank</p>
+          <p id="kpiBank" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹5,37,610</p>
+          <p id="kpiBankSub" class="mt-1 text-xs text-slate-500">Inward: ₹5,37,610 | Outward: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cash in Hand</p>
+          <p id="kpiCash" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹0</p>
+          <p id="kpiCashSub" class="mt-1 text-xs text-slate-500">Inward: ₹0 | Outward: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Book Collection</p>
+          <p id="kpiCollection" class="mt-1.5 text-xl sm:text-2xl font-bold text-emerald-700 tabular-nums">₹10,68,149</p>
+          <p class="mt-1 text-xs text-slate-500">Street: ₹1,81,096 | VIP/QR: ₹8,87,053</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">2025 Expenses (Actual)</p>
+          <p id="kpiProjActual" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹14,29,375</p>
+          <p class="mt-1 text-xs text-rose-600">Budget: ₹13,58,100 | Var: +₹71,275</p>
+        </div>
+      </div>
+
+      <!-- Charts Row (Mirrors Dashboard Charts) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Monthly Income vs. Expenses (2026)</h2>
-            <span class="text-xs text-slate-500">Bank + Cash combined</span>
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Monthly Inward vs. Outward (CashFlow)</h2>
+            <span class="text-xs text-slate-500">Live BankBook + CashBook</span>
           </div>
           <div class="relative h-72">
             <canvas id="monthlyChart"></canvas>
@@ -146,41 +148,84 @@
 
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Expenses by Category</h2>
-            <span class="text-xs text-slate-500">Excludes transfers</span>
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">2025 Expense Budget vs. Actuals</h2>
+            <span class="text-xs text-slate-500">Projections Sheet</span>
           </div>
           <div class="relative h-72">
-            <canvas id="categoryChart"></canvas>
+            <canvas id="budgetChart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Recent Activity & Opening Balances -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Recent Transactions</h2>
-            <button id="btnViewAllBank" type="button" class="text-xs font-medium text-brand-700 hover:underline">Open BankBook →</button>
+      <!-- Monthly Cash Book Summary + Tally vs Bank Reconciliation -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Monthly Cash Book Summary</h2>
+            <button id="btnViewAllCash" type="button" class="text-xs font-medium text-brand-700 hover:underline">Open CashBook →</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
               <thead class="border-b border-slate-200 text-slate-500 uppercase text-xs">
                 <tr>
-                  <th class="py-2 pr-3">Date</th>
-                  <th class="py-2 pr-3">Book</th>
-                  <th class="py-2 pr-3">Particulars</th>
-                  <th class="py-2 pr-3">Category</th>
-                  <th class="py-2 text-right">Amount</th>
+                  <th class="py-2 pr-3">Month / Period</th>
+                  <th class="py-2 pr-3 text-right">Inward</th>
+                  <th class="py-2 pr-3 text-right">Outward</th>
+                  <th class="py-2 pr-3 text-right">Net Flow</th>
+                  <th class="py-2 text-right">Cumulative</th>
                 </tr>
               </thead>
-              <tbody id="recentTableBody" class="divide-y divide-slate-100"></tbody>
+              <tbody id="monthlyCashBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Tally vs. Bank Reconciliation</h2>
+            <span class="text-xs text-slate-500">From Balance Tab</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="border-b border-slate-200 text-slate-500 uppercase text-xs">
+                <tr>
+                  <th class="py-2 pr-3">Reconciliation Item</th>
+                  <th class="py-2 pr-3 text-right">Bank Book</th>
+                  <th class="py-2 pr-3 text-right">Tally ERP</th>
+                  <th class="py-2 text-right">Variance</th>
+                </tr>
+              </thead>
+              <tbody id="tallyReconBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Collection & Cheques Issued Audit + Opening Balances -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Book Collection &amp; Cheques Issued Audit</h2>
+            <span class="text-xs text-slate-500">60 Books · 4 Cheques</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="border-b border-slate-200 text-slate-500 uppercase text-xs">
+                <tr>
+                  <th class="py-2 pr-3">Collection / Cheque Head</th>
+                  <th class="py-2 pr-3">Books / Count</th>
+                  <th class="py-2 pr-3 text-right">Amount</th>
+                  <th class="py-2 text-right">Audit Status</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
           <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Opening Balances</h2>
-          <p class="text-xs text-slate-500">Set your starting balances for 2026 to keep running balances accurate.</p>
+          <p class="text-xs text-slate-500">Adjust starting Bank &amp; Cash balances for 2026.</p>
           <div class="space-y-3">
             <div>
               <label for="openBankInput" class="block text-xs font-medium text-slate-600 mb-1">Bank Opening Balance</label>
@@ -196,9 +241,59 @@
           </div>
         </div>
       </div>
+
+      <!-- Expense Projections vs Actuals — Comprehensive Budget Audit -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Expense Projections vs. Actuals — Budget Audit</h2>
+          <span class="text-xs text-slate-500">2024 Actual vs. 2025 Budget vs. 2025 Actual</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Expense Head</th>
+                <th class="py-2.5 px-3 text-right">2024 Actual</th>
+                <th class="py-2.5 px-3 text-right">2025 Budget</th>
+                <th class="py-2.5 px-3 text-right">2025 Actual</th>
+                <th class="py-2.5 px-3 text-right">Budget Var</th>
+                <th class="py-2.5 px-3 text-right">Var %</th>
+                <th class="py-2.5 px-3 text-right">YoY Growth</th>
+                <th class="py-2.5 px-3 text-center">Status</th>
+                <th class="py-2.5 px-3 text-right">Util %</th>
+              </tr>
+            </thead>
+            <tbody id="projectionsTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot id="projectionsTableFoot" class="bg-slate-50 font-semibold border-t border-slate-200"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Recent Ledger Activity</h2>
+          <button id="btnViewAllBank" type="button" class="text-xs font-medium text-brand-700 hover:underline">Open BankBook →</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="border-b border-slate-200 text-slate-500 uppercase text-xs">
+              <tr>
+                <th class="py-2 pr-3">Date</th>
+                <th class="py-2 pr-3">Book</th>
+                <th class="py-2 pr-3">Particulars</th>
+                <th class="py-2 pr-3">Purpose / Category</th>
+                <th class="py-2 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="recentTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
     </section>
 
-    <!-- TAB: BANKBOOK & CASHBOOK (Shared dynamic ledger view) -->
+    <!-- TAB: BANKBOOK & CASHBOOK -->
     <section id="view-ledger" class="tab-view hidden space-y-4">
       <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -216,35 +311,32 @@
           </div>
         </div>
 
-        <!-- Filters -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <input id="filterSearch" type="text" placeholder="Search particulars, reference..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
           <select id="filterType" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
-            <option value="all">All Types (Credit &amp; Debit)</option>
-            <option value="income">Income / Credit (+)</option>
-            <option value="expense">Expense / Debit (-)</option>
+            <option value="all">All Types (Inward &amp; Outward)</option>
+            <option value="income">Inward / Credit (+)</option>
+            <option value="expense">Outward / Debit (-)</option>
             <option value="transfer">Contra Transfer</option>
           </select>
           <select id="filterCategory" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
             <option value="all">All Categories</option>
           </select>
           <select id="filterMonth" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
-            <option value="all">All Months (2026)</option>
+            <option value="all">All Months</option>
           </select>
         </div>
 
-        <!-- Ledger Table -->
         <div class="overflow-x-auto border border-slate-200 rounded-lg">
           <table class="w-full text-left text-xs sm:text-sm">
             <thead class="bg-slate-100 text-slate-600 uppercase text-xs border-b border-slate-200">
               <tr>
                 <th class="py-2.5 px-3">Date</th>
-                <th class="py-2.5 px-3">Particulars</th>
-                <th class="py-2.5 px-3">Category</th>
-                <th class="py-2.5 px-3">Ref / Mode</th>
-                <th class="py-2.5 px-3 text-right">Credit (+)</th>
-                <th class="py-2.5 px-3 text-right">Debit (-)</th>
-                <th class="py-2.5 px-3 text-right">Balance</th>
+                <th class="py-2.5 px-3">Particular</th>
+                <th class="py-2.5 px-3">Purpose / Category</th>
+                <th class="py-2.5 px-3">Reference</th>
+                <th class="py-2.5 px-3 text-right">Inward (+)</th>
+                <th class="py-2.5 px-3 text-right">Outward (-)</th>
                 <th class="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -265,7 +357,7 @@
           </p>
           <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center space-y-3 bg-slate-50">
             <input id="csvFileInput" type="file" accept=".csv" class="block w-full text-xs sm:text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-800 file:text-white hover:file:bg-brand-700 cursor-pointer" />
-            <p class="text-xs text-slate-500">Supports columns like Date, Particulars/Description, Category, Mode/Book (Bank/Cash), Income/Credit, Expense/Debit, or Amount.</p>
+            <p class="text-xs text-slate-500">Supports Date, Particular, Purpose/Category, Reference/Book, Inward, and Outward columns.</p>
           </div>
 
           <div id="csvMappingBox" class="hidden space-y-3 pt-2 border-t border-slate-200">
@@ -276,11 +368,11 @@
                 <select id="mapDate" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
               <div>
-                <label class="block text-slate-600 mb-1" for="mapDesc">Particulars / Description</label>
+                <label class="block text-slate-600 mb-1" for="mapDesc">Particular</label>
                 <select id="mapDesc" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
               <div>
-                <label class="block text-slate-600 mb-1" for="mapCat">Category</label>
+                <label class="block text-slate-600 mb-1" for="mapCat">Purpose / Category</label>
                 <select id="mapCat" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
               <div>
@@ -288,11 +380,11 @@
                 <select id="mapBook" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
               <div>
-                <label class="block text-slate-600 mb-1" for="mapIncome">Income / Credit Column</label>
+                <label class="block text-slate-600 mb-1" for="mapIncome">Inward / Credit Column</label>
                 <select id="mapIncome" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
               <div>
-                <label class="block text-slate-600 mb-1" for="mapExpense">Expense / Debit Column</label>
+                <label class="block text-slate-600 mb-1" for="mapExpense">Outward / Debit Column</label>
                 <select id="mapExpense" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
               </div>
             </div>
@@ -358,8 +450,8 @@
           <div>
             <label for="entryType" class="block text-xs font-medium text-slate-600 mb-1">Type</label>
             <select id="entryType" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
-              <option value="income">Income / Credit (+)</option>
-              <option value="expense">Expense / Debit (-)</option>
+              <option value="income">Inward / Credit (+)</option>
+              <option value="expense">Outward / Debit (-)</option>
             </select>
           </div>
           <div>
@@ -368,27 +460,29 @@
           </div>
         </div>
         <div>
-          <label for="entryDesc" class="block text-xs font-medium text-slate-600 mb-1">Particulars / Description</label>
-          <input id="entryDesc" type="text" required placeholder="e.g., Client Retainer, Office Supplies" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          <label for="entryDesc" class="block text-xs font-medium text-slate-600 mb-1">Particular</label>
+          <input id="entryDesc" type="text" required placeholder="e.g., Book Collection Deposit, Pandal Advance" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="entryCat" class="block text-xs font-medium text-slate-600 mb-1">Category</label>
-            <input id="entryCat" type="text" list="categorySuggestions" required placeholder="e.g., Salary, Rent" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+            <label for="entryCat" class="block text-xs font-medium text-slate-600 mb-1">Purpose / Category</label>
+            <input id="entryCat" type="text" list="categorySuggestions" required placeholder="e.g., Pandal, Pooja Party" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
             <datalist id="categorySuggestions">
-              <option value="Sales / Revenue"></option>
-              <option value="Consulting"></option>
-              <option value="Salary &amp; Payroll"></option>
-              <option value="Rent &amp; Utilities"></option>
-              <option value="Groceries &amp; Supplies"></option>
-              <option value="Travel &amp; Fuel"></option>
-              <option value="Software &amp; SaaS"></option>
-              <option value="Miscellaneous"></option>
+              <option value="Book Collection"></option>
+              <option value="Pandal"></option>
+              <option value="Flower"></option>
+              <option value="Electrical"></option>
+              <option value="Cooking, Prasadam &amp; Annadhanam"></option>
+              <option value="Pooja Party"></option>
+              <option value="Music, Nadaswaram &amp; Artists"></option>
+              <option value="Balan Cleaning"></option>
+              <option value="Procession, Crackers &amp; Gifts"></option>
+              <option value="Other Operating &amp; Admin"></option>
             </datalist>
           </div>
           <div>
-            <label for="entryRef" class="block text-xs font-medium text-slate-600 mb-1">Ref / Mode</label>
-            <input id="entryRef" type="text" placeholder="UPI, NEFT, Cash..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+            <label for="entryRef" class="block text-xs font-medium text-slate-600 mb-1">Reference</label>
+            <input id="entryRef" type="text" placeholder="NEFT, Cheque #, Cash..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-2">
@@ -410,7 +504,7 @@
         <div>
           <label for="transferDirection" class="block text-xs font-medium text-slate-600 mb-1">Direction</label>
           <select id="transferDirection" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
-            <option value="bank_to_cash">Bank → Cash (Cash Withdrawal / ATM)</option>
+            <option value="bank_to_cash">Bank → Cash (Bank Withdrawal)</option>
             <option value="cash_to_bank">Cash → Bank (Cash Deposit)</option>
           </select>
         </div>
@@ -426,7 +520,7 @@
         </div>
         <div>
           <label for="transferNote" class="block text-xs font-medium text-slate-600 mb-1">Note</label>
-          <input id="transferNote" type="text" placeholder="e.g., ATM withdrawal for petty cash" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          <input id="transferNote" type="text" placeholder="e.g., Bank Withdrawal for Cash Book" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button id="btnCancelTransfer" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
@@ -441,7 +535,7 @@
 
   <script>
     (function () {
-      const STORAGE_KEY = 'bankbook_cashbook_2026_v3_synced';
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v4_dashboard';
       const CURRENCIES = {
         INR: { symbol: '₹', locale: 'en-IN' },
         USD: { symbol: '$', locale: 'en-US' },
@@ -449,12 +543,46 @@
         GBP: { symbol: '£', locale: 'en-GB' }
       };
 
-      const SAMPLE_DATA = {"currency": "INR", "openingBank": 537610.0, "openingCash": 0, "entries": []};
+      // Grounded Dashboard Sheet Reference Data (Income & Expenses - 2026)
+      const TALLY_RECON = [
+        { item: 'Total Expenses (Outward)', bank: 1708038, tally: 1709541, variance: 1503 },
+        { item: 'Total Income (Inward)', bank: 2651842, tally: 2638962, variance: -12880 },
+        { item: 'Receipts / Reversals', bank: 59807, tally: 21648, variance: 38159 },
+        { item: 'Secondary Adjustments', bank: 0, tally: 5950, variance: 5950 },
+        { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: -6930, isTotal: true }
+      ];
+
+      const AUDIT_ROWS = [
+        { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: 181096, status: 'Collected & Deposited' },
+        { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: 887053, status: 'Tallied with Bank' },
+        { head: 'Total Book Collections', count: 'All 60 Books', amount: 1068149, status: 'Fully Reconciled', isBold: true },
+        { head: 'Cheques Issued — Cleared', count: '4 Cleared', amount: 31375, status: 'Cleared (100%)' },
+        { head: 'Cheques Issued — Pending', count: '0 Pending', amount: 0, status: 'Nil Pending' }
+      ];
+
+      const PROJECTIONS_DATA = [
+        { head: 'Pandal', a2024: 344245, b2025: 450000, a2025: 430000, status: 'Settled' },
+        { head: 'Flower', a2024: 0, b2025: 50000, a2025: 70000, status: 'Settled' },
+        { head: 'Electrical', a2024: 115000, b2025: 125000, a2025: 155000, status: 'Settled' },
+        { head: 'Cooking, Prasadam & Annadhanam', a2024: 181311, b2025: 155000, a2025: 104276, status: 'Settled' },
+        { head: 'Pooja Party', a2024: 175698, b2025: 217000, a2025: 207000, status: 'Settled' },
+        { head: 'Music, Nadaswaram & Artists', a2024: 62125, b2025: 132000, a2025: 133000, status: 'Settled' },
+        { head: 'Balan Cleaning', a2024: 73260, b2025: 40000, a2025: 41800, status: 'Settled' },
+        { head: 'Procession, Crackers & Gifts', a2024: 22600, b2025: 34100, a2025: 18370, status: 'Settled' },
+        { head: 'Other Operating & Admin Expenses', a2024: 439078.5, b2025: 155000, a2025: 269929, status: 'Settled' }
+      ];
+
+      const SAMPLE_DATA = {
+        currency: 'INR',
+        openingBank: 537610.0,
+        openingCash: 0,
+        entries: []
+      };
 
       let state = loadState();
       let activeTab = 'dashboard';
       let monthlyChartInstance = null;
-      let categoryChartInstance = null;
+      let budgetChartInstance = null;
       let parsedCsvRows = [];
       let parsedCsvHeaders = [];
 
@@ -463,24 +591,22 @@
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.entries)) {
-              return parsed;
-            }
+            if (parsed && Array.isArray(parsed.entries)) return parsed;
           }
-        } catch (e) { /* fallback to sample */ }
+        } catch (e) { /* fallback */ }
         return JSON.parse(JSON.stringify(SAMPLE_DATA));
       }
 
       function saveState() {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (e) { /* ignore storage quota errors */ }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       }
 
       function fmtMoney(val) {
+        if (val === null || val === undefined) return '—';
         const cfg = CURRENCIES[state.currency] || CURRENCIES.INR;
         const num = Number(val) || 0;
-        return cfg.symbol + num.toLocaleString(cfg.locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        const sign = num < 0 ? '-' : '';
+        return sign + cfg.symbol + Math.abs(num).toLocaleString(cfg.locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
       }
 
       function showToast(msg) {
@@ -511,55 +637,34 @@
         const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
         const cashBal = cashRows.length ? cashRows[cashRows.length - 1].balance : Number(state.openingCash || 0);
 
-        const nonTransfer = state.entries.filter(e => !e.isTransfer);
-        const incomes = nonTransfer.filter(e => e.type === 'income');
-        const expenses = nonTransfer.filter(e => e.type === 'expense');
-        const totalIncome = incomes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-        const totalExpense = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-        const netFlow = totalIncome - totalExpense;
+        const bankInward = Number(state.openingBank || 0) + bankRows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const bankOutward = bankRows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const cashInward = Number(state.openingCash || 0) + cashRows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const cashOutward = cashRows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-        document.getElementById('kpiBank').textContent = fmtMoney(bankBal);
-        document.getElementById('kpiBankSub').textContent = 'Opening: ' + fmtMoney(state.openingBank);
-        document.getElementById('kpiCash').textContent = fmtMoney(cashBal);
-        document.getElementById('kpiCashSub').textContent = 'Opening: ' + fmtMoney(state.openingCash);
-        document.getElementById('kpiIncome').textContent = fmtMoney(totalIncome);
-        document.getElementById('kpiIncomeCount').textContent = incomes.length + ' credits';
-        document.getElementById('kpiExpense').textContent = fmtMoney(totalExpense);
-        document.getElementById('kpiExpenseCount').textContent = expenses.length + ' debits';
         document.getElementById('kpiTotal').textContent = fmtMoney(bankBal + cashBal);
-        document.getElementById('kpiNetFlow').textContent = 'Net flow: ' + (netFlow >= 0 ? '+' : '') + fmtMoney(netFlow);
+        document.getElementById('kpiTotalSub').textContent = `Bank: ${fmtMoney(bankBal)} | Cash: ${fmtMoney(cashBal)}`;
+        document.getElementById('kpiBank').textContent = fmtMoney(bankBal);
+        document.getElementById('kpiBankSub').textContent = `Inward: ${fmtMoney(bankInward)} | Outward: ${fmtMoney(bankOutward)}`;
+        document.getElementById('kpiCash').textContent = fmtMoney(cashBal);
+        document.getElementById('kpiCashSub').textContent = `Inward: ${fmtMoney(cashInward)} | Outward: ${fmtMoney(cashOutward)}`;
       }
 
       function renderCharts() {
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const incomeByMonth = new Array(12).fill(0);
-        const expenseByMonth = new Array(12).fill(0);
-        const catTotals = {};
-
-        state.entries.forEach(e => {
-          if (e.isTransfer) return;
-          const parts = (e.date || '').split('-');
-          const mIdx = parts.length >= 2 ? parseInt(parts[1], 10) - 1 : -1;
-          const amt = Number(e.amount) || 0;
-          if (mIdx >= 0 && mIdx < 12) {
-            if (e.type === 'income') incomeByMonth[mIdx] += amt;
-            else expenseByMonth[mIdx] += amt;
-          }
-          if (e.type === 'expense') {
-            const cat = e.category || 'Uncategorized';
-            catTotals[cat] = (catTotals[cat] || 0) + amt;
-          }
-        });
+        const monthOrder = ['2025-04', '2025-08', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-06', '2026-09', '2026-11'];
+        const allMonths = Array.from(new Set(monthOrder.concat(state.entries.map(e => (e.date || '').slice(0, 7)).filter(Boolean)))).sort();
+        const inData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0));
+        const outData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'expense').reduce((s, e) => s + (Number(e.amount) || 0), 0));
 
         const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
         if (monthlyChartInstance) monthlyChartInstance.destroy();
         monthlyChartInstance = new Chart(ctxMonthly, {
           type: 'bar',
           data: {
-            labels: monthNames,
+            labels: allMonths,
             datasets: [
-              { label: 'Income', data: incomeByMonth, backgroundColor: '#1b6b52', borderRadius: 4 },
-              { label: 'Expenses', data: expenseByMonth, backgroundColor: '#e11d48', borderRadius: 4 }
+              { label: 'Inward', data: inData, backgroundColor: '#1b6b52', borderRadius: 4 },
+              { label: 'Outward', data: outData, backgroundColor: '#e11d48', borderRadius: 4 }
             ]
           },
           options: {
@@ -570,34 +675,128 @@
           }
         });
 
-        const catLabels = Object.keys(catTotals);
-        const catValues = catLabels.map(k => catTotals[k]);
-        const ctxCat = document.getElementById('categoryChart').getContext('2d');
-        if (categoryChartInstance) categoryChartInstance.destroy();
-        categoryChartInstance = new Chart(ctxCat, {
-          type: 'doughnut',
+        const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+        if (budgetChartInstance) budgetChartInstance.destroy();
+        budgetChartInstance = new Chart(ctxBudget, {
+          type: 'bar',
           data: {
-            labels: catLabels.length ? catLabels : ['No Expenses'],
-            datasets: [{
-              data: catValues.length ? catValues : [1],
-              backgroundColor: catValues.length
-                ? ['#0f3d2e', '#1e293b', '#10b981', '#f59e0b', '#e11d48', '#6366f1', '#14b8a6', '#64748b']
-                : ['#e2e8f0']
-            }]
+            labels: PROJECTIONS_DATA.map(p => p.head.split(',')[0].split(' & ')[0]),
+            datasets: [
+              { label: '2025 Budget', data: PROJECTIONS_DATA.map(p => p.b2025), backgroundColor: '#64748b', borderRadius: 4 },
+              { label: '2025 Actual', data: PROJECTIONS_DATA.map(p => p.a2025), backgroundColor: '#0f3d2e', borderRadius: 4 }
+            ]
           },
           options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { beginAtZero: true } }
           }
         });
+      }
+
+      function renderSheetDashboardTables() {
+        // Monthly Cash Book Summary
+        const periods = ['2025-04', '2025-08', '2025-11', '2025-12', '2026-01'];
+        const extra = state.entries.filter(e => e.book === 'Cash').map(e => (e.date || '').slice(0, 7)).filter(m => m && !periods.includes(m));
+        const allPeriods = periods.concat(Array.from(new Set(extra))).sort();
+        let cum = Number(state.openingCash || 0);
+        let totIn = 0, totOut = 0;
+
+        const mBody = document.getElementById('monthlyCashBody');
+        mBody.innerHTML = allPeriods.map(p => {
+          const rows = state.entries.filter(e => e.book === 'Cash' && (e.date || '').startsWith(p));
+          const inw = rows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+          const outw = rows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+          const net = inw - outw;
+          cum += net; totIn += inw; totOut += outw;
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2 pr-3 font-medium text-slate-700 tabular-nums">${escapeHtml(p)}</td>
+              <td class="py-2 pr-3 text-right tabular-nums text-emerald-700">${fmtMoney(inw)}</td>
+              <td class="py-2 pr-3 text-right tabular-nums text-rose-700">${fmtMoney(outw)}</td>
+              <td class="py-2 pr-3 text-right tabular-nums font-medium">${fmtMoney(net)}</td>
+              <td class="py-2 text-right tabular-nums font-semibold text-slatex-900">${fmtMoney(cum)}</td>
+            </tr>
+          `;
+        }).join('') + `
+          <tr class="bg-slate-50 font-semibold border-t border-slate-200">
+            <td class="py-2 pr-3 text-slate-800">Total Cash Book</td>
+            <td class="py-2 pr-3 text-right tabular-nums text-emerald-700">${fmtMoney(totIn)}</td>
+            <td class="py-2 pr-3 text-right tabular-nums text-rose-700">${fmtMoney(totOut)}</td>
+            <td class="py-2 pr-3 text-right tabular-nums">${fmtMoney(totIn - totOut)}</td>
+            <td class="py-2 text-right tabular-nums text-slatex-900">${fmtMoney(cum)}</td>
+          </tr>
+        `;
+
+        // Tally vs Bank Reconciliation
+        document.getElementById('tallyReconBody').innerHTML = TALLY_RECON.map(r => `
+          <tr class="${r.isTotal ? 'bg-slate-50 font-semibold border-t border-slate-200' : 'hover:bg-slate-50'}">
+            <td class="py-2.5 pr-3 text-slate-800">${escapeHtml(r.item)}</td>
+            <td class="py-2.5 pr-3 text-right tabular-nums text-slate-700">${fmtMoney(r.bank)}</td>
+            <td class="py-2.5 pr-3 text-right tabular-nums text-slate-700">${fmtMoney(r.tally)}</td>
+            <td class="py-2.5 text-right tabular-nums font-medium ${r.variance < 0 ? 'text-rose-700' : 'text-emerald-700'}">${fmtMoney(r.variance)}</td>
+          </tr>
+        `).join('');
+
+        // Book Collection & Cheques Audit
+        document.getElementById('auditTableBody').innerHTML = AUDIT_ROWS.map(r => `
+          <tr class="${r.isBold ? 'bg-slate-50 font-semibold' : 'hover:bg-slate-50'}">
+            <td class="py-2.5 pr-3 text-slate-800">${escapeHtml(r.head)}</td>
+            <td class="py-2.5 pr-3 text-slate-600">${escapeHtml(r.count)}</td>
+            <td class="py-2.5 pr-3 text-right tabular-nums text-slatex-900">${fmtMoney(r.amount)}</td>
+            <td class="py-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800">${escapeHtml(r.status)}</span></td>
+          </tr>
+        `).join('');
+
+        // Projections vs Actuals
+        let sum24 = 0, sumB25 = 0, sumA25 = 0;
+        document.getElementById('projectionsTableBody').innerHTML = PROJECTIONS_DATA.map(p => {
+          sum24 += p.a2024; sumB25 += p.b2025; sumA25 += p.a2025;
+          const bVar = p.a2025 - p.b2025;
+          const bVarPct = p.b2025 ? (bVar / p.b2025) * 100 : 0;
+          const yoy = p.a2024 ? (p.a2025 - p.a2024) : 0;
+          const utilPct = p.b2025 ? (p.a2025 / p.b2025) * 100 : 0;
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2 px-3 font-medium text-slate-800">${escapeHtml(p.head)}</td>
+              <td class="py-2 px-3 text-right tabular-nums text-slate-600">${fmtMoney(p.a2024)}</td>
+              <td class="py-2 px-3 text-right tabular-nums text-slate-700">${fmtMoney(p.b2025)}</td>
+              <td class="py-2 px-3 text-right tabular-nums font-medium text-slatex-900">${fmtMoney(p.a2025)}</td>
+              <td class="py-2 px-3 text-right tabular-nums ${bVar > 0 ? 'text-rose-700' : 'text-emerald-700'}">${bVar > 0 ? '+' : ''}${fmtMoney(bVar)}</td>
+              <td class="py-2 px-3 text-right tabular-nums text-slate-600">${bVarPct.toFixed(1)}%</td>
+              <td class="py-2 px-3 text-right tabular-nums text-slate-600">${yoy >= 0 ? '+' : ''}${fmtMoney(yoy)}</td>
+              <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-700">${escapeHtml(p.status)}</span></td>
+              <td class="py-2 px-3 text-right tabular-nums font-medium">${utilPct.toFixed(1)}%</td>
+            </tr>
+          `;
+        }).join('');
+
+        const totVar = sumA25 - sumB25;
+        const totVarPct = sumB25 ? (totVar / sumB25) * 100 : 0;
+        const totYoy = sumA25 - sum24;
+        const totUtil = sumB25 ? (sumA25 / sumB25) * 100 : 0;
+        document.getElementById('projectionsTableFoot').innerHTML = `
+          <tr>
+            <td class="py-2.5 px-3 text-slatex-900">TOTAL EXPENSES</td>
+            <td class="py-2.5 px-3 text-right tabular-nums">${fmtMoney(sum24)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums">${fmtMoney(sumB25)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums">${fmtMoney(sumA25)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-rose-700">+${fmtMoney(totVar)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums">${totVarPct.toFixed(1)}%</td>
+            <td class="py-2.5 px-3 text-right tabular-nums">+${fmtMoney(totYoy)}</td>
+            <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800">Settled / Final</span></td>
+            <td class="py-2.5 px-3 text-right tabular-nums">${totUtil.toFixed(1)}%</td>
+          </tr>
+        `;
       }
 
       function renderDashboardRecent() {
         const tbody = document.getElementById('recentTableBody');
         const sorted = state.entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
         if (!sorted.length) {
-          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No entries yet. Click "+ New Entry" to add one.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No ledger transactions yet. Click "+ New Entry" or import a CSV to add transactions.</td></tr>';
           return;
         }
         tbody.innerHTML = sorted.map(e => `
@@ -624,14 +823,14 @@
         const months = Array.from(new Set(entries.map(e => (e.date || '').slice(0, 7)).filter(Boolean))).sort();
         const mSel = document.getElementById('filterMonth');
         const prevMonth = mSel.value;
-        mSel.innerHTML = '<option value="all">All Months (2026)</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        mSel.innerHTML = '<option value="all">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
         if (months.includes(prevMonth)) mSel.value = prevMonth;
       }
 
       function renderLedger(bookName) {
         document.getElementById('ledgerTitle').textContent = bookName === 'Bank' ? 'BankBook Ledger' : 'CashBook Ledger';
         const opening = bookName === 'Bank' ? Number(state.openingBank || 0) : Number(state.openingCash || 0);
-        document.getElementById('ledgerSubtitle').textContent = `Opening Balance: ${fmtMoney(opening)} · Chronological running balance`;
+        document.getElementById('ledgerSubtitle').textContent = 'Chronological transaction register';
 
         populateLedgerFilters(bookName);
         const allRows = computeBookLedger(bookName);
@@ -653,7 +852,7 @@
 
         const tbody = document.getElementById('ledgerTableBody');
         if (!filtered.length) {
-          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">No matching entries found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">No entries in this ledger yet. Click "+ Add Entry" to record one.</td></tr>';
         } else {
           tbody.innerHTML = filtered.map(r => `
             <tr class="hover:bg-slate-50">
@@ -663,7 +862,6 @@
               <td class="py-2.5 px-3 text-slate-500">${escapeHtml(r.ref || '—')}</td>
               <td class="py-2.5 px-3 text-right tabular-nums text-emerald-700 font-medium">${r.type === 'income' ? fmtMoney(r.amount) : ''}</td>
               <td class="py-2.5 px-3 text-right tabular-nums text-rose-700 font-medium">${r.type === 'expense' ? fmtMoney(r.amount) : ''}</td>
-              <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-slatex-900">${fmtMoney(r.balance)}</td>
               <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
                 <button data-edit="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
                 <button data-del="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
@@ -680,7 +878,6 @@
             <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Totals (${filtered.length} entries)</td>
             <td class="py-2.5 px-3 text-right tabular-nums text-emerald-700">${fmtMoney(sumCredit)}</td>
             <td class="py-2.5 px-3 text-right tabular-nums text-rose-700">${fmtMoney(sumDebit)}</td>
-            <td class="py-2.5 px-3 text-right tabular-nums text-slatex-900">Closing: ${fmtMoney(closing)}</td>
             <td></td>
           </tr>
         `;
@@ -706,6 +903,7 @@
 
         if (activeTab === 'dashboard') {
           renderCharts();
+          renderSheetDashboardTables();
           renderDashboardRecent();
         } else if (activeTab === 'bankbook') {
           renderLedger('Bank');
@@ -751,7 +949,7 @@
       }
 
       function exportCsv(rows, filename) {
-        const headers = ['Date', 'Book', 'Type', 'Particulars', 'Category', 'Ref/Mode', 'Credit', 'Debit'];
+        const headers = ['Date', 'Book', 'Type', 'Particular', 'Purpose/Category', 'Reference', 'Inward', 'Outward'];
         const csvLines = [headers.join(',')].concat(rows.map(r => {
           const credit = r.type === 'income' ? r.amount : '';
           const debit = r.type === 'expense' ? r.amount : '';
@@ -791,7 +989,6 @@
         return lines;
       }
 
-      // Event Listeners
       document.getElementById('navTabs').addEventListener('click', e => {
         const btn = e.target.closest('.tab-btn');
         if (!btn) return;
@@ -811,6 +1008,11 @@
 
       document.getElementById('btnViewAllBank').addEventListener('click', () => {
         activeTab = 'bankbook';
+        renderAll();
+      });
+
+      document.getElementById('btnViewAllCash').addEventListener('click', () => {
+        activeTab = 'cashbook';
         renderAll();
       });
 
@@ -865,10 +1067,10 @@
         const note = document.getElementById('transferNote').value.trim();
         const stamp = Date.now();
         if (dir === 'bank_to_cash') {
-          state.entries.push({ id: 't1_' + stamp, date, book: 'Bank', type: 'expense', amount, desc: note || 'Cash Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
-          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Cash Received from Bank (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Bank', type: 'expense', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
         } else {
-          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposited to Bank (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
           state.entries.push({ id: 't2_' + stamp, date, book: 'Bank', type: 'income', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
         }
         saveState();
@@ -947,15 +1149,14 @@
           ['mapDate', 'mapDesc', 'mapCat', 'mapBook', 'mapIncome', 'mapExpense'].forEach(id => {
             document.getElementById(id).innerHTML = (id === 'mapCat' || id === 'mapBook' || id === 'mapExpense') ? optNone : opts;
           });
-          // Auto-guess columns
           parsedCsvHeaders.forEach((h, i) => {
             const l = h.toLowerCase();
             if (l.includes('date')) document.getElementById('mapDate').value = i;
-            if (l.includes('desc') || l.includes('partic') || l.includes('item')) document.getElementById('mapDesc').value = i;
-            if (l.includes('cat')) document.getElementById('mapCat').value = i;
-            if (l.includes('book') || l.includes('mode') || l.includes('account')) document.getElementById('mapBook').value = i;
-            if (l.includes('inc') || l.includes('cred') || l.includes('dep')) document.getElementById('mapIncome').value = i;
-            if (l.includes('exp') || l.includes('deb') || l.includes('with')) document.getElementById('mapExpense').value = i;
+            if (l.includes('partic') || l.includes('desc') || l.includes('item')) document.getElementById('mapDesc').value = i;
+            if (l.includes('purp') || l.includes('cat')) document.getElementById('mapCat').value = i;
+            if (l.includes('book') || l.includes('mode') || l.includes('ref')) document.getElementById('mapBook').value = i;
+            if (l.includes('inw') || l.includes('inc') || l.includes('cred')) document.getElementById('mapIncome').value = i;
+            if (l.includes('outw') || l.includes('exp') || l.includes('deb')) document.getElementById('mapExpense').value = i;
           });
           document.getElementById('csvMappingBox').classList.remove('hidden');
           showToast(`Loaded ${parsedCsvRows.length} rows. Review column mapping.`);
