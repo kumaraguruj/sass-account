@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BankBook &amp; CashBook — 2026 Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              900: '#0b2e23',
+              800: '#0f3d2e',
+              700: '#14533f',
+              600: '#1b6b52',
+              100: '#e6f4ef',
+              50: '#f2faf7'
+            },
+            slatex: {
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+              600: '#475569',
+              100: '#f1f5f9'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation -->
+  <header class="bg-brand-800 text-white shadow-sm sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-lg tracking-tight border border-white/15">
+          BC
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-semibold leading-tight">BankBook &amp; CashBook</h1>
+          <p class="text-xs text-emerald-200/80">2026 Income &amp; Expenses Ledger</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="sr-only" for="currencySelect">Currency</label>
+        <select id="currencySelect" class="bg-brand-900/70 border border-white/15 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+        </select>
+        <button id="btnOpenTransfer" type="button" class="px-3 py-1.5 rounded-lg bg-slatex-700 hover:bg-slatex-600 text-xs sm:text-sm font-medium transition border border-white/10">
+          Contra Transfer
+        </button>
+        <button id="btnOpenAdd" type="button" class="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs sm:text-sm font-semibold transition shadow-sm">
+          + New Entry
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-navigation Tabs -->
+    <nav class="bg-brand-900/60 border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto gap-1 py-1.5" id="navTabs">
+        <button data-tab="dashboard" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition bg-white text-brand-900">
+          Dashboard
+        </button>
+        <button data-tab="bankbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-emerald-100 hover:bg-white/10">
+          BankBook
+        </button>
+        <button data-tab="cashbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-emerald-100 hover:bg-white/10">
+          CashBook
+        </button>
+        <button data-tab="import" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-emerald-100 hover:bg-white/10">
+          Import / Export CSV
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Sample Data Notice Banner -->
+  <div id="sampleBanner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs sm:text-sm px-4 py-2">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <span>Connected to <strong>Income &amp; Expenses - 2026</strong> (₹5,37,610 Bank Opening · 214 Cash Book entries · ₹60,288 Cash in Hand).</span>
+      <button id="btnDismissBanner" type="button" class="text-amber-800 hover:text-amber-950 font-medium underline text-xs">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6">
+
+    <!-- KPI Strip (Always visible) -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" aria-label="Key Balances">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Bank Balance</p>
+        <p id="kpiBank" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹0</p>
+        <p id="kpiBankSub" class="mt-1 text-xs text-slate-500">Opening: ₹0</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cash in Hand</p>
+        <p id="kpiCash" class="mt-1.5 text-xl sm:text-2xl font-bold text-slatex-900 tabular-nums">₹0</p>
+        <p id="kpiCashSub" class="mt-1 text-xs text-slate-500">Opening: ₹0</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Income</p>
+        <p id="kpiIncome" class="mt-1.5 text-xl sm:text-2xl font-bold text-emerald-700 tabular-nums">₹0</p>
+        <p id="kpiIncomeCount" class="mt-1 text-xs text-slate-500">0 credits</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Expenses</p>
+        <p id="kpiExpense" class="mt-1.5 text-xl sm:text-2xl font-bold text-rose-700 tabular-nums">₹0</p>
+        <p id="kpiExpenseCount" class="mt-1 text-xs text-slate-500">0 debits</p>
+      </div>
+      <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-emerald-200 uppercase tracking-wider">Combined Liquidity</p>
+        <p id="kpiTotal" class="mt-1.5 text-xl sm:text-2xl font-bold tabular-nums">₹0</p>
+        <p id="kpiNetFlow" class="mt-1 text-xs text-emerald-200">Net flow: ₹0</p>
+      </div>
+    </section>
+
+    <!-- TAB: DASHBOARD -->
+    <section id="view-dashboard" class="tab-view space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Monthly Income vs. Expenses (2026)</h2>
+            <span class="text-xs text-slate-500">Bank + Cash combined</span>
+          </div>
+          <div class="relative h-72">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Expenses by Category</h2>
+            <span class="text-xs text-slate-500">Excludes transfers</span>
+          </div>
+          <div class="relative h-72">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity & Opening Balances -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Recent Transactions</h2>
+            <button id="btnViewAllBank" type="button" class="text-xs font-medium text-brand-700 hover:underline">Open BankBook →</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="border-b border-slate-200 text-slate-500 uppercase text-xs">
+                <tr>
+                  <th class="py-2 pr-3">Date</th>
+                  <th class="py-2 pr-3">Book</th>
+                  <th class="py-2 pr-3">Particulars</th>
+                  <th class="py-2 pr-3">Category</th>
+                  <th class="py-2 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="recentTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Opening Balances</h2>
+          <p class="text-xs text-slate-500">Set your starting balances for 2026 to keep running balances accurate.</p>
+          <div class="space-y-3">
+            <div>
+              <label for="openBankInput" class="block text-xs font-medium text-slate-600 mb-1">Bank Opening Balance</label>
+              <input id="openBankInput" type="number" step="0.01" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+            </div>
+            <div>
+              <label for="openCashInput" class="block text-xs font-medium text-slate-600 mb-1">Cash Opening Balance</label>
+              <input id="openCashInput" type="number" step="0.01" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+            </div>
+            <button id="btnSaveOpening" type="button" class="w-full py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium transition">
+              Update Opening Balances
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: BANKBOOK & CASHBOOK (Shared dynamic ledger view) -->
+    <section id="view-ledger" class="tab-view hidden space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="ledgerTitle" class="text-base sm:text-lg font-semibold text-slatex-900">BankBook</h2>
+            <p id="ledgerSubtitle" class="text-xs text-slate-500">Chronological ledger with running balance</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnExportBookCsv" type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs sm:text-sm font-medium text-slate-700 transition">
+              Export CSV
+            </button>
+            <button id="btnAddToBook" type="button" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs sm:text-sm font-medium transition">
+              + Add Entry
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <input id="filterSearch" type="text" placeholder="Search particulars, reference..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          <select id="filterType" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="all">All Types (Credit &amp; Debit)</option>
+            <option value="income">Income / Credit (+)</option>
+            <option value="expense">Expense / Debit (-)</option>
+            <option value="transfer">Contra Transfer</option>
+          </select>
+          <select id="filterCategory" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="all">All Categories</option>
+          </select>
+          <select id="filterMonth" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="all">All Months (2026)</option>
+          </select>
+        </div>
+
+        <!-- Ledger Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3">Particulars</th>
+                <th class="py-2.5 px-3">Category</th>
+                <th class="py-2.5 px-3">Ref / Mode</th>
+                <th class="py-2.5 px-3 text-right">Credit (+)</th>
+                <th class="py-2.5 px-3 text-right">Debit (-)</th>
+                <th class="py-2.5 px-3 text-right">Balance</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot id="ledgerTableFoot" class="bg-slate-50 font-semibold border-t border-slate-200 text-xs sm:text-sm"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: IMPORT / EXPORT CSV -->
+    <section id="view-import" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-base font-semibold text-slatex-900">Import from Google Sheets (CSV)</h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            In Google Sheets, open <strong>Income &amp; Expenses - 2026</strong> and choose <em>File → Download → Comma Separated Values (.csv)</em>, then upload it here.
+          </p>
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center space-y-3 bg-slate-50">
+            <input id="csvFileInput" type="file" accept=".csv" class="block w-full text-xs sm:text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-800 file:text-white hover:file:bg-brand-700 cursor-pointer" />
+            <p class="text-xs text-slate-500">Supports columns like Date, Particulars/Description, Category, Mode/Book (Bank/Cash), Income/Credit, Expense/Debit, or Amount.</p>
+          </div>
+
+          <div id="csvMappingBox" class="hidden space-y-3 pt-2 border-t border-slate-200">
+            <h3 class="text-sm font-semibold text-slatex-900">Map CSV Columns</h3>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapDate">Date</label>
+                <select id="mapDate" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapDesc">Particulars / Description</label>
+                <select id="mapDesc" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapCat">Category</label>
+                <select id="mapCat" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapBook">Book / Mode (Bank or Cash)</label>
+                <select id="mapBook" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapIncome">Income / Credit Column</label>
+                <select id="mapIncome" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapExpense">Expense / Debit Column</label>
+                <select id="mapExpense" class="w-full rounded border border-slate-300 px-2 py-1.5"></select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+              <label class="flex items-center gap-2 text-xs text-slate-700">
+                <input id="csvReplaceMode" type="checkbox" checked class="rounded border-slate-300 text-brand-700" />
+                Replace current entries on import
+              </label>
+            </div>
+            <button id="btnConfirmImport" type="button" class="w-full py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium transition">
+              Import Rows
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-base font-semibold text-slatex-900">Export &amp; Data Management</h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Download your combined ledger to paste back into Google Sheets, or back up your state as JSON.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="btnExportAllCsv" type="button" class="py-2.5 px-4 rounded-lg bg-slatex-800 hover:bg-slatex-700 text-white text-xs sm:text-sm font-medium transition">
+              Export All as CSV
+            </button>
+            <button id="btnExportJson" type="button" class="py-2.5 px-4 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium transition">
+              Backup JSON
+            </button>
+            <button id="btnResetSample" type="button" class="py-2.5 px-4 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs sm:text-sm font-medium transition">
+              Reset to Sheet Snapshot
+            </button>
+            <button id="btnClearAll" type="button" class="py-2.5 px-4 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs sm:text-sm font-medium transition">
+              Clear All Entries
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Add / Edit Transaction -->
+  <div id="entryModal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="entryModalTitle" class="text-base font-semibold text-slatex-900">New Ledger Entry</h3>
+        <button id="btnCloseEntryModal" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+      <form id="entryForm" class="space-y-3">
+        <input type="hidden" id="entryId" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryDate" class="block text-xs font-medium text-slate-600 mb-1">Date</label>
+            <input id="entryDate" type="date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          </div>
+          <div>
+            <label for="entryBook" class="block text-xs font-medium text-slate-600 mb-1">Book</label>
+            <select id="entryBook" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <option value="Bank">BankBook</option>
+              <option value="Cash">CashBook</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryType" class="block text-xs font-medium text-slate-600 mb-1">Type</label>
+            <select id="entryType" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <option value="income">Income / Credit (+)</option>
+              <option value="expense">Expense / Debit (-)</option>
+            </select>
+          </div>
+          <div>
+            <label for="entryAmount" class="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+            <input id="entryAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          </div>
+        </div>
+        <div>
+          <label for="entryDesc" class="block text-xs font-medium text-slate-600 mb-1">Particulars / Description</label>
+          <input id="entryDesc" type="text" required placeholder="e.g., Client Retainer, Office Supplies" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryCat" class="block text-xs font-medium text-slate-600 mb-1">Category</label>
+            <input id="entryCat" type="text" list="categorySuggestions" required placeholder="e.g., Salary, Rent" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+            <datalist id="categorySuggestions">
+              <option value="Sales / Revenue"></option>
+              <option value="Consulting"></option>
+              <option value="Salary &amp; Payroll"></option>
+              <option value="Rent &amp; Utilities"></option>
+              <option value="Groceries &amp; Supplies"></option>
+              <option value="Travel &amp; Fuel"></option>
+              <option value="Software &amp; SaaS"></option>
+              <option value="Miscellaneous"></option>
+            </datalist>
+          </div>
+          <div>
+            <label for="entryRef" class="block text-xs font-medium text-slate-600 mb-1">Ref / Mode</label>
+            <input id="entryRef" type="text" placeholder="UPI, NEFT, Cash..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelEntry" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Contra Transfer -->
+  <div id="transferModal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-slatex-900">Contra Transfer (Bank ↔ Cash)</h3>
+        <button id="btnCloseTransferModal" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+      <form id="transferForm" class="space-y-3">
+        <div>
+          <label for="transferDirection" class="block text-xs font-medium text-slate-600 mb-1">Direction</label>
+          <select id="transferDirection" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="bank_to_cash">Bank → Cash (Cash Withdrawal / ATM)</option>
+            <option value="cash_to_bank">Cash → Bank (Cash Deposit)</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="transferDate" class="block text-xs font-medium text-slate-600 mb-1">Date</label>
+            <input id="transferDate" type="date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          </div>
+          <div>
+            <label for="transferAmount" class="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+            <input id="transferAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+          </div>
+        </div>
+        <div>
+          <label for="transferNote" class="block text-xs font-medium text-slate-600 mb-1">Note</label>
+          <input id="transferNote" type="text" placeholder="e.g., ATM withdrawal for petty cash" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelTransfer" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Record Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slatex-900 text-white text-xs sm:text-sm px-4 py-2.5 rounded-lg shadow-lg transition"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v2_connected';
+      const CURRENCIES = {
+        INR: { symbol: '₹', locale: 'en-IN' },
+        USD: { symbol: '$', locale: 'en-US' },
+        EUR: { symbol: '€', locale: 'de-DE' },
+        GBP: { symbol: '£', locale: 'en-GB' }
+      };
+
+      const SAMPLE_DATA = {"currency": "INR", "openingBank": 537610.0, "openingCash": 0, "entries": [{"id": "cb_3_in", "date": "2025-08-30", "book": "Cash", "type": "income", "amount": 11705.0, "desc": "Bank Withdrawal", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_4_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 400.0, "desc": "Mobile rechage 9884185694", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_5_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 740.0, "desc": "Maalai mariyathai (SANTHANAM ALWARPET, METRO DURAI)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_6_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Thiru Mahamman Koil Donation", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_7_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "Puspavanam Advance", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_8_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Vinayakar Urvalam Annadhanam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_9_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 1415.0, "desc": "Vinayakar Chathurthi Poojai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_10_out", "date": "2025-08-30", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_11_in", "date": "2025-11-03", "book": "Cash", "type": "income", "amount": 59990.0, "desc": "Bank Withdrawal", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_12_out", "date": "2025-11-03", "book": "Cash", "type": "expense", "amount": 52000.0, "desc": "60th Year Towel Payment", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_13_out", "date": "2025-11-03", "book": "Cash", "type": "expense", "amount": 3840.0, "desc": "Ottapalam visit (Chennai to Coimbatore Bus Booking) Paid to Kumaraguru", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_14_out", "date": "2025-11-03", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "Advance Payment to Electrical Work (Hari)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_15_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 3780.0, "desc": "Ottapalam visit (Train Booking and Autofare) Paid to Varadarajan", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_16_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 60.0, "desc": "Pooja Party Train Concession Letter Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_17_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 50.0, "desc": "Pooja Invitation Proof Printing", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_18_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Printing invitation", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_19_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 260.0, "desc": "Donor Towel Pickup From Triplicane", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_20_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 800.0, "desc": "Garland Expense (Hemachandran)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_21_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Banner Sathish Adv", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_22_out", "date": "2025-11-15", "book": "Cash", "type": "expense", "amount": 40.0, "desc": "Note book", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_23_out", "date": "2025-11-16", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Pooja Banner Fix at Mahalingapuram Ayyppan Team", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_24_out", "date": "2025-11-16", "book": "Cash", "type": "expense", "amount": 470.0, "desc": "Nandu House Visit (Auto)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_25_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 350.0, "desc": "Garland for Ayyppan Photo", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_26_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Paid Adv to Pandal Vijayan", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_27_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 600.0, "desc": "Donor Visit Expense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_28_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 1200.0, "desc": "Sandhana Kaappu Varashithi Vinayagar", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_29_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 1905.0, "desc": "Karthigail 1 Expense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_30_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 400.0, "desc": "Donor Visit Expense (Gas Mohan,Thambhi Swamy)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_31_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 340.0, "desc": "Mobile Recharge (9884155694)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_32_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Meenatchi Amman Gurukal Gift", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_33_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 25000.0, "desc": "Cash Withdrawal from Bank", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_34_out", "date": "2025-11-23", "book": "Cash", "type": "expense", "amount": 1100.0, "desc": "Lunch for 11 Member (Street Collection)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_35_out", "date": "2025-11-23", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Petromax Advance", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_36_out", "date": "2025-11-24", "book": "Cash", "type": "expense", "amount": 340.0, "desc": "Donor Carry bag", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_37_in", "date": "2025-11-23", "book": "Cash", "type": "income", "amount": 13402.0, "desc": "Street Collection", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_38_out", "date": "2025-11-23", "book": "Cash", "type": "expense", "amount": 29402.0, "desc": "Deposited in bank", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_39_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Duraivelu rept no 001", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_40_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5001.0, "desc": "Sriram Construction rcpt 003", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_41_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Hari kumar rcpt 004", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_42_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Sujatha Harikumar rcpt no 005", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_43_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Rahul Hari Kumar rcpt no 006", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_44_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Oriya Hari Kumar rcpt no 007", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_45_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5001.0, "desc": "Sushama Devadaas", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_46_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 3000.0, "desc": "Gnanapraakasam rcpt no 009", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_47_in", "date": "2025-11-17", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Chandrasekaran rcpt no 010", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_48_in", "date": "2025-11-20", "book": "Cash", "type": "income", "amount": 2000.0, "desc": "M. Parthasarathy", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_49_in", "date": "2025-11-20", "book": "Cash", "type": "income", "amount": 1000.0, "desc": "Mohan Milk rcpt no 012", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_50_in", "date": "2025-11-23", "book": "Cash", "type": "income", "amount": 5000.0, "desc": "Saraswati Prabhakaran", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_51_out", "date": "2025-11-17", "book": "Cash", "type": "expense", "amount": 35000.0, "desc": "Cash deposited into bank", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_52_in", "date": "2025-11-26", "book": "Cash", "type": "income", "amount": 500.0, "desc": "Prabhu Hair dresses rcpt 16", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_53_in", "date": "2025-11-26", "book": "Cash", "type": "income", "amount": 500.0, "desc": "Babu rcpt 17", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_54_out", "date": "2025-11-26", "book": "Cash", "type": "expense", "amount": 65.0, "desc": "Sticker Feviquick", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_55_out", "date": "2025-11-26", "book": "Cash", "type": "expense", "amount": 1050.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_56_out", "date": "2025-11-26", "book": "Cash", "type": "expense", "amount": 5.0, "desc": "Courier Cover", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_57_out", "date": "2025-11-26", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Cash Deposited into bank", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_58_out", "date": "2025-12-01", "book": "Cash", "type": "expense", "amount": 2500.0, "desc": "Banner Sathish", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_59_out", "date": "2025-12-01", "book": "Cash", "type": "expense", "amount": 850.0, "desc": "Donor Visit (Auto)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_60_out", "date": "2025-12-01", "book": "Cash", "type": "expense", "amount": 800.0, "desc": "Donor Visit Guruswamy pudupet to Choolaimedu", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_61_out", "date": "2025-12-01", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Vibhudhi Cover Printing", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_62_out", "date": "2025-12-01", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Courier 3 nos", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_63_out", "date": "2025-12-05", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Pandal Tea Expenses", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_64_out", "date": "2025-12-06", "book": "Cash", "type": "expense", "amount": 50.0, "desc": "Weekly Pooja Temple cleaning", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_65_out", "date": "2025-12-05", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Courier 6 nos", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_66_out", "date": "2025-12-08", "book": "Cash", "type": "expense", "amount": 60.0, "desc": "Cover", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_67_out", "date": "2025-12-08", "book": "Cash", "type": "expense", "amount": 710.0, "desc": "Sriram Mylapore (Auto and Sample Snacks)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_68_out", "date": "2025-12-09", "book": "Cash", "type": "expense", "amount": 20.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_69_out", "date": "2025-12-09", "book": "Cash", "type": "expense", "amount": 400.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_70_out", "date": "2025-12-09", "book": "Cash", "type": "expense", "amount": 85.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_71_out", "date": "2025-12-09", "book": "Cash", "type": "expense", "amount": 60.0, "desc": "Tea Expenses", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_72_in", "date": "2025-12-10", "book": "Cash", "type": "income", "amount": 15000.0, "desc": "Cash Withdrawal from Bank", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_73_out", "date": "2025-12-10", "book": "Cash", "type": "expense", "amount": 2360.0, "desc": "Tree Cutting for Pandal", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_74_out", "date": "2025-12-10", "book": "Cash", "type": "expense", "amount": 760.0, "desc": "Courier 12 Nos", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_75_out", "date": "2025-12-10", "book": "Cash", "type": "expense", "amount": 80.0, "desc": "Courier Cover", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_76_out", "date": "2025-12-10", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Sairam Mylapore Up/Down Auto", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_77_out", "date": "2025-12-10", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Donor Visit", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_78_out", "date": "2025-12-11", "book": "Cash", "type": "expense", "amount": 700.0, "desc": "Donor Visit (Adyar, Porur, Kodambakkam)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_79_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Chandrabanu Street Rain Water Bhole Cleaning", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_80_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 1100.0, "desc": "Sangam Room Whitewash Labour", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_81_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 295.0, "desc": "Sangam Room Whitewash Material", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_82_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 3500.0, "desc": "Vibhudhi & Kunkumam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_83_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Tea Expenses Corporation Cleaning team", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_84_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Donor Visit to Purasaiwalkam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_85_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Courier 9 Cover", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_86_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Donor Koyambedu Market", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_87_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 1100.0, "desc": "Lunch", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_88_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "---- Charges", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_89_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 450.0, "desc": "Donor Vist T Nagar Auto", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_90_out", "date": "2025-12-12", "book": "Cash", "type": "expense", "amount": 50.0, "desc": "Courier", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_91_out", "date": "2025-12-14", "book": "Cash", "type": "expense", "amount": 610.0, "desc": "Lunch", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_92_out", "date": "2025-12-14", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Petrol Charge", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_93_out", "date": "2025-12-16", "book": "Cash", "type": "expense", "amount": 800.0, "desc": "Auto Expense VG Electricals", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_94_out", "date": "2025-12-16", "book": "Cash", "type": "expense", "amount": 900.0, "desc": "Auto Sridhar c/o Parry Porkodi Nikil", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_95_out", "date": "2025-12-16", "book": "Cash", "type": "expense", "amount": 400.0, "desc": "Dinner", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_96_out", "date": "2025-12-16", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Poster", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_97_out", "date": "2025-12-16", "book": "Cash", "type": "expense", "amount": 150.0, "desc": "Stationery Items Clip", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_98_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 1500.0, "desc": "Corporation Cleaning Charges", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_99_in", "date": "2025-12-18", "book": "Cash", "type": "income", "amount": 500000.0, "desc": "Bank Withdrawal", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_100_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 7370.0, "desc": "Crackers", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_101_out", "date": "2025-12-17", "book": "Cash", "type": "expense", "amount": 10000.0, "desc": "Advance payment for Flower", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_102_out", "date": "2025-12-17", "book": "Cash", "type": "expense", "amount": 450.0, "desc": "Puspavanam Invite and Snacks Pickup", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_103_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 2800.0, "desc": "Vibhuthi Packing", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_104_out", "date": "2025-12-17", "book": "Cash", "type": "expense", "amount": 5400.0, "desc": "Milk Payment", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_105_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 1760.0, "desc": "Sastha Dasan tea, Water, Food", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_106_in", "date": "2025-04-01", "book": "Cash", "type": "income", "amount": 42853.0, "desc": "Ramanathan 418, 419,420", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_107_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 35000.0, "desc": "Manikandan Advance Paid by Guruswamy", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_108_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 1001.0, "desc": "Sridharan Advance", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_109_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 252.0, "desc": "Bus Ticket CBM to Palakad", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_110_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 1600.0, "desc": "Palakad to Ottapalam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_111_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "Sastha dasan Advance", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_112_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 3000.0, "desc": "nadaswaram", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_113_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 140.0, "desc": "Electrical Labour TEA", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_114_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 140.0, "desc": "Corporation Cleaning team tea", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_115_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Paid to Bala Corporation", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_116_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 35000.0, "desc": "Sastha Dasan settlement", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_117_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 7000.0, "desc": "Muthu Audio day1 Settlement", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_118_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 2566.0, "desc": "Paid to Pavithran for pooja Material", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_119_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 5800.0, "desc": "Varadhan suspense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_120_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 1500.0, "desc": "Plumbing Labour", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_121_out", "date": "2025-12-18", "book": "Cash", "type": "expense", "amount": 254.0, "desc": "Plumbing Material", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_122_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 4678.0, "desc": "Pandian 17/12/2025", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_123_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Cooking Poojai Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_124_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Kuruthu Poojau Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_125_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Keli Kottu Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_126_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 15000.0, "desc": "arvind Subramaniam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_127_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1565.0, "desc": "arvind Subramaniam Cab Expense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_128_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 55000.0, "desc": "Puspavanam Kuppuswamy", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_129_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Dinner Tea Water", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_130_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 7000.0, "desc": "Muthu Audio day2 Settlement", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_131_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 375.0, "desc": "Night Tea", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_132_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 20000.0, "desc": "Flower Advanve", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_133_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 2280.0, "desc": "Lunch Paid to Prabhu", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_134_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 4012.0, "desc": "Koil Kattailai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_135_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 3000.0, "desc": "School Topper 3 Nos", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_136_out", "date": "2025-12-20", "book": "Cash", "type": "expense", "amount": 2500.0, "desc": "Vilakku Polishing", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_137_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 4000.0, "desc": "Police Gift", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_138_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 900.0, "desc": "Thalathattu Token 3 No paid by Vipin", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_139_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1200.0, "desc": "Tiffin 18 Nos + Auto for cleaning team", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_140_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 3500.0, "desc": "Sa re ga ma Momento + Auto (3000 + 500)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_141_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1500.0, "desc": "Pooja Party Day 2 Auto Fare (Giri)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_142_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1000.0, "desc": "Arvind SUbramaniam advance", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_143_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 400.0, "desc": "Nikil (Thatchanai + Transport for crackers)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_144_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 501.0, "desc": "Thayambaka Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_145_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 550.0, "desc": "Tea Expense (Ambalam & Cleaning)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_146_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Periya Sadaiyamman Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_147_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Paid to Kandan autofare", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_148_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 700.0, "desc": "Paid to Kandan Kutti Yanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_149_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 120.0, "desc": "Paid to Kandan autofare", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_150_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 3750.0, "desc": "Annadhanam Material Purchase", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_151_out", "date": "2025-12-21", "book": "Cash", "type": "expense", "amount": 3085.0, "desc": "Breakfast", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_152_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Oil tin for ambalam Kaal", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_153_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 5500.0, "desc": "Annadhanam Material Purchase", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_154_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1300.0, "desc": "Pooja Party pickup Autofare", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_155_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Autofare for Firewood purchase", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_156_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Police Gift", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_157_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Autofare for chendamelam to and fro Periya sadaiyamman", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_158_in", "date": "2025-04-01", "book": "Cash", "type": "income", "amount": 23754.0, "desc": "Undial money Received", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_159_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 72000.0, "desc": "Pooja Party", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_160_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 99000.0, "desc": "Thayambaka team", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_161_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "EB Carges to Hariswamy", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_162_in", "date": "2025-04-01", "book": "Cash", "type": "income", "amount": 60000.0, "desc": "Thalathattu Token 200 Sales", "category": "Cash Receipt", "ref": "Cash", "isTransfer": false}, {"id": "cb_163_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 58100.0, "desc": "Thalathattu Gift Purchase", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_164_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 120.0, "desc": "Water can for Pooja party (Maharaja)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_165_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 32.0, "desc": "Milk", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_166_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 120.0, "desc": "Water can for Pooja party (Maharaja)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_167_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Waste & Envelope (Maharaja)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_168_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1150.0, "desc": "Auto Fare Pooja party return", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_169_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 20000.0, "desc": "Vetri balan Cleaning charges", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_170_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 180.0, "desc": "Tea (Ambalam fixing )", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_171_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1550.0, "desc": "Coconut", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_172_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 120.0, "desc": "Kattu Kayiru", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_173_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 3300.0, "desc": "Pakku Mattai Thattu Extra", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_174_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Varasithi vinayagar koil kattalai extra", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_175_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Varasithi vinayagar koil Thatchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_176_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1430.0, "desc": "Baskar Tea Stall", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_177_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Light for madam room", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_178_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Ma ilai Tharanam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_179_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 8500.0, "desc": "Procession Chariot and labour", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_180_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Komaleeshwar Abhishekam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_181_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Kondamma cleaning charges", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_182_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 270.0, "desc": "Komaleeshwar Abhishekam (Milk, Curd)", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_183_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Komaleeshwar Abhishekam Coconut", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_184_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 2000.0, "desc": "Water lorry Advance Paid by Varadhan", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_185_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 240.0, "desc": "Cleaning Brush", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_186_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 200.0, "desc": "Auto Guruswamy MMDA Colony", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_187_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Mylapore oil tin Pickup Auto", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_188_out", "date": "2025-12-19", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Cleaning People Food", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_189_out", "date": "2025-12-20", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Bolipaattu Datchanai", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_190_in", "date": "2025-04-01", "book": "Cash", "type": "income", "amount": 150000.0, "desc": "Bank Withdrawal", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}, {"id": "cb_191_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 500.0, "desc": "Generator Labours Gift", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_192_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "Temple Cleaning", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_193_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Koil Servent Gift", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_194_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 100.0, "desc": "Cleaning People Lorry", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_195_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 280.0, "desc": "Tender Coconut", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_196_out", "date": "2025-12-24", "book": "Cash", "type": "expense", "amount": 1750.0, "desc": "Cylinder", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_197_out", "date": "22//12/2025", "book": "Cash", "type": "expense", "amount": 900.0, "desc": "Vilakku Delevery", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_198_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 5450.0, "desc": "GraphArt", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_199_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1150.0, "desc": "Aravai Bill", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_200_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 3000.0, "desc": "Water Settlement", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_201_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 580.0, "desc": "Water Can 4 case Bala", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_202_out", "date": "2025-12-24", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "Petty Cash to Varadharajan", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_203_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 595.0, "desc": "Momento for Vendors", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_204_out", "date": "2025-12-21", "book": "Cash", "type": "expense", "amount": 8000.0, "desc": "Petromax Settlement", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_205_out", "date": "2025-12-25", "book": "Cash", "type": "expense", "amount": 5000.0, "desc": "Sathish banner", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_206_out", "date": "2025-12-25", "book": "Cash", "type": "expense", "amount": 8000.0, "desc": "Banana Leaf", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_207_out", "date": "2025-12-28", "book": "Cash", "type": "expense", "amount": 2050.0, "desc": "Tea Expense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_208_out", "date": "2025-12-28", "book": "Cash", "type": "expense", "amount": 300.0, "desc": "fruits for donor", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_209_out", "date": "2026-01-08", "book": "Cash", "type": "expense", "amount": 2020.0, "desc": "sai snacks", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_210_out", "date": "2025-12-28", "book": "Cash", "type": "expense", "amount": 15000.0, "desc": "hari swami electrical expense", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_211_out", "date": "2026-01-08", "book": "Cash", "type": "expense", "amount": 3000.0, "desc": "Security", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_212_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1850.0, "desc": "Varadan Exp", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_213_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 1340.0, "desc": "Shawl", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_214_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 2500.0, "desc": "Makaram", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_215_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 25070.0, "desc": "Mandalam", "category": "Cash Expense", "ref": "Cash", "isTransfer": false}, {"id": "cb_216_out", "date": "2025-04-01", "book": "Cash", "type": "expense", "amount": 62720.0, "desc": "Cash deposited into bank", "category": "Contra Transfer", "ref": "Cash", "isTransfer": true}]};
+
+      let state = loadState();
+      let activeTab = 'dashboard';
+      let monthlyChartInstance = null;
+      let categoryChartInstance = null;
+      let parsedCsvRows = [];
+      let parsedCsvHeaders = [];
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.entries)) {
+              return parsed;
+            }
+          }
+        } catch (e) { /* fallback to sample */ }
+        return JSON.parse(JSON.stringify(SAMPLE_DATA));
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) { /* ignore storage quota errors */ }
+      }
+
+      function fmtMoney(val) {
+        const cfg = CURRENCIES[state.currency] || CURRENCIES.INR;
+        const num = Number(val) || 0;
+        return cfg.symbol + num.toLocaleString(cfg.locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => el.classList.add('hidden'), 3000);
+      }
+
+      function computeBookLedger(bookName) {
+        const opening = bookName === 'Bank' ? Number(state.openingBank || 0) : Number(state.openingCash || 0);
+        const rows = state.entries
+          .filter(e => e.book === bookName)
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+        let running = opening;
+        return rows.map(r => {
+          const amt = Number(r.amount) || 0;
+          running += r.type === 'income' ? amt : -amt;
+          return { ...r, balance: running };
+        });
+      }
+
+      function renderKPIs() {
+        const bankRows = computeBookLedger('Bank');
+        const cashRows = computeBookLedger('Cash');
+        const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
+        const cashBal = cashRows.length ? cashRows[cashRows.length - 1].balance : Number(state.openingCash || 0);
+
+        const nonTransfer = state.entries.filter(e => !e.isTransfer);
+        const incomes = nonTransfer.filter(e => e.type === 'income');
+        const expenses = nonTransfer.filter(e => e.type === 'expense');
+        const totalIncome = incomes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const totalExpense = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const netFlow = totalIncome - totalExpense;
+
+        document.getElementById('kpiBank').textContent = fmtMoney(bankBal);
+        document.getElementById('kpiBankSub').textContent = 'Opening: ' + fmtMoney(state.openingBank);
+        document.getElementById('kpiCash').textContent = fmtMoney(cashBal);
+        document.getElementById('kpiCashSub').textContent = 'Opening: ' + fmtMoney(state.openingCash);
+        document.getElementById('kpiIncome').textContent = fmtMoney(totalIncome);
+        document.getElementById('kpiIncomeCount').textContent = incomes.length + ' credits';
+        document.getElementById('kpiExpense').textContent = fmtMoney(totalExpense);
+        document.getElementById('kpiExpenseCount').textContent = expenses.length + ' debits';
+        document.getElementById('kpiTotal').textContent = fmtMoney(bankBal + cashBal);
+        document.getElementById('kpiNetFlow').textContent = 'Net flow: ' + (netFlow >= 0 ? '+' : '') + fmtMoney(netFlow);
+      }
+
+      function renderCharts() {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const incomeByMonth = new Array(12).fill(0);
+        const expenseByMonth = new Array(12).fill(0);
+        const catTotals = {};
+
+        state.entries.forEach(e => {
+          if (e.isTransfer) return;
+          const parts = (e.date || '').split('-');
+          const mIdx = parts.length >= 2 ? parseInt(parts[1], 10) - 1 : -1;
+          const amt = Number(e.amount) || 0;
+          if (mIdx >= 0 && mIdx < 12) {
+            if (e.type === 'income') incomeByMonth[mIdx] += amt;
+            else expenseByMonth[mIdx] += amt;
+          }
+          if (e.type === 'expense') {
+            const cat = e.category || 'Uncategorized';
+            catTotals[cat] = (catTotals[cat] || 0) + amt;
+          }
+        });
+
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        if (monthlyChartInstance) monthlyChartInstance.destroy();
+        monthlyChartInstance = new Chart(ctxMonthly, {
+          type: 'bar',
+          data: {
+            labels: monthNames,
+            datasets: [
+              { label: 'Income', data: incomeByMonth, backgroundColor: '#1b6b52', borderRadius: 4 },
+              { label: 'Expenses', data: expenseByMonth, backgroundColor: '#e11d48', borderRadius: 4 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+
+        const catLabels = Object.keys(catTotals);
+        const catValues = catLabels.map(k => catTotals[k]);
+        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+        if (categoryChartInstance) categoryChartInstance.destroy();
+        categoryChartInstance = new Chart(ctxCat, {
+          type: 'doughnut',
+          data: {
+            labels: catLabels.length ? catLabels : ['No Expenses'],
+            datasets: [{
+              data: catValues.length ? catValues : [1],
+              backgroundColor: catValues.length
+                ? ['#0f3d2e', '#1e293b', '#10b981', '#f59e0b', '#e11d48', '#6366f1', '#14b8a6', '#64748b']
+                : ['#e2e8f0']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
+      function renderDashboardRecent() {
+        const tbody = document.getElementById('recentTableBody');
+        const sorted = state.entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+        if (!sorted.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No entries yet. Click "+ New Entry" to add one.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = sorted.map(e => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 pr-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(e.date)}</td>
+            <td class="py-2.5 pr-3"><span class="px-2 py-0.5 rounded text-xs font-medium ${e.book === 'Bank' ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-800'}">${escapeHtml(e.book)}</span></td>
+            <td class="py-2.5 pr-3 font-medium text-slate-800">${escapeHtml(e.desc)}</td>
+            <td class="py-2.5 pr-3 text-slate-500">${escapeHtml(e.category)}</td>
+            <td class="py-2.5 text-right font-semibold tabular-nums ${e.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">
+              ${e.type === 'income' ? '+' : '-'}${fmtMoney(e.amount)}
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      function populateLedgerFilters(bookName) {
+        const entries = state.entries.filter(e => e.book === bookName);
+        const cats = Array.from(new Set(entries.map(e => e.category).filter(Boolean))).sort();
+        const catSel = document.getElementById('filterCategory');
+        const prevCat = catSel.value;
+        catSel.innerHTML = '<option value="all">All Categories</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cats.includes(prevCat)) catSel.value = prevCat;
+
+        const months = Array.from(new Set(entries.map(e => (e.date || '').slice(0, 7)).filter(Boolean))).sort();
+        const mSel = document.getElementById('filterMonth');
+        const prevMonth = mSel.value;
+        mSel.innerHTML = '<option value="all">All Months (2026)</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        if (months.includes(prevMonth)) mSel.value = prevMonth;
+      }
+
+      function renderLedger(bookName) {
+        document.getElementById('ledgerTitle').textContent = bookName === 'Bank' ? 'BankBook Ledger' : 'CashBook Ledger';
+        const opening = bookName === 'Bank' ? Number(state.openingBank || 0) : Number(state.openingCash || 0);
+        document.getElementById('ledgerSubtitle').textContent = `Opening Balance: ${fmtMoney(opening)} · Chronological running balance`;
+
+        populateLedgerFilters(bookName);
+        const allRows = computeBookLedger(bookName);
+
+        const q = document.getElementById('filterSearch').value.trim().toLowerCase();
+        const fType = document.getElementById('filterType').value;
+        const fCat = document.getElementById('filterCategory').value;
+        const fMonth = document.getElementById('filterMonth').value;
+
+        const filtered = allRows.filter(r => {
+          if (q && !(r.desc || '').toLowerCase().includes(q) && !(r.ref || '').toLowerCase().includes(q) && !(r.category || '').toLowerCase().includes(q)) return false;
+          if (fType === 'income' && (r.type !== 'income' || r.isTransfer)) return false;
+          if (fType === 'expense' && (r.type !== 'expense' || r.isTransfer)) return false;
+          if (fType === 'transfer' && !r.isTransfer) return false;
+          if (fCat !== 'all' && r.category !== fCat) return false;
+          if (fMonth !== 'all' && !(r.date || '').startsWith(fMonth)) return false;
+          return true;
+        });
+
+        const tbody = document.getElementById('ledgerTableBody');
+        if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">No matching entries found.</td></tr>';
+        } else {
+          tbody.innerHTML = filtered.map(r => `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(r.date)}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(r.desc)}</td>
+              <td class="py-2.5 px-3 text-slate-600">${escapeHtml(r.category)}</td>
+              <td class="py-2.5 px-3 text-slate-500">${escapeHtml(r.ref || '—')}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums text-emerald-700 font-medium">${r.type === 'income' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums text-rose-700 font-medium">${r.type === 'expense' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-slatex-900">${fmtMoney(r.balance)}</td>
+              <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
+                <button data-edit="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
+                <button data-del="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        const sumCredit = filtered.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const sumDebit = filtered.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const closing = allRows.length ? allRows[allRows.length - 1].balance : opening;
+        document.getElementById('ledgerTableFoot').innerHTML = `
+          <tr>
+            <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Totals (${filtered.length} entries)</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-emerald-700">${fmtMoney(sumCredit)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-rose-700">${fmtMoney(sumDebit)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-slatex-900">Closing: ${fmtMoney(closing)}</td>
+            <td></td>
+          </tr>
+        `;
+      }
+
+      function renderAll() {
+        document.getElementById('currencySelect').value = state.currency || 'INR';
+        document.getElementById('openBankInput').value = state.openingBank ?? 0;
+        document.getElementById('openCashInput').value = state.openingCash ?? 0;
+
+        renderKPIs();
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          const isActive = btn.dataset.tab === activeTab;
+          btn.className = isActive
+            ? 'tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition bg-white text-brand-900'
+            : 'tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-emerald-100 hover:bg-white/10';
+        });
+
+        document.getElementById('view-dashboard').classList.toggle('hidden', activeTab !== 'dashboard');
+        document.getElementById('view-ledger').classList.toggle('hidden', activeTab !== 'bankbook' && activeTab !== 'cashbook');
+        document.getElementById('view-import').classList.toggle('hidden', activeTab !== 'import');
+
+        if (activeTab === 'dashboard') {
+          renderCharts();
+          renderDashboardRecent();
+        } else if (activeTab === 'bankbook') {
+          renderLedger('Bank');
+        } else if (activeTab === 'cashbook') {
+          renderLedger('Cash');
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      }
+
+      function openEntryModal(entry) {
+        document.getElementById('entryModalTitle').textContent = entry ? 'Edit Ledger Entry' : 'New Ledger Entry';
+        document.getElementById('entryId').value = entry ? entry.id : '';
+        document.getElementById('entryDate').value = entry ? entry.date : '2026-11-16';
+        document.getElementById('entryBook').value = entry ? entry.book : (activeTab === 'cashbook' ? 'Cash' : 'Bank');
+        document.getElementById('entryType').value = entry ? entry.type : 'expense';
+        document.getElementById('entryAmount').value = entry ? entry.amount : '';
+        document.getElementById('entryDesc').value = entry ? entry.desc : '';
+        document.getElementById('entryCat').value = entry ? entry.category : '';
+        document.getElementById('entryRef').value = entry ? (entry.ref || '') : '';
+        document.getElementById('entryModal').classList.remove('hidden');
+        document.getElementById('entryModal').classList.add('flex');
+      }
+
+      function closeEntryModal() {
+        document.getElementById('entryModal').classList.add('hidden');
+        document.getElementById('entryModal').classList.remove('flex');
+      }
+
+      function openTransferModal() {
+        document.getElementById('transferDate').value = '2026-11-16';
+        document.getElementById('transferAmount').value = '';
+        document.getElementById('transferNote').value = '';
+        document.getElementById('transferModal').classList.remove('hidden');
+        document.getElementById('transferModal').classList.add('flex');
+      }
+
+      function closeTransferModal() {
+        document.getElementById('transferModal').classList.add('hidden');
+        document.getElementById('transferModal').classList.remove('flex');
+      }
+
+      function exportCsv(rows, filename) {
+        const headers = ['Date', 'Book', 'Type', 'Particulars', 'Category', 'Ref/Mode', 'Credit', 'Debit'];
+        const csvLines = [headers.join(',')].concat(rows.map(r => {
+          const credit = r.type === 'income' ? r.amount : '';
+          const debit = r.type === 'expense' ? r.amount : '';
+          return [r.date, r.book, r.type, r.desc, r.category, r.ref || '', credit, debit]
+            .map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',');
+        }));
+        const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function parseCsvText(text) {
+        const lines = [];
+        let cur = [], val = '', inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (inQuotes) {
+            if (ch === '"' && text[i + 1] === '"') { val += '"'; i++; }
+            else if (ch === '"') inQuotes = false;
+            else val += ch;
+          } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { cur.push(val.trim()); val = ''; }
+            else if (ch === '\n' || ch === '\r') {
+              if (ch === '\r' && text[i + 1] === '\n') i++;
+              cur.push(val.trim());
+              if (cur.some(x => x !== '')) lines.push(cur);
+              cur = []; val = '';
+            } else val += ch;
+          }
+        }
+        if (val !== '' || cur.length) { cur.push(val.trim()); lines.push(cur); }
+        return lines;
+      }
+
+      // Event Listeners
+      document.getElementById('navTabs').addEventListener('click', e => {
+        const btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        activeTab = btn.dataset.tab;
+        renderAll();
+      });
+
+      document.getElementById('currencySelect').addEventListener('change', e => {
+        state.currency = e.target.value;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btnDismissBanner').addEventListener('click', () => {
+        document.getElementById('sampleBanner').classList.add('hidden');
+      });
+
+      document.getElementById('btnViewAllBank').addEventListener('click', () => {
+        activeTab = 'bankbook';
+        renderAll();
+      });
+
+      document.getElementById('btnSaveOpening').addEventListener('click', () => {
+        state.openingBank = parseFloat(document.getElementById('openBankInput').value) || 0;
+        state.openingCash = parseFloat(document.getElementById('openCashInput').value) || 0;
+        saveState();
+        renderAll();
+        showToast('Opening balances updated.');
+      });
+
+      document.getElementById('btnOpenAdd').addEventListener('click', () => openEntryModal(null));
+      document.getElementById('btnAddToBook').addEventListener('click', () => openEntryModal(null));
+      document.getElementById('btnCloseEntryModal').addEventListener('click', closeEntryModal);
+      document.getElementById('btnCancelEntry').addEventListener('click', closeEntryModal);
+
+      document.getElementById('entryForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const id = document.getElementById('entryId').value;
+        const item = {
+          id: id || 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          date: document.getElementById('entryDate').value,
+          book: document.getElementById('entryBook').value,
+          type: document.getElementById('entryType').value,
+          amount: parseFloat(document.getElementById('entryAmount').value) || 0,
+          desc: document.getElementById('entryDesc').value.trim(),
+          category: document.getElementById('entryCat').value.trim() || 'Miscellaneous',
+          ref: document.getElementById('entryRef').value.trim()
+        };
+        if (id) {
+          const idx = state.entries.findIndex(x => x.id === id);
+          if (idx >= 0) state.entries[idx] = { ...state.entries[idx], ...item };
+          showToast('Entry updated.');
+        } else {
+          state.entries.push(item);
+          showToast('Entry added.');
+        }
+        saveState();
+        closeEntryModal();
+        renderAll();
+      });
+
+      document.getElementById('btnOpenTransfer').addEventListener('click', openTransferModal);
+      document.getElementById('btnCloseTransferModal').addEventListener('click', closeTransferModal);
+      document.getElementById('btnCancelTransfer').addEventListener('click', closeTransferModal);
+
+      document.getElementById('transferForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const dir = document.getElementById('transferDirection').value;
+        const date = document.getElementById('transferDate').value;
+        const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+        const note = document.getElementById('transferNote').value.trim();
+        const stamp = Date.now();
+        if (dir === 'bank_to_cash') {
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Bank', type: 'expense', amount, desc: note || 'Cash Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Cash Received from Bank (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+        } else {
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposited to Bank (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Bank', type: 'income', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+        }
+        saveState();
+        closeTransferModal();
+        renderAll();
+        showToast('Contra transfer recorded in both books.');
+      });
+
+      document.getElementById('ledgerTableBody').addEventListener('click', e => {
+        const editId = e.target.dataset.edit;
+        const delId = e.target.dataset.del;
+        if (editId) {
+          const item = state.entries.find(x => x.id === editId);
+          if (item) openEntryModal(item);
+        } else if (delId) {
+          state.entries = state.entries.filter(x => x.id !== delId);
+          saveState();
+          renderAll();
+          showToast('Entry deleted.');
+        }
+      });
+
+      ['filterSearch', 'filterType', 'filterCategory', 'filterMonth'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          renderLedger(activeTab === 'cashbook' ? 'Cash' : 'Bank');
+        });
+      });
+
+      document.getElementById('btnExportBookCsv').addEventListener('click', () => {
+        const book = activeTab === 'cashbook' ? 'Cash' : 'Bank';
+        exportCsv(computeBookLedger(book), `${book}Book_2026.csv`);
+      });
+
+      document.getElementById('btnExportAllCsv').addEventListener('click', () => {
+        exportCsv(state.entries, 'Income_Expenses_2026_Export.csv');
+      });
+
+      document.getElementById('btnExportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'BankBook_CashBook_2026_Backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('btnResetSample').addEventListener('click', () => {
+        state = JSON.parse(JSON.stringify(SAMPLE_DATA));
+        saveState();
+        renderAll();
+        showToast('Restored Income & Expenses - 2026 snapshot.');
+      });
+
+      document.getElementById('btnClearAll').addEventListener('click', () => {
+        state.entries = [];
+        saveState();
+        renderAll();
+        showToast('All entries cleared.');
+      });
+
+      document.getElementById('csvFileInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const rows = parseCsvText(ev.target.result);
+          if (rows.length < 2) {
+            showToast('CSV appears empty.');
+            return;
+          }
+          parsedCsvHeaders = rows[0];
+          parsedCsvRows = rows.slice(1);
+          const opts = parsedCsvHeaders.map((h, i) => `<option value="${i}">${escapeHtml(h || 'Column ' + (i + 1))}</option>`).join('');
+          const optNone = '<option value="-1">— None —</option>' + opts;
+          ['mapDate', 'mapDesc', 'mapCat', 'mapBook', 'mapIncome', 'mapExpense'].forEach(id => {
+            document.getElementById(id).innerHTML = (id === 'mapCat' || id === 'mapBook' || id === 'mapExpense') ? optNone : opts;
+          });
+          // Auto-guess columns
+          parsedCsvHeaders.forEach((h, i) => {
+            const l = h.toLowerCase();
+            if (l.includes('date')) document.getElementById('mapDate').value = i;
+            if (l.includes('desc') || l.includes('partic') || l.includes('item')) document.getElementById('mapDesc').value = i;
+            if (l.includes('cat')) document.getElementById('mapCat').value = i;
+            if (l.includes('book') || l.includes('mode') || l.includes('account')) document.getElementById('mapBook').value = i;
+            if (l.includes('inc') || l.includes('cred') || l.includes('dep')) document.getElementById('mapIncome').value = i;
+            if (l.includes('exp') || l.includes('deb') || l.includes('with')) document.getElementById('mapExpense').value = i;
+          });
+          document.getElementById('csvMappingBox').classList.remove('hidden');
+          showToast(`Loaded ${parsedCsvRows.length} rows. Review column mapping.`);
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btnConfirmImport').addEventListener('click', () => {
+        const iDate = parseInt(document.getElementById('mapDate').value, 10);
+        const iDesc = parseInt(document.getElementById('mapDesc').value, 10);
+        const iCat = parseInt(document.getElementById('mapCat').value, 10);
+        const iBook = parseInt(document.getElementById('mapBook').value, 10);
+        const iInc = parseInt(document.getElementById('mapIncome').value, 10);
+        const iExp = parseInt(document.getElementById('mapExpense').value, 10);
+
+        const imported = [];
+        parsedCsvRows.forEach((r, idx) => {
+          const incAmt = iInc >= 0 ? parseFloat(String(r[iInc] || '').replace(/[^0-9.-]/g, '')) || 0 : 0;
+          const expAmt = iExp >= 0 ? parseFloat(String(r[iExp] || '').replace(/[^0-9.-]/g, '')) || 0 : 0;
+          if (!incAmt && !expAmt) return;
+          const rawBook = iBook >= 0 ? String(r[iBook] || '').toLowerCase() : '';
+          const book = rawBook.includes('cash') ? 'Cash' : 'Bank';
+          const rawDate = String(r[iDate] || '').trim();
+          const date = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : '2026-01-01';
+          const desc = iDesc >= 0 ? (r[iDesc] || 'Imported Entry') : 'Imported Entry';
+          const category = iCat >= 0 ? (r[iCat] || 'Miscellaneous') : 'Miscellaneous';
+
+          if (incAmt > 0) imported.push({ id: 'imp_' + Date.now() + '_' + idx + 'i', date, book, type: 'income', amount: incAmt, desc, category, ref: rawBook || 'CSV' });
+          if (expAmt > 0) imported.push({ id: 'imp_' + Date.now() + '_' + idx + 'e', date, book, type: 'expense', amount: expAmt, desc, category, ref: rawBook || 'CSV' });
+        });
+
+        if (document.getElementById('csvReplaceMode').checked) {
+          state.entries = imported;
+        } else {
+          state.entries = state.entries.concat(imported);
+        }
+        saveState();
+        activeTab = 'dashboard';
+        renderAll();
+        showToast(`Imported ${imported.length} entries.`);
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
