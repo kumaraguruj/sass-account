@@ -1,13 +1,115 @@
 <!-- ... existing code ... -->
-      async function syncFromGoogleSheet(silent) {
-        const btn = document.getElementById('btnSyncSheet');
-        const icon = document.getElementById('syncIcon');
-        btn.disabled = true;
-        icon.classList.add('animate-spin');
-        let scriptErr = '';
-        try {
-          let bankRows, cashRows, bookColRows, chequeRows, balanceRows;
-          const scriptUrl = (state.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL || '').trim();
-          let pulledViaScript = false;
-          if (scriptUrl) {
-<!-- ... existing code ... -->
+      const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdsKqJiPy6D46nQQChB2Nc9RJy_igDTtyF1NTStHBEMfYMkrlKG3Jq3A5ph9WqHwG-/exec';
+      const SAMPLE_DATA = {
+        currency: 'INR',
+        openingBank: 537610.0,
+        openingCash: 0,
+        lastRefreshed: '18 Nov, 10:02 pm',
+        appsScriptUrl: DEFAULT_APPS_SCRIPT_URL,
+        autoSync: true,
+        entries: [
+          { id: 'bb_3_out', date: '2026-11-16', book: 'Bank', type: 'expense', amount: 55555, desc: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true },
+          { id: 'bb_4_out', date: '2026-11-16', book: 'Bank', type: 'expense', amount: 5200, desc: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true },
+          { id: 'bb_5_in', date: '2026-11-16', book: 'Bank', type: 'income', amount: 3500, desc: 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true }
+        ]
+      };
+// ... existing code ... -->
+      function normalizeSheetDate(raw) {
+        const t = String(raw || '').trim();
+        if (!t) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+        const m = t.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+        if (m) {
+          const d = m[1].padStart(2, '0');
+          const mo = m[2].padStart(2, '0');
+          const y = m[3].length === 2 ? '20' + m[3] : m[3];
+          return `${y}-${mo}-${d}`;
+        }
+        return '';
+      }
+// ... existing code ... -->
+          // Parse Bank Book: S No (0), Date (1), Particular (2), Purpose (3), Reference (4), Inward (5), Outward (6), Bank Balance (7)
+          for (let i = 1; i < bankRows.length; i++) {
+            const r = bankRows[i];
+            const rawDate = (r[1] || '').trim();
+            const part = (r[2] || '').trim();
+            const inw = toNum(r[5]);
+            const outw = toNum(r[6]);
+            if (part.toLowerCase() === 'opening balance') {
+              newOpeningBank = inw;
+              continue;
+            }
+            // Skip trailing formula-only balance rows where Date, Particular, Inward, and Outward are empty
+            if (!rawDate && !part && inw === 0 && outw === 0) continue;
+            if (inw === 0 && outw === 0) continue;
+            const dt = normalizeSheetDate(rawDate) || '2026-01-01';
+            const purp = (r[3] || '').trim() || 'Bank Transaction';
+            const ref = (r[4] || '').trim();
+            const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part) || /contra/i.test(purp);
+            if (inw > 0) syncedEntries.push({ id: `bb_${i + 1}_in`, date: dt, book: 'Bank', type: 'income', amount: inw, desc: part || 'Bank Receipt', category: purp, ref, isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `bb_${i + 1}_out`, date: dt, book: 'Bank', type: 'expense', amount: outw, desc: part || 'Bank Payment', category: purp, ref, isTransfer: isT });
+          }
+
+          // Parse Cash Book: S No (0), Date (1), Particular (2), Inward (3), Outward (4), Current Balance (5)
+          let newOpeningCash = 0;
+          for (let i = 1; i < cashRows.length; i++) {
+            const r = cashRows[i];
+            const rawDate = (r[1] || '').trim();
+            const part = (r[2] || '').trim();
+            const inw = toNum(r[3]);
+            const outw = toNum(r[4]);
+            if (part.toLowerCase() === 'opening balance') {
+              newOpeningCash = inw;
+              continue;
+            }
+            if (!rawDate && !part && inw === 0 && outw === 0) continue;
+            if (inw === 0 && outw === 0) continue;
+            const dt = normalizeSheetDate(rawDate) || '2026-01-01';
+            const isT = /bank withdrawal|cash deposit|withdrawn from bank|contra/i.test(part);
+            if (inw > 0) syncedEntries.push({ id: `cb_${i + 1}_in`, date: dt, book: 'Cash', type: 'income', amount: inw, desc: part || 'Cash Inward', category: isT ? 'Contra Transfer' : 'Cash Receipt', ref: 'Cash', isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `cb_${i + 1}_out`, date: dt, book: 'Cash', type: 'expense', amount: outw, desc: part || 'Cash Outward', category: isT ? 'Contra Transfer' : 'Cash Expense', ref: 'Cash', isTransfer: isT });
+          }
+// ... existing code ... -->
+      const APPS_SCRIPT_CODE = `function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  function readRows(name) {
+    var sh = ss.getSheetByName(name);
+    return sh ? sh.getDataRange().getDisplayValues() : [];
+  }
+  var payload = {
+    status: 'ok',
+    bankBook: readRows('Bank Book'),
+    cashBook: readRows('Cash Book'),
+    bookCollection: readRows('Book Collection'),
+    chequesIssued: readRows('Cheques Issued'),
+    balance: readRows('Balance')
+  };
+  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  function fmtDate(iso) {
+    var m = String(iso || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+    return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso || '');
+  }
+  function writeBook(sheetName, rows, startRow, cols) {
+    var sh = ss.getSheetByName(sheetName);
+    if (!sh) return;
+    var clearRows = Math.max(sh.getLastRow() - startRow + 1, rows.length, 1);
+    sh.getRange(startRow, 1, clearRows, cols).clearContent();
+    if (!rows.length) return;
+    var values = rows.map(function(r, i) {
+      if (cols === 7) return [i + 1, fmtDate(r.date), r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+      return [i + 1, fmtDate(r.date), r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+    });
+    sh.getRange(startRow, 1, values.length, cols).setValues(values);
+  }
+  var bankEntries = data.entries.filter(function(x) { return x.book === 'Bank'; });
+  var cashEntries = data.entries.filter(function(x) { return x.book === 'Cash'; });
+  writeBook('Bank Book', bankEntries, 3, 7);
+  writeBook('Cash Book', cashEntries, 2, 5);
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: data.entries.length })).setMimeType(ContentService.MimeType.JSON);
+}`;
+// ... existing code ... -->
