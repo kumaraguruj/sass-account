@@ -562,7 +562,7 @@
 
   <script>
     (function () {
-      const STORAGE_KEY = 'bankbook_cashbook_2026_v7_balance_synced';
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v8_live_sync';
       const CURRENCIES = {
         INR: { symbol: '₹', locale: 'en-IN' },
         USD: { symbol: '$', locale: 'en-US' },
@@ -599,11 +599,14 @@
         { head: 'Other Operating & Admin Expenses', a2024: 439078.5, b2025: 155000, a2025: 269929, status: 'Settled' }
       ];
 
+      const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdsKqJiPy6D46nQQChB2Nc9RJy_igDTtyF1NTStHBEMfYMkrlKG3Jq3A5ph9WqHwG-/exec';
       const SAMPLE_DATA = {
         currency: 'INR',
         openingBank: 537610.0,
         openingCash: 0,
-        lastRefreshed: '18 Nov, 07:20 pm',
+        lastRefreshed: '18 Nov, 09:40 pm',
+        appsScriptUrl: DEFAULT_APPS_SCRIPT_URL,
+        autoSync: true,
         entries: []
       };
 
@@ -619,7 +622,7 @@
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.entries)) return parsed;
+            if (parsed && Array.isArray(parsed.entries)) { if (!parsed.appsScriptUrl) parsed.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL; return parsed; }
           }
         } catch (e) { /* fallback */ }
         return JSON.parse(JSON.stringify(SAMPLE_DATA));
