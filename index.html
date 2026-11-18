@@ -438,7 +438,13 @@
               <input id="appsScriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-600" />
               <button id="btnSaveScriptUrl" type="button" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs font-medium transition">Save URL</button>
             </div>
-            <button id="btnCopyAppsScript" type="button" class="text-xs font-medium text-brand-700 hover:underline">Copy Apps Script code</button>
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <input id="autoSyncToggle" type="checkbox" checked class="rounded border-slate-300 text-brand-700" />
+                Auto-save to Google Sheet on every add / edit / delete
+              </label>
+              <button id="btnCopyAppsScript" type="button" class="text-xs font-medium text-brand-700 hover:underline">Copy Apps Script code</button>
+            </div>
           </div>
         </div>
       </div>
@@ -913,6 +919,8 @@
         document.getElementById('openCashInput').value = state.openingCash ?? 0;
         const urlIn = document.getElementById('appsScriptUrlInput');
         if (urlIn) urlIn.value = state.appsScriptUrl || '';
+        const autoEl = document.getElementById('autoSyncToggle');
+        if (autoEl) autoEl.checked = state.autoSync !== false;
 
         renderKPIs();
 
@@ -1178,29 +1186,38 @@
       const APPS_SCRIPT_CODE = `function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var bankSheet = ss.getSheetByName('Bank Book');
-  var cashSheet = ss.getSheetByName('Cash Book');
+  function writeBook(sheetName, rows, startRow, cols) {
+    var sh = ss.getSheetByName(sheetName);
+    if (!sh || !rows.length) return;
+    sh.getRange(startRow, 1, Math.max(rows.length, 1), cols).clearContent();
+    var values = rows.map(function(r, i) {
+      if (cols === 7) return [i + 1, r.date, r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+      return [i + 1, r.date, r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+    });
+    sh.getRange(startRow, 1, values.length, cols).setValues(values);
+  }
   var bankEntries = data.entries.filter(function(x) { return x.book === 'Bank'; });
   var cashEntries = data.entries.filter(function(x) { return x.book === 'Cash'; });
-  if (bankEntries.length) {
-    bankEntries.forEach(function(r, idx) {
-      bankSheet.appendRow([idx + 1, r.date, r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : '']);
-    });
-  }
-  if (cashEntries.length) {
-    cashEntries.forEach(function(r, idx) {
-      cashSheet.appendRow([idx + 1, r.date, r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : '']);
-    });
-  }
+  writeBook('Bank Book', bankEntries, 3, 7);
+  writeBook('Cash Book', cashEntries, 2, 5);
   return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: data.entries.length })).setMimeType(ContentService.MimeType.JSON);
 }`;
 
-      async function pushToGoogleSheet() {
+      function autoPushIfEnabled() {
+        const autoOn = state.autoSync !== false;
+        if (autoOn && (state.appsScriptUrl || '').trim()) {
+          pushToGoogleSheet(true);
+        }
+      }
+
+      async function pushToGoogleSheet(silent) {
         const url = (state.appsScriptUrl || '').trim();
         if (!url) {
-          activeTab = 'import';
-          renderAll();
-          showToast('Add your Apps Script Web App URL in Import / Export CSV to save directly to Google Sheets.');
+          if (!silent) {
+            activeTab = 'import';
+            renderAll();
+            showToast('Add your Apps Script Web App URL in Import / Export CSV to enable auto-save.');
+          }
           return;
         }
         try {
@@ -1210,13 +1227,18 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ openingBank: state.openingBank, openingCash: state.openingCash, entries: state.entries })
           });
-          showToast(`Sent ${state.entries.length} entries to Income & Expenses - 2026.`);
+          state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          saveState();
+          const lrEl = document.getElementById('lastRefreshedText');
+          if (lrEl) lrEl.textContent = 'Last refreshed: ' + state.lastRefreshed;
+          showToast(silent ? 'Auto-saved to Google Sheet.' : `Saved ${state.entries.length} entries to Income & Expenses - 2026.`);
         } catch (err) {
-          showToast('Could not reach Apps Script URL. Check deployment permissions.');
+          if (!silent) showToast('Could not reach Apps Script URL. Check deployment permissions.');
         }
       }
 
-      document.getElementById('btnPushSheet').addEventListener('click', pushToGoogleSheet);
+      document.getElementById('btnPushSheet').addEventListener('click', () => pushToGoogleSheet(false));
+      document.getElementById('autoSyncToggle').addEventListener('change', e => { state.autoSync = e.target.checked; saveState(); });
       document.getElementById('btnSaveScriptUrl').addEventListener('click', () => {
         state.appsScriptUrl = document.getElementById('appsScriptUrlInput').value.trim();
         saveState();
@@ -1301,6 +1323,7 @@
         saveState();
         closeEntryModal();
         renderAll();
+        autoPushIfEnabled();
       });
 
       document.getElementById('btnOpenTransfer').addEventListener('click', openTransferModal);
@@ -1324,6 +1347,7 @@
         saveState();
         closeTransferModal();
         renderAll();
+        autoPushIfEnabled();
         showToast('Contra transfer recorded in both books.');
       });
 
@@ -1338,6 +1362,7 @@
           saveState();
           renderAll();
           showToast('Entry deleted.');
+          autoPushIfEnabled();
         }
       });
 
