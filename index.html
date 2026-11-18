@@ -1065,13 +1065,34 @@
         btn.disabled = true;
         icon.classList.add('animate-spin');
         try {
-          const [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
-            fetchSheetCsv('Bank Book'),
-            fetchSheetCsv('Cash Book'),
-            fetchSheetCsv('Book Collection'),
-            fetchSheetCsv('Cheques Issued'),
-            fetchSheetCsv('Balance')
-          ]);
+          let bankRows, cashRows, bookColRows, chequeRows, balanceRows;
+          const scriptUrl = (state.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL || '').trim();
+          let pulledViaScript = false;
+          if (scriptUrl) {
+            try {
+              const res = await fetch(scriptUrl);
+              if (res.ok) {
+                const json = await res.json();
+                if (json && json.status === 'ok') {
+                  bankRows = json.bankBook || [];
+                  cashRows = json.cashBook || [];
+                  bookColRows = json.bookCollection || [];
+                  chequeRows = json.chequesIssued || [];
+                  balanceRows = json.balance || [];
+                  pulledViaScript = true;
+                }
+              }
+            } catch (e) { /* fall back to CSV endpoint */ }
+          }
+          if (!pulledViaScript) {
+            [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
+              fetchSheetCsv('Bank Book'),
+              fetchSheetCsv('Cash Book'),
+              fetchSheetCsv('Book Collection'),
+              fetchSheetCsv('Cheques Issued'),
+              fetchSheetCsv('Balance')
+            ]);
+          }
 
           let newOpeningBank = 0;
           const syncedEntries = [];
@@ -1190,7 +1211,24 @@
 
       document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
 
-      const APPS_SCRIPT_CODE = `function doPost(e) {
+      const APPS_SCRIPT_CODE = `function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  function readRows(name) {
+    var sh = ss.getSheetByName(name);
+    return sh ? sh.getDataRange().getDisplayValues() : [];
+  }
+  var payload = {
+    status: 'ok',
+    bankBook: readRows('Bank Book'),
+    cashBook: readRows('Cash Book'),
+    bookCollection: readRows('Book Collection'),
+    chequesIssued: readRows('Cheques Issued'),
+    balance: readRows('Balance')
+  };
+  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   function writeBook(sheetName, rows, startRow, cols) {
