@@ -1059,7 +1059,7 @@
         return parseCsvText(text);
       }
 
-      async function syncFromGoogleSheet() {
+      async function syncFromGoogleSheet(silent) {
         const btn = document.getElementById('btnSyncSheet');
         const icon = document.getElementById('syncIcon');
         btn.disabled = true;
@@ -1175,16 +1175,20 @@
           ];
 
           renderAll();
-          showToast(`Synced ${syncedEntries.length} entries from Google Sheet.`);
+          if (!silent || syncedEntries.length) {
+            showToast(`Synced ${syncedEntries.length} entries from Google Sheet.`);
+          }
         } catch (err) {
-          showToast('Live sync needs Sheet sharing set to "Anyone with the link (Viewer)" or use Import CSV.');
+          if (!silent) {
+            showToast('Live sync needs Sheet sharing set to "Anyone with the link (Viewer)" or use Import CSV.');
+          }
         } finally {
           btn.disabled = false;
           icon.classList.remove('animate-spin');
         }
       }
 
-      document.getElementById('btnSyncSheet').addEventListener('click', syncFromGoogleSheet);
+      document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
 
       const APPS_SCRIPT_CODE = `function doPost(e) {
   var data = JSON.parse(e.postData.contents);
@@ -1476,6 +1480,7 @@
       });
 
       renderAll();
+      syncFromGoogleSheet(true);
     })();
   </script>
 </body>
