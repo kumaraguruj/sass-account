@@ -1,19 +1,1452 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sri Ayyappa Swamy Seva Sangam — Income &amp; Expenses 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            display: ['Playfair Display', 'Georgia', 'serif']
+          },
+          colors: {
+            brand: {
+              900: '#0f2442',
+              800: '#1b365d',
+              700: '#2b4c7e',
+              600: '#405f90',
+              100: '#d9e3f9',
+              50: '#eef3fb'
+            },
+            slatex: {
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+              600: '#475569',
+              100: '#f1f5f9'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --navy-900: #0f2442;
+      --navy-800: #1b365d;
+      --navy-700: #2b4c7e;
+      --slate-600: #405f90;
+      --surface-bg: #f8fafc;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--surface-bg);
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .font-display {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Navigation Tabs */
+    .tab-strip {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .tab-strip::-webkit-scrollbar {
+      display: none;
+    }
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.425rem 0.875rem;
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      color: #e0f2fe;
+      transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tab-btn:hover {
+      background-color: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .tab-btn.is-active {
+      background-color: #ffffff;
+      color: var(--navy-900);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(15, 36, 66, 0.18);
+    }
+
+    /* Standardized Form Controls */
+    .form-control {
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid #cbd5e1;
+      background-color: #ffffff;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: #1e293b;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--navy-800);
+      box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.16);
+    }
+
+    /* Ledger & Cheque Tables */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .ledger-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: #f1f5f9;
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .ledger-table tbody tr {
+      transition: background-color 0.12s ease;
+    }
+    .ledger-table tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Status Badges */
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Modals & Toast */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 50;
+      padding: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-panel {
+      background-color: #ffffff;
+      border-radius: 0.875rem;
+      width: 100%;
+      max-width: 30rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.25rem;
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.22), 0 8px 10px -6px rgba(15, 23, 42, 0.15);
+    }
+
+    .toast-banner {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 60;
+      max-width: calc(100vw - 2.5rem);
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 0.65rem 1rem;
+      border-radius: 0.625rem;
+      font-size: 0.8125rem;
+      box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.25);
+    }
+
+    /* Custom Scrollbars */
+    .table-scroll::-webkit-scrollbar,
+    .modal-panel::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb,
+    .modal-panel::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    /* Print Stylesheet (A4 Clean Ledger Export) */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 12mm;
+      }
+      header, nav, #sampleBanner, button, select, input, #toast, .modal-backdrop {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      main {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      .shadow-sm, .shadow-xl {
+        box-shadow: none !important;
+      }
+      .border {
+        border-color: #cbd5e1 !important;
+      }
+      .ledger-table thead th {
+        position: static !important;
+        background-color: #e2e8f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation -->
+  <header class="bg-brand-800 text-white shadow-sm sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div>
+          <h1 class="font-display text-lg sm:text-xl font-bold tracking-normal leading-tight">Sri Ayyappa Swamy Seva Sangam</h1>
+          <p class="text-xs text-sky-200/80">Income &amp; Expenses — 2026 · BankBook, CashBook &amp; Executive Cockpit</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="sr-only" for="currencySelect">Currency</label>
+        <select id="currencySelect" class="bg-brand-900/70 border border-white/15 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+        </select>
+        <button id="btnOpenTransfer" type="button" class="px-3 py-1.5 rounded-lg bg-slatex-700 hover:bg-slatex-600 text-xs sm:text-sm font-medium transition border border-white/10">
+          Contra Transfer
+        </button>
+        <button id="btnOpenAdd" type="button" class="px-3.5 py-1.5 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs sm:text-sm font-semibold transition shadow-sm">
+          + New Entry
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-navigation Tabs -->
+    <nav class="bg-brand-900/60 border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-2 py-1.5">
+        <div class="flex overflow-x-auto tab-strip gap-1" id="navTabs">
+          <button data-tab="dashboard" type="button" class="tab-btn is-active">
+            Executive Dashboard
+          </button>
+          <button data-tab="bankbook" type="button" class="tab-btn">
+            BankBook
+          </button>
+          <button data-tab="cashbook" type="button" class="tab-btn">
+            CashBook
+          </button>
+          <button data-tab="cheques" type="button" class="tab-btn">
+            Cheques &amp; Clearance
+          </button>
+          <button data-tab="import" type="button" class="tab-btn">
+            Import / Export CSV
+          </button>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="lastRefreshedText" class="text-[11px] text-sky-200/85 whitespace-nowrap">Last refreshed: —</span>
+          <button id="btnSyncSheet" type="button" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet" class="w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+            <span id="syncIcon" class="text-base leading-none">↻</span>
+          </button>
+          <button id="btnPushSheet" type="button" title="Save data to Google Sheet" aria-label="Save data to Google Sheet" class="w-8 h-8 rounded-md bg-sky-400/20 hover:bg-sky-400/35 text-sky-100 flex items-center justify-center transition border border-sky-300/25">
+            <span class="text-base leading-none">↑</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Synced Sheet Banner -->
+  <div id="sampleBanner" class="bg-sky-50 border-b border-sky-200 text-slate-900 text-xs sm:text-sm px-4 py-2">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <span id="bannerSummaryText">Synced with <strong>Income &amp; Expenses - 2026</strong>.</span>
+      <button id="btnDismissBanner" type="button" class="text-brand-700 hover:text-brand-900 font-medium underline text-xs">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6">
+
+    <!-- TAB: EXECUTIVE DASHBOARD -->
+    <section id="view-dashboard" class="tab-view space-y-6">
+
+      <!-- 6 Executive KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm lg:col-span-2">
+          <p class="text-[11px] font-medium text-sky-200 uppercase tracking-wider">Combined Liquidity</p>
+          <p id="kpiTotal" class="mt-1.5 text-xl sm:text-2xl font-bold tabular-nums">₹5,37,610</p>
+          <p id="kpiTotalSub" class="mt-1 text-[11px] text-sky-200">Bank: ₹5,37,610 | Cash: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cash at Bank</p>
+          <p id="kpiBank" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹5,37,610</p>
+          <p id="kpiBankSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹5,37,610 | Out: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cash in Hand</p>
+          <p id="kpiCash" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹0</p>
+          <p id="kpiCashSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹0 | Outward: ₹0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Net Period Flow</p>
+          <p id="kpiNetFlow" class="mt-1.5 text-xl font-bold text-rose-700 tabular-nums">-₹57,255</p>
+          <p id="kpiNetFlowSub" class="mt-1 text-[11px] text-slate-500">In: ₹3,500 | Out: ₹60,755</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cheques Cleared</p>
+          <p id="kpiChequesCleared" class="mt-1.5 text-xl font-bold text-teal-700 tabular-nums">₹0</p>
+          <p id="kpiChequesSub" class="mt-1 text-[11px] text-slate-500">0 Cleared | 0 Pending</p>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Monthly Inward vs. Outward (CashFlow)</h2>
+            <span class="text-xs text-slate-500">Live BankBook + CashBook</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Transaction Volume by Category</h2>
+            <span class="text-xs text-slate-500">All Time</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Collection & Cheques Issued Audit + Cheque Clearance Summary -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Book Collection &amp; Cheques Issued Audit</h2>
+            <span id="auditHeaderSub" class="text-xs text-slate-500">60 Books · 0 Cheques</span>
+          </div>
+          <div class="table-scroll border border-slate-200 rounded-lg">
+            <table class="ledger-table text-xs sm:text-sm">
+              <thead class="border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-2">Collection / Cheque Head</th>
+                  <th class="py-2.5 px-2">Books / Count</th>
+                  <th class="py-2.5 px-2 text-right">Amount</th>
+                  <th class="py-2.5 px-2 text-right">Audit Status</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-sm font-semibold text-slatex-900">Cheque Clearance Summary</h2>
+            <button id="btnOpenChequesDash" type="button" class="text-[11px] font-medium text-brand-700 hover:underline">Manage Cheques →</button>
+          </div>
+          <div class="table-scroll border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-[11px] sm:text-xs">
+              <thead class="bg-slate-100 text-slate-600 uppercase border-b border-slate-200">
+                <tr>
+                  <th class="py-2 px-2">Status</th>
+                  <th class="py-2 px-2 text-right">Count</th>
+                  <th class="py-2 px-2 text-right">Amount</th>
+                  <th class="py-2 px-2 text-right">Bank Impact</th>
+                </tr>
+              </thead>
+              <tbody id="dashChequeSummaryBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tally vs Bank Reconciliation + Opening Balances -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Tally vs. Bank Reconciliation</h2>
+            <span class="text-xs text-slate-500">From Balance Tab</span>
+          </div>
+          <div class="table-scroll border border-slate-200 rounded-lg">
+            <table class="ledger-table text-xs sm:text-sm">
+              <thead class="border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-2">Reconciliation Item</th>
+                  <th class="py-2.5 px-2 text-right">Bank Book</th>
+                  <th class="py-2.5 px-2 text-right">Tally ERP</th>
+                  <th class="py-2.5 px-2 text-right">Variance</th>
+                </tr>
+              </thead>
+              <tbody id="tallyReconBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Opening Balances</h2>
+          <p class="text-xs text-slate-500">Adjust starting Bank &amp; Cash balances for 2026.</p>
+          <div class="space-y-3">
+            <div>
+              <label for="openBankInput" class="block text-xs font-medium text-slate-600 mb-1">Bank Opening Balance</label>
+              <input id="openBankInput" type="number" step="0.01" class="form-control" />
+            </div>
+            <div>
+              <label for="openCashInput" class="block text-xs font-medium text-slate-600 mb-1">Cash Opening Balance</label>
+              <input id="openCashInput" type="number" step="0.01" class="form-control" />
+            </div>
+            <button id="btnSaveOpening" type="button" class="w-full py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium transition">
+              Update Opening Balances
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Recent Ledger Activity</h2>
+          <button id="btnViewAllBank" type="button" class="text-xs font-medium text-brand-700 hover:underline">Open BankBook →</button>
+        </div>
+        <div class="table-scroll border border-slate-200 rounded-lg">
+          <table class="ledger-table text-xs sm:text-sm">
+            <thead class="border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-2">Date</th>
+                <th class="py-2.5 px-2">Book</th>
+                <th class="py-2.5 px-2">Particulars</th>
+                <th class="py-2.5 px-2">Purpose / Category</th>
+                <th class="py-2.5 px-2 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="recentTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB: BANKBOOK & CASHBOOK -->
+    <section id="view-ledger" class="tab-view hidden space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="ledgerTitle" class="text-base sm:text-lg font-semibold text-slatex-900">BankBook Ledger</h2>
+            <p id="ledgerSubtitle" class="text-xs text-slate-500">Chronological transaction register</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnExportBookCsv" type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs sm:text-sm font-medium text-slate-700 transition">
+              Export CSV
+            </button>
+            <button id="btnAddToBook" type="button" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs sm:text-sm font-medium transition">
+              + Add Entry
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <input id="filterSearch" type="text" placeholder="Search particulars, reference..." class="form-control" />
+          <select id="filterType" class="form-control">
+            <option value="all">All Types (Inward &amp; Outward)</option>
+            <option value="income">Inward / Credit (+)</option>
+            <option value="expense">Outward / Debit (-)</option>
+            <option value="transfer">Contra Transfer</option>
+          </select>
+          <select id="filterCategory" class="form-control">
+            <option value="all">All Categories</option>
+          </select>
+          <select id="filterMonth" class="form-control">
+            <option value="all">All Months</option>
+          </select>
+        </div>
+
+        <div class="table-scroll border border-slate-200 rounded-lg">
+          <table class="ledger-table text-xs sm:text-sm">
+            <thead class="border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3 min-w-[200px]">Particular</th>
+                <th class="py-2.5 px-3">Purpose / Category</th>
+                <th class="py-2.5 px-3">Reference</th>
+                <th class="py-2.5 px-3 text-right">Inward (+)</th>
+                <th class="py-2.5 px-3 text-right">Outward (-)</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot id="ledgerTableFoot" class="bg-slate-50 font-semibold border-t border-slate-200 text-xs sm:text-sm"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: CHEQUES & CLEARANCE -->
+    <section id="view-cheques" class="tab-view hidden space-y-4">
+      <!-- 4 Cheque KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-sky-200 uppercase tracking-wider">Total Cheques Issued</p>
+          <p id="chqKpiTotal" class="mt-1.5 text-xl font-bold tabular-nums">₹0</p>
+          <p id="chqKpiTotalSub" class="mt-1 text-[11px] text-sky-200">0 Cheques Recorded</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cleared Amount &amp; Count</p>
+          <p id="chqKpiCleared" class="mt-1.5 text-xl font-bold text-teal-700 tabular-nums">₹0</p>
+          <p id="chqKpiClearedSub" class="mt-1 text-[11px] text-slate-500">0 Cleared</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending Clearance</p>
+          <p id="chqKpiPending" class="mt-1.5 text-xl font-bold text-amber-700 tabular-nums">₹0</p>
+          <p id="chqKpiPendingSub" class="mt-1 text-[11px] text-slate-500">0 Uncleared / In-Transit</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Effective Cleared Bank Bal</p>
+          <p id="chqKpiEffectiveBank" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹4,80,355</p>
+          <p class="mt-1 text-[11px] text-slate-500">Bank Book + Uncleared Float</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-semibold text-slatex-900">Cheques Issued &amp; Clearance Register</h2>
+            <p class="text-xs text-slate-500">Synced with <strong>Cheques Issued</strong> tab · One-click clearance updates</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnExportChequesCsv" type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs sm:text-sm font-medium text-slate-700 transition">
+              Export CSV
+            </button>
+            <button id="btnOpenChequeModal" type="button" class="px-3.5 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs sm:text-sm font-medium transition">
+              + Issue Cheque
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="chqFilterSearch" type="text" placeholder="Search cheque #, payee, purpose..." class="form-control" />
+          <select id="chqFilterStatus" class="form-control">
+            <option value="all">All Clearance Statuses</option>
+            <option value="Cleared">Cleared</option>
+            <option value="Pending">Pending / Uncleared</option>
+            <option value="Cancelled">Cancelled / Bounced</option>
+          </select>
+          <select id="chqFilterMonth" class="form-control">
+            <option value="all">All Issue Months</option>
+          </select>
+        </div>
+
+        <div class="table-scroll border border-slate-200 rounded-lg">
+          <table class="ledger-table text-xs sm:text-sm">
+            <thead class="border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Issue Date</th>
+                <th class="py-2.5 px-3">Cheque #</th>
+                <th class="py-2.5 px-3 min-w-[180px]">Payee / Particular</th>
+                <th class="py-2.5 px-3">Purpose</th>
+                <th class="py-2.5 px-3 text-right">Amount</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">Clearance Date</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="chequesTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot id="chequesTableFoot" class="bg-slate-50 font-semibold border-t border-slate-200 text-xs sm:text-sm"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: IMPORT / EXPORT CSV -->
+    <section id="view-import" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-base font-semibold text-slatex-900">Import from Google Sheets (CSV)</h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            In Google Sheets, open <strong>Income &amp; Expenses - 2026</strong> and choose <em>File → Download → Comma Separated Values (.csv)</em>, then upload it here.
+          </p>
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center space-y-3 bg-slate-50">
+            <input id="csvFileInput" type="file" accept=".csv" class="block w-full text-xs sm:text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-800 file:text-white hover:file:bg-brand-700 cursor-pointer" />
+            <p class="text-xs text-slate-500">Supports Date, Particular, Purpose/Category, Reference/Book, Inward, and Outward columns.</p>
+          </div>
+
+          <div id="csvMappingBox" class="hidden space-y-3 pt-2 border-t border-slate-200">
+            <h3 class="text-sm font-semibold text-slatex-900">Map CSV Columns</h3>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapDate">Date</label>
+                <select id="mapDate" class="form-control text-xs py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapDesc">Particular</label>
+                <select id="mapDesc" class="form-control text-xs py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapCat">Purpose / Category</label>
+                <select id="mapCat" class="form-control text-xs py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapBook">Book / Mode (Bank or Cash)</label>
+                <select id="mapBook" class="form-control text-xs py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapIncome">Inward / Credit Column</label>
+                <select id="mapIncome" class="form-control text-xs py-1.5"></select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1" for="mapExpense">Outward / Debit Column</label>
+                <select id="mapExpense" class="form-control text-xs py-1.5"></select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+              <label class="flex items-center gap-2 text-xs text-slate-700">
+                <input id="csvReplaceMode" type="checkbox" checked class="rounded border-slate-300 text-brand-700" />
+                Replace current entries on import
+              </label>
+            </div>
+            <button id="btnConfirmImport" type="button" class="w-full py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium transition">
+              Import Rows
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <h2 class="text-base font-semibold text-slatex-900">Export &amp; Data Management</h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Download your combined ledger to paste back into Google Sheets, or back up your state as JSON.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="btnExportAllCsv" type="button" class="py-2.5 px-4 rounded-lg bg-slatex-800 hover:bg-slatex-700 text-white text-xs sm:text-sm font-medium transition">
+              Export All as CSV
+            </button>
+            <button id="btnExportJson" type="button" class="py-2.5 px-4 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium transition">
+              Backup JSON
+            </button>
+            <button id="btnResetSample" type="button" class="py-2.5 px-4 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs sm:text-sm font-medium transition">
+              Reset to Sheet Snapshot
+            </button>
+            <button id="btnClearAll" type="button" class="py-2.5 px-4 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs sm:text-sm font-medium transition">
+              Clear All Entries
+            </button>
+          </div>
+
+          <div id="appsScriptCard" class="pt-4 border-t border-slate-200 space-y-2.5">
+            <h3 class="text-sm font-semibold text-slatex-900">Save Directly to Google Sheet (Apps Script)</h3>
+            <p class="text-xs text-slate-600">
+              In <strong>Income &amp; Expenses - 2026</strong>, open <em>Extensions → Apps Script</em>, paste the sync script, deploy as a Web App (<em>Anyone</em>), and save the URL below.
+            </p>
+            <div class="flex gap-2">
+              <input id="appsScriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="form-control text-xs py-1.5 flex-1" />
+              <button id="btnSaveScriptUrl" type="button" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs font-medium transition shrink-0">Save URL</button>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <input id="autoSyncToggle" type="checkbox" checked class="rounded border-slate-300 text-brand-700" />
+                Auto-save to Google Sheet on every add / edit / delete
+              </label>
+              <button id="btnCopyAppsScript" type="button" class="text-xs font-medium text-brand-700 hover:underline">Copy Apps Script code</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Add / Edit Transaction -->
+  <div id="entryModal" class="modal-backdrop hidden">
+    <div class="modal-panel space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="entryModalTitle" class="text-base font-semibold text-slatex-900">New Ledger Entry</h3>
+        <button id="btnCloseEntryModal" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-lg font-bold">&times;</button>
+      </div>
+      <form id="entryForm" class="space-y-3">
+        <input type="hidden" id="entryId" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryDate" class="block text-xs font-medium text-slate-600 mb-1">Date</label>
+            <input id="entryDate" type="date" required class="form-control" />
+          </div>
+          <div>
+            <label for="entryBook" class="block text-xs font-medium text-slate-600 mb-1">Book</label>
+            <select id="entryBook" class="form-control">
+              <option value="Bank">BankBook</option>
+              <option value="Cash">CashBook</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryType" class="block text-xs font-medium text-slate-600 mb-1">Type</label>
+            <select id="entryType" class="form-control">
+              <option value="income">Inward / Credit (+)</option>
+              <option value="expense">Outward / Debit (-)</option>
+            </select>
+          </div>
+          <div>
+            <label for="entryAmount" class="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+            <input id="entryAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="form-control" />
+          </div>
+        </div>
+        <div>
+          <label for="entryDesc" class="block text-xs font-medium text-slate-600 mb-1">Particular</label>
+          <input id="entryDesc" type="text" required placeholder="e.g., Book Collection Deposit, Pandal Advance" class="form-control" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="entryCat" class="block text-xs font-medium text-slate-600 mb-1">Purpose / Category</label>
+            <input id="entryCat" type="text" list="categorySuggestions" required placeholder="e.g., Pandal, Pooja Party" class="form-control" />
+            <datalist id="categorySuggestions">
+              <option value="Book Collection"></option>
+              <option value="Pandal"></option>
+              <option value="Flower"></option>
+              <option value="Electrical"></option>
+              <option value="Cooking, Prasadam &amp; Annadhanam"></option>
+              <option value="Pooja Party"></option>
+              <option value="Music, Nadaswaram &amp; Artists"></option>
+              <option value="Balan Cleaning"></option>
+              <option value="Procession, Crackers &amp; Gifts"></option>
+              <option value="Other Operating &amp; Admin"></option>
+            </datalist>
+          </div>
+          <div>
+            <label for="entryRef" class="block text-xs font-medium text-slate-600 mb-1">Reference</label>
+            <input id="entryRef" type="text" placeholder="NEFT, Cheque #, Cash..." class="form-control" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelEntry" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Contra Transfer -->
+  <div id="transferModal" class="modal-backdrop hidden">
+    <div class="modal-panel space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-slatex-900">Contra Transfer (Bank ↔ Cash)</h3>
+        <button id="btnCloseTransferModal" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-lg font-bold">&times;</button>
+      </div>
+      <form id="transferForm" class="space-y-3">
+        <div>
+          <label for="transferDirection" class="block text-xs font-medium text-slate-600 mb-1">Direction</label>
+          <select id="transferDirection" class="form-control">
+            <option value="bank_to_cash">Bank → Cash (Bank Withdrawal)</option>
+            <option value="cash_to_bank">Cash → Bank (Cash Deposit)</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="transferDate" class="block text-xs font-medium text-slate-600 mb-1">Date</label>
+            <input id="transferDate" type="date" required class="form-control" />
+          </div>
+          <div>
+            <label for="transferAmount" class="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+            <input id="transferAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="form-control" />
+          </div>
+        </div>
+        <div>
+          <label for="transferNote" class="block text-xs font-medium text-slate-600 mb-1">Note</label>
+          <input id="transferNote" type="text" placeholder="e.g., Bank Withdrawal for Cash Book" class="form-control" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelTransfer" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Record Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Cheque -->
+  <div id="chequeModal" class="modal-backdrop hidden">
+    <div class="modal-panel space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="chequeModalTitle" class="text-base font-semibold text-slatex-900">Issue New Cheque</h3>
+        <button id="btnCloseChequeModal" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-lg font-bold">&times;</button>
+      </div>
+      <form id="chequeForm" class="space-y-3">
+        <input type="hidden" id="chequeId" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="chequeDate" class="block text-xs font-medium text-slate-600 mb-1">Issue Date</label>
+            <input id="chequeDate" type="date" required class="form-control" />
+          </div>
+          <div>
+            <label for="chequeNo" class="block text-xs font-medium text-slate-600 mb-1">Cheque Number</label>
+            <input id="chequeNo" type="text" required placeholder="e.g., 451021" class="form-control" />
+          </div>
+        </div>
+        <div>
+          <label for="chequePayee" class="block text-xs font-medium text-slate-600 mb-1">Payee / Particular</label>
+          <input id="chequePayee" type="text" required placeholder="e.g., Sri Balaji Pandal Works" class="form-control" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="chequePurpose" class="block text-xs font-medium text-slate-600 mb-1">Purpose / Category</label>
+            <input id="chequePurpose" type="text" list="categorySuggestions" required placeholder="e.g., Pandal" class="form-control" />
+          </div>
+          <div>
+            <label for="chequeAmount" class="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+            <input id="chequeAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="form-control" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="chequeStatus" class="block text-xs font-medium text-slate-600 mb-1">Clearance Status</label>
+            <select id="chequeStatus" class="form-control">
+              <option value="Pending">Pending</option>
+              <option value="Cleared">Cleared</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label for="chequeClearDate" class="block text-xs font-medium text-slate-600 mb-1">Clearance Date</label>
+            <input id="chequeClearDate" type="date" class="form-control" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelCheque" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Save Cheque</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast-banner hidden"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v12_clean_header';
+      const SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
       const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdsKqJiPy6D46nQQChB2Nc9RJy_igDTtyF1NTStHBEMfYMkrlKG3Jq3A5ph9WqHwG-/exec';
+
+      const CURRENCIES = {
+        INR: { symbol: '₹', locale: 'en-IN' },
+        USD: { symbol: '$', locale: 'en-US' },
+        EUR: { symbol: '€', locale: 'de-DE' },
+        GBP: { symbol: '£', locale: 'en-GB' }
+      };
+
+      // Grounded Dashboard Sheet Reference Data (Income & Expenses - 2026)
+      let tallyRecon = [
+        { item: 'Total Expenses (Outward)', bank: 0, tally: 0, variance: 0 },
+        { item: 'Total Income (Inward)', bank: 0, tally: 0, variance: 0 },
+        { item: 'Receipts / Reversals', bank: 0, tally: 0, variance: 0 },
+        { item: 'Secondary Adjustments', bank: 0, tally: 0, variance: 0 },
+        { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: 0, isTotal: true }
+      ];
+
+      let auditRows = [
+        { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: 0, status: 'Awaiting Entries' },
+        { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: 0, status: 'Awaiting Entries' },
+        { head: 'Total Book Collections', count: 'All 60 Books', amount: 0, status: 'Reset for 2026', isBold: true },
+        { head: 'Cheques Issued — Cleared', count: '0 Cleared', amount: 0, status: 'Nil' },
+        { head: 'Cheques Issued — Pending', count: '0 Pending', amount: 0, status: 'Nil Pending' }
+      ];
+
       const SAMPLE_DATA = {
         currency: 'INR',
         openingBank: 537610.0,
         openingCash: 0,
-        lastRefreshed: '18 Nov, 10:02 pm',
+        lastRefreshed: '18 Nov, 10:15 pm',
         appsScriptUrl: DEFAULT_APPS_SCRIPT_URL,
         autoSync: true,
         entries: [
           { id: 'bb_3_out', date: '2026-11-16', book: 'Bank', type: 'expense', amount: 55555, desc: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true },
           { id: 'bb_4_out', date: '2026-11-16', book: 'Bank', type: 'expense', amount: 5200, desc: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true },
           { id: 'bb_5_in', date: '2026-11-16', book: 'Bank', type: 'income', amount: 3500, desc: 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true }
-        ]
+        ],
+        cheques: []
       };
-// ... existing code ... -->
+
+      let state = loadState();
+      let activeTab = 'dashboard';
+      let monthlyChartInstance = null;
+      let categoryChartInstance = null;
+      let parsedCsvRows = [];
+      let parsedCsvHeaders = [];
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.entries)) {
+              if (!parsed.appsScriptUrl) parsed.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL;
+              if (!Array.isArray(parsed.cheques)) parsed.cheques = [];
+              return parsed;
+            }
+          }
+        } catch (e) { /* fallback to snapshot */ }
+        return JSON.parse(JSON.stringify(SAMPLE_DATA));
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) { /* ignore quota errors */ }
+      }
+
+      function fmtMoney(val) {
+        if (val === null || val === undefined) return '—';
+        const cfg = CURRENCIES[state.currency] || CURRENCIES.INR;
+        const num = Number(val) || 0;
+        const sign = num < 0 ? '-' : '';
+        return sign + cfg.symbol + Math.abs(num).toLocaleString(cfg.locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => el.classList.add('hidden'), 3200);
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      }
+
+      function computeBookLedger(bookName) {
+        const opening = bookName === 'Bank' ? Number(state.openingBank || 0) : Number(state.openingCash || 0);
+        const rows = state.entries
+          .filter(e => e.book === bookName)
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+        let running = opening;
+        return rows.map(r => {
+          const amt = Number(r.amount) || 0;
+          running += r.type === 'income' ? amt : -amt;
+          return { ...r, balance: running };
+        });
+      }
+
+      function computeChequeStats() {
+        const list = Array.isArray(state.cheques) ? state.cheques : [];
+        const cleared = list.filter(c => c.status === 'Cleared');
+        const pending = list.filter(c => c.status === 'Pending');
+        const cancelled = list.filter(c => c.status === 'Cancelled');
+        const totalAmt = list.filter(c => c.status !== 'Cancelled').reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        const clearedAmt = cleared.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        const pendingAmt = pending.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        const cancelledAmt = cancelled.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        return {
+          totalCount: list.length,
+          totalAmt,
+          clearedCount: cleared.length,
+          clearedAmt,
+          pendingCount: pending.length,
+          pendingAmt,
+          cancelledCount: cancelled.length,
+          cancelledAmt
+        };
+      }
+
+      function renderKPIs() {
+        const bankRows = computeBookLedger('Bank');
+        const cashRows = computeBookLedger('Cash');
+        const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
+        const cashBal = cashRows.length ? cashRows[cashRows.length - 1].balance : Number(state.openingCash || 0);
+
+        const bankInward = Number(state.openingBank || 0) + bankRows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const bankOutward = bankRows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const cashInward = Number(state.openingCash || 0) + cashRows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const cashOutward = cashRows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+        const totalTxIn = state.entries.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const totalTxOut = state.entries.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const netFlow = totalTxIn - totalTxOut;
+
+        const chq = computeChequeStats();
+
+        document.getElementById('kpiTotal').textContent = fmtMoney(bankBal + cashBal);
+        document.getElementById('kpiTotalSub').textContent = `Bank: ${fmtMoney(bankBal)} | Cash: ${fmtMoney(cashBal)}`;
+        document.getElementById('kpiBank').textContent = fmtMoney(bankBal);
+        document.getElementById('kpiBankSub').textContent = `Inward: ${fmtMoney(bankInward)} | Out: ${fmtMoney(bankOutward)}`;
+        document.getElementById('kpiCash').textContent = fmtMoney(cashBal);
+        document.getElementById('kpiCashSub').textContent = `Inward: ${fmtMoney(cashInward)} | Outward: ${fmtMoney(cashOutward)}`;
+
+        const netEl = document.getElementById('kpiNetFlow');
+        netEl.textContent = (netFlow > 0 ? '+' : '') + fmtMoney(netFlow);
+        netEl.className = `mt-1.5 text-xl font-bold tabular-nums ${netFlow >= 0 ? 'text-teal-700' : 'text-rose-700'}`;
+        document.getElementById('kpiNetFlowSub').textContent = `In: ${fmtMoney(totalTxIn)} | Out: ${fmtMoney(totalTxOut)}`;
+
+        document.getElementById('kpiChequesCleared').textContent = fmtMoney(chq.clearedAmt);
+        document.getElementById('kpiChequesSub').textContent = `${chq.clearedCount} Cleared | ${chq.pendingCount} Pending`;
+
+        const bannerEl = document.getElementById('bannerSummaryText');
+        if (bannerEl) {
+          bannerEl.innerHTML = `Synced with <strong>Income &amp; Expenses - 2026</strong> — Combined Liquidity ${fmtMoney(bankBal + cashBal)} · Cash at Bank ${fmtMoney(bankBal)} · Cash in Hand ${fmtMoney(cashBal)} · Cheques Cleared ${fmtMoney(chq.clearedAmt)}.`;
+        }
+      }
+
+      function renderCharts() {
+        const monthSet = new Set(['2026-11']);
+        state.entries.forEach(e => {
+          const m = (e.date || '').slice(0, 7);
+          if (m) monthSet.add(m);
+        });
+        const allMonths = Array.from(monthSet).sort();
+        const inData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0));
+        const outData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'expense').reduce((s, e) => s + (Number(e.amount) || 0), 0));
+
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        if (monthlyChartInstance) monthlyChartInstance.destroy();
+        monthlyChartInstance = new Chart(ctxMonthly, {
+          type: 'bar',
+          data: {
+            labels: allMonths,
+            datasets: [
+              { label: 'Inward (+)', data: inData, backgroundColor: '#2b4c7e', borderRadius: 5 },
+              { label: 'Outward (-)', data: outData, backgroundColor: '#64748b', borderRadius: 5 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+
+        const catTotals = {};
+        state.entries.forEach(e => {
+          const cat = e.category || 'Miscellaneous';
+          catTotals[cat] = (catTotals[cat] || 0) + (Number(e.amount) || 0);
+        });
+        const catLabels = Object.keys(catTotals).length ? Object.keys(catTotals) : ['No Entries Yet'];
+        const catValues = Object.keys(catTotals).length ? Object.values(catTotals) : [0];
+
+        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        if (categoryChartInstance) categoryChartInstance.destroy();
+        categoryChartInstance = new Chart(ctxCategory, {
+          type: 'bar',
+          data: {
+            labels: catLabels,
+            datasets: [
+              { label: 'Total Volume', data: catValues, backgroundColor: '#1b365d', borderRadius: 5 }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { beginAtZero: true } }
+          }
+        });
+      }
+
+      function renderSheetDashboardTables() {
+        const chq = computeChequeStats();
+        const bankRows = computeBookLedger('Bank');
+        const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
+        const effectiveClearedBal = bankBal + chq.pendingAmt;
+
+        document.getElementById('dashChequeSummaryBody').innerHTML = `
+          <tr>
+            <td class="py-2.5 px-2 font-medium text-teal-800">Cleared Cheques</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${chq.clearedCount}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums font-medium text-teal-700">${fmtMoney(chq.clearedAmt)}</td>
+            <td class="py-2.5 px-2 text-right text-xs text-slate-500">Debited in Bank</td>
+          </tr>
+          <tr>
+            <td class="py-2.5 px-2 font-medium text-amber-800">Pending / Uncleared</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${chq.pendingCount}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums font-medium text-amber-700">${fmtMoney(chq.pendingAmt)}</td>
+            <td class="py-2.5 px-2 text-right text-xs text-amber-700">+${fmtMoney(chq.pendingAmt)} Float</td>
+          </tr>
+          <tr>
+            <td class="py-2.5 px-2 text-slate-600">Cancelled / Bounced</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-600">${chq.cancelledCount}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-500">${fmtMoney(chq.cancelledAmt)}</td>
+            <td class="py-2.5 px-2 text-right text-xs text-slate-400">No Bank Impact</td>
+          </tr>
+          <tr class="bg-slate-50 font-semibold border-t border-slate-200">
+            <td class="py-2.5 px-2 text-slatex-900">Effective Cleared Bank Bal</td>
+            <td class="py-2.5 px-2 text-right tabular-nums">${chq.totalCount}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums">${fmtMoney(chq.totalAmt)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-brand-800">${fmtMoney(effectiveClearedBal)}</td>
+          </tr>
+        `;
+
+        document.getElementById('tallyReconBody').innerHTML = tallyRecon.map(r => `
+          <tr class="${r.isTotal ? 'bg-slate-50 font-semibold border-t border-slate-200' : ''}">
+            <td class="py-2.5 px-2 text-slate-800">${escapeHtml(r.item)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${fmtMoney(r.bank)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${fmtMoney(r.tally)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums font-medium ${r.variance < 0 ? 'text-rose-700' : 'text-teal-700'}">${fmtMoney(r.variance)}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('auditTableBody').innerHTML = auditRows.map(r => `
+          <tr class="${r.isBold ? 'bg-slate-50 font-semibold' : ''}">
+            <td class="py-2.5 px-2 text-slate-800">${escapeHtml(r.head)}</td>
+            <td class="py-2.5 px-2 text-slate-600">${escapeHtml(r.count)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slatex-900">${fmtMoney(r.amount)}</td>
+            <td class="py-2.5 px-2 text-right"><span class="badge-pill bg-sky-50 text-brand-800">${escapeHtml(r.status)}</span></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderDashboardRecent() {
+        const tbody = document.getElementById('recentTableBody');
+        const sorted = state.entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+        if (!sorted.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No ledger transactions yet. Click "+ New Entry" or import a CSV to add transactions.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = sorted.map(e => `
+          <tr>
+            <td class="py-2.5 px-2 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(e.date)}</td>
+            <td class="py-2.5 px-2"><span class="badge-pill ${e.book === 'Bank' ? 'bg-slate-100 text-slate-700' : 'bg-sky-50 text-brand-800'}">${escapeHtml(e.book)}</span></td>
+            <td class="py-2.5 px-2 font-medium text-slate-800">${escapeHtml(e.desc)}</td>
+            <td class="py-2.5 px-2 text-slate-500">${escapeHtml(e.category)}</td>
+            <td class="py-2.5 px-2 text-right font-semibold tabular-nums whitespace-nowrap ${e.type === 'income' ? 'text-teal-700' : 'text-rose-700'}">
+              ${e.type === 'income' ? '+' : '-'}${fmtMoney(e.amount)}
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      function populateLedgerFilters(bookName) {
+        const entries = state.entries.filter(e => e.book === bookName);
+        const cats = Array.from(new Set(entries.map(e => e.category).filter(Boolean))).sort();
+        const catSel = document.getElementById('filterCategory');
+        const prevCat = catSel.value;
+        catSel.innerHTML = '<option value="all">All Categories</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cats.includes(prevCat)) catSel.value = prevCat;
+
+        const months = Array.from(new Set(entries.map(e => (e.date || '').slice(0, 7)).filter(Boolean))).sort();
+        const mSel = document.getElementById('filterMonth');
+        const prevMonth = mSel.value;
+        mSel.innerHTML = '<option value="all">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        if (months.includes(prevMonth)) mSel.value = prevMonth;
+      }
+
+      function renderLedger(bookName) {
+        document.getElementById('ledgerTitle').textContent = bookName === 'Bank' ? 'BankBook Ledger' : 'CashBook Ledger';
+        document.getElementById('ledgerSubtitle').textContent = 'Chronological transaction register';
+
+        populateLedgerFilters(bookName);
+        const allRows = computeBookLedger(bookName);
+
+        const q = document.getElementById('filterSearch').value.trim().toLowerCase();
+        const fType = document.getElementById('filterType').value;
+        const fCat = document.getElementById('filterCategory').value;
+        const fMonth = document.getElementById('filterMonth').value;
+
+        const filtered = allRows.filter(r => {
+          if (q && !(r.desc || '').toLowerCase().includes(q) && !(r.ref || '').toLowerCase().includes(q) && !(r.category || '').toLowerCase().includes(q)) return false;
+          if (fType === 'income' && (r.type !== 'income' || r.isTransfer)) return false;
+          if (fType === 'expense' && (r.type !== 'expense' || r.isTransfer)) return false;
+          if (fType === 'transfer' && !r.isTransfer) return false;
+          if (fCat !== 'all' && r.category !== fCat) return false;
+          if (fMonth !== 'all' && !(r.date || '').startsWith(fMonth)) return false;
+          return true;
+        });
+
+        const tbody = document.getElementById('ledgerTableBody');
+        if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">No entries in this ledger yet. Click "+ Add Entry" to record one.</td></tr>';
+        } else {
+          tbody.innerHTML = filtered.map(r => `
+            <tr>
+              <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(r.date)}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(r.desc)}</td>
+              <td class="py-2.5 px-3 text-slate-600">${escapeHtml(r.category)}</td>
+              <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">${escapeHtml(r.ref || '—')}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-teal-700 font-medium">${r.type === 'income' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-rose-700 font-medium">${r.type === 'expense' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
+                <button data-edit="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
+                <button data-del="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        const sumCredit = filtered.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const sumDebit = filtered.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        document.getElementById('ledgerTableFoot').innerHTML = `
+          <tr>
+            <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Totals (${filtered.length} entries)</td>
+            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-teal-700">${fmtMoney(sumCredit)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-rose-700">${fmtMoney(sumDebit)}</td>
+            <td></td>
+          </tr>
+        `;
+      }
+
+      function renderCheques() {
+        const chq = computeChequeStats();
+        const bankRows = computeBookLedger('Bank');
+        const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
+
+        document.getElementById('chqKpiTotal').textContent = fmtMoney(chq.totalAmt);
+        document.getElementById('chqKpiTotalSub').textContent = `${chq.totalCount} Cheques Recorded`;
+        document.getElementById('chqKpiCleared').textContent = fmtMoney(chq.clearedAmt);
+        document.getElementById('chqKpiClearedSub').textContent = `${chq.clearedCount} Cleared`;
+        document.getElementById('chqKpiPending').textContent = fmtMoney(chq.pendingAmt);
+        document.getElementById('chqKpiPendingSub').textContent = `${chq.pendingCount} Uncleared / In-Transit`;
+        document.getElementById('chqKpiEffectiveBank').textContent = fmtMoney(bankBal + chq.pendingAmt);
+
+        const list = (state.cheques || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const months = Array.from(new Set(list.map(c => (c.date || '').slice(0, 7)).filter(Boolean))).sort();
+        const mSel = document.getElementById('chqFilterMonth');
+        const prevM = mSel.value;
+        mSel.innerHTML = '<option value="all">All Issue Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        if (months.includes(prevM)) mSel.value = prevM;
+
+        const q = document.getElementById('chqFilterSearch').value.trim().toLowerCase();
+        const fStatus = document.getElementById('chqFilterStatus').value;
+        const fMonth = mSel.value;
+
+        const filtered = list.filter(c => {
+          if (q && !(c.chequeNo || '').toLowerCase().includes(q) && !(c.payee || '').toLowerCase().includes(q) && !(c.purpose || '').toLowerCase().includes(q)) return false;
+          if (fStatus !== 'all' && c.status !== fStatus) return false;
+          if (fMonth !== 'all' && !(c.date || '').startsWith(fMonth)) return false;
+          return true;
+        });
+
+        const tbody = document.getElementById('chequesTableBody');
+        if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">No cheques recorded yet. Click "+ Issue Cheque" or refresh from Google Sheet.</td></tr>';
+        } else {
+          tbody.innerHTML = filtered.map(c => {
+            const isCleared = c.status === 'Cleared';
+            const isCancelled = c.status === 'Cancelled';
+            const badgeCls = isCleared
+              ? 'bg-teal-50 text-teal-800 border border-teal-200'
+              : isCancelled
+              ? 'bg-slate-100 text-slate-600 border border-slate-200'
+              : 'bg-amber-50 text-amber-800 border border-amber-200';
+            const toggleLabel = isCleared ? 'Undo' : 'Mark Cleared';
+            const toggleCls = isCleared ? 'text-amber-700 hover:underline' : 'text-teal-700 hover:underline';
+            return `
+              <tr>
+                <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(c.date)}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap font-semibold text-brand-800 tabular-nums">${escapeHtml(c.chequeNo || '—')}</td>
+                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(c.payee)}</td>
+                <td class="py-2.5 px-3 text-slate-600">${escapeHtml(c.purpose || '—')}</td>
+                <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap font-semibold text-slatex-900">${fmtMoney(c.amount)}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap"><span class="badge-pill ${badgeCls}">${escapeHtml(c.status)}</span></td>
+                <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(c.clearDate || '—')}</td>
+                <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
+                  <button data-chq-toggle="${escapeHtml(c.id)}" type="button" class="text-xs font-semibold ${toggleCls}">${toggleLabel}</button>
+                  <button data-chq-edit="${escapeHtml(c.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
+                  <button data-chq-del="${escapeHtml(c.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        const sumFiltered = filtered.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        document.getElementById('chequesTableFoot').innerHTML = `
+          <tr>
+            <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Cheques (${filtered.length} items)</td>
+            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-slatex-900">${fmtMoney(sumFiltered)}</td>
+            <td colspan="3"></td>
+          </tr>
+        `;
+      }
+
+      function renderAll() {
+        const lrEl = document.getElementById('lastRefreshedText');
+        if (lrEl) {
+          lrEl.textContent = 'Last refreshed: ' + (state.lastRefreshed || new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }));
+        }
+        document.getElementById('currencySelect').value = state.currency || 'INR';
+        document.getElementById('openBankInput').value = state.openingBank ?? 0;
+        document.getElementById('openCashInput').value = state.openingCash ?? 0;
+        const urlIn = document.getElementById('appsScriptUrlInput');
+        if (urlIn) urlIn.value = state.appsScriptUrl || '';
+        const autoEl = document.getElementById('autoSyncToggle');
+        if (autoEl) autoEl.checked = state.autoSync !== false;
+
+        renderKPIs();
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.toggle('is-active', btn.dataset.tab === activeTab);
+        });
+
+        document.getElementById('view-dashboard').classList.toggle('hidden', activeTab !== 'dashboard');
+        document.getElementById('view-ledger').classList.toggle('hidden', activeTab !== 'bankbook' && activeTab !== 'cashbook');
+        document.getElementById('view-cheques').classList.toggle('hidden', activeTab !== 'cheques');
+        document.getElementById('view-import').classList.toggle('hidden', activeTab !== 'import');
+
+        if (activeTab === 'dashboard') {
+          renderCharts();
+          renderSheetDashboardTables();
+          renderDashboardRecent();
+        } else if (activeTab === 'bankbook') {
+          renderLedger('Bank');
+        } else if (activeTab === 'cashbook') {
+          renderLedger('Cash');
+        } else if (activeTab === 'cheques') {
+          renderCheques();
+        }
+      }
+
+      function openEntryModal(entry) {
+        document.getElementById('entryModalTitle').textContent = entry ? 'Edit Ledger Entry' : 'New Ledger Entry';
+        document.getElementById('entryId').value = entry ? entry.id : '';
+        document.getElementById('entryDate').value = entry ? entry.date : new Date().toISOString().slice(0, 10);
+        document.getElementById('entryBook').value = entry ? entry.book : (activeTab === 'cashbook' ? 'Cash' : 'Bank');
+        document.getElementById('entryType').value = entry ? entry.type : 'expense';
+        document.getElementById('entryAmount').value = entry ? entry.amount : '';
+        document.getElementById('entryDesc').value = entry ? entry.desc : '';
+        document.getElementById('entryCat').value = entry ? entry.category : '';
+        document.getElementById('entryRef').value = entry ? (entry.ref || '') : '';
+        document.getElementById('entryModal').classList.remove('hidden');
+        document.getElementById('entryModal').classList.add('flex');
+      }
+
+      function closeEntryModal() {
+        document.getElementById('entryModal').classList.add('hidden');
+        document.getElementById('entryModal').classList.remove('flex');
+      }
+
+      function openTransferModal() {
+        document.getElementById('transferDate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('transferAmount').value = '';
+        document.getElementById('transferNote').value = '';
+        document.getElementById('transferModal').classList.remove('hidden');
+        document.getElementById('transferModal').classList.add('flex');
+      }
+
+      function closeTransferModal() {
+        document.getElementById('transferModal').classList.add('hidden');
+        document.getElementById('transferModal').classList.remove('flex');
+      }
+
+      function openChequeModal(cheque) {
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('chequeModalTitle').textContent = cheque ? 'Edit Cheque Record' : 'Issue New Cheque';
+        document.getElementById('chequeId').value = cheque ? cheque.id : '';
+        document.getElementById('chequeDate').value = cheque ? cheque.date : today;
+        document.getElementById('chequeNo').value = cheque ? (cheque.chequeNo || '') : '';
+        document.getElementById('chequePayee').value = cheque ? (cheque.payee || '') : '';
+        document.getElementById('chequePurpose').value = cheque ? (cheque.purpose || '') : '';
+        document.getElementById('chequeAmount').value = cheque ? cheque.amount : '';
+        document.getElementById('chequeStatus').value = cheque ? (cheque.status || 'Pending') : 'Pending';
+        document.getElementById('chequeClearDate').value = cheque ? (cheque.clearDate || '') : '';
+        document.getElementById('chequeModal').classList.remove('hidden');
+        document.getElementById('chequeModal').classList.add('flex');
+      }
+
+      function closeChequeModal() {
+        document.getElementById('chequeModal').classList.add('hidden');
+        document.getElementById('chequeModal').classList.remove('flex');
+      }
+
+      function exportCsv(rows, filename) {
+        const headers = ['Date', 'Book', 'Type', 'Particular', 'Purpose/Category', 'Reference', 'Inward', 'Outward'];
+        const csvLines = [headers.join(',')].concat(rows.map(r => {
+          const credit = r.type === 'income' ? r.amount : '';
+          const debit = r.type === 'expense' ? r.amount : '';
+          return [r.date, r.book, r.type, r.desc, r.category, r.ref || '', credit, debit]
+            .map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',');
+        }));
+        const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function exportChequesCsv(rows, filename) {
+        const headers = ['Issue Date', 'Cheque No', 'Payee', 'Purpose', 'Amount', 'Status', 'Clearance Date'];
+        const csvLines = [headers.join(',')].concat(rows.map(c =>
+          [c.date, c.chequeNo, c.payee, c.purpose, c.amount, c.status, c.clearDate || '']
+            .map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')
+        ));
+        const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function parseCsvText(text) {
+        const lines = [];
+        let cur = [], val = '', inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (inQuotes) {
+            if (ch === '"' && text[i + 1] === '"') { val += '"'; i++; }
+            else if (ch === '"') inQuotes = false;
+            else val += ch;
+          } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { cur.push(val.trim()); val = ''; }
+            else if (ch === '\n' || ch === '\r') {
+              if (ch === '\r' && text[i + 1] === '\n') i++;
+              cur.push(val.trim());
+              if (cur.some(x => x !== '')) lines.push(cur);
+              cur = []; val = '';
+            } else val += ch;
+          }
+        }
+        if (val !== '' || cur.length) { cur.push(val.trim()); lines.push(cur); }
+        return lines;
+      }
+
       function normalizeSheetDate(raw) {
         const t = String(raw || '').trim();
         if (!t) return '';
@@ -25,9 +1458,76 @@
           const y = m[3].length === 2 ? '20' + m[3] : m[3];
           return `${y}-${mo}-${d}`;
         }
-        return '';
+        return t;
       }
-// ... existing code ... -->
+
+      function toNum(v) {
+        const n = parseFloat(String(v || '').replace(/[^0-9.-]/g, ''));
+        return isNaN(n) ? 0 : n;
+      }
+
+      async function fetchSheetCsv(sheetName) {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        if (text.trim().startsWith('<!DOCTYPE') || text.includes('accounts.google.com')) {
+          throw new Error('Sheet is private');
+        }
+        return parseCsvText(text);
+      }
+
+      async function syncFromGoogleSheet(silent) {
+        const btn = document.getElementById('btnSyncSheet');
+        const icon = document.getElementById('syncIcon');
+        btn.disabled = true;
+        icon.classList.add('animate-spin');
+        let scriptErr = '';
+        try {
+          let bankRows, cashRows, bookColRows, chequeRows, balanceRows;
+          const scriptUrl = (state.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL || '').trim();
+          let pulledViaScript = false;
+
+          if (scriptUrl) {
+            try {
+              const sep = scriptUrl.includes('?') ? '&' : '?';
+              const res = await fetch(scriptUrl + sep + '_t=' + Date.now(), { redirect: 'follow' });
+              const rawText = await res.text();
+              if (!res.ok) {
+                scriptErr = 'HTTP ' + res.status;
+              } else if (rawText.trim().startsWith('<')) {
+                scriptErr = 'Apps Script returned HTML (check "Who has access: Anyone" & New version)';
+              } else {
+                const json = JSON.parse(rawText);
+                if (json && json.status === 'ok') {
+                  bankRows = json.bankBook || [];
+                  cashRows = json.cashBook || [];
+                  bookColRows = json.bookCollection || [];
+                  chequeRows = json.chequesIssued || [];
+                  balanceRows = json.balance || [];
+                  pulledViaScript = true;
+                } else {
+                  scriptErr = 'Unexpected JSON from Apps Script';
+                }
+              }
+            } catch (e) {
+              scriptErr = e && e.message ? e.message : 'Network/CORS error';
+            }
+          }
+
+          if (!pulledViaScript) {
+            [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
+              fetchSheetCsv('Bank Book'),
+              fetchSheetCsv('Cash Book'),
+              fetchSheetCsv('Book Collection'),
+              fetchSheetCsv('Cheques Issued'),
+              fetchSheetCsv('Balance')
+            ]);
+          }
+
+          let newOpeningBank = 0;
+          const syncedEntries = [];
+
           // Parse Bank Book: S No (0), Date (1), Particular (2), Purpose (3), Reference (4), Inward (5), Outward (6), Bank Balance (7)
           for (let i = 1; i < bankRows.length; i++) {
             const r = bankRows[i];
@@ -42,34 +1542,142 @@
             // Skip trailing formula-only balance rows where Date, Particular, Inward, and Outward are empty
             if (!rawDate && !part && inw === 0 && outw === 0) continue;
             if (inw === 0 && outw === 0) continue;
+
             const dt = normalizeSheetDate(rawDate) || '2026-01-01';
             const purp = (r[3] || '').trim() || 'Bank Transaction';
             const ref = (r[4] || '').trim();
             const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part) || /contra/i.test(purp);
-            if (inw > 0) syncedEntries.push({ id: `bb_${i + 1}_in`, date: dt, book: 'Bank', type: 'income', amount: inw, desc: part || 'Bank Receipt', category: purp, ref, isTransfer: isT });
-            if (outw > 0) syncedEntries.push({ id: `bb_${i + 1}_out`, date: dt, book: 'Bank', type: 'expense', amount: outw, desc: part || 'Bank Payment', category: purp, ref, isTransfer: isT });
+            if (inw > 0) syncedEntries.push({ id: `bb_${i}_in`, date: dt, book: 'Bank', type: 'income', amount: inw, desc: part || 'Bank Receipt', category: purp, ref, isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `bb_${i}_out`, date: dt, book: 'Bank', type: 'expense', amount: outw, desc: part || 'Bank Payment', category: purp, ref, isTransfer: isT });
           }
 
-          // Parse Cash Book: S No (0), Date (1), Particular (2), Inward (3), Outward (4), Current Balance (5)
+          // Parse Cash Book
           let newOpeningCash = 0;
           for (let i = 1; i < cashRows.length; i++) {
             const r = cashRows[i];
             const rawDate = (r[1] || '').trim();
             const part = (r[2] || '').trim();
-            const inw = toNum(r[3]);
-            const outw = toNum(r[4]);
+            
+            // Auto-detect columns (assuming it matches Bank Book's 7/8 cols, fallback to 5/6 cols)
+            let inwIdx = 5, outwIdx = 6, purpIdx = 3, refIdx = 4;
+            if (cashRows[0] && cashRows[0].length <= 6 && cashRows[1] && cashRows[1].length <= 6) {
+                inwIdx = 3; outwIdx = 4; purpIdx = -1; refIdx = -1;
+            }
+
+            const inw = toNum(r[inwIdx]);
+            const outw = toNum(r[outwIdx]);
+
             if (part.toLowerCase() === 'opening balance') {
               newOpeningCash = inw;
               continue;
             }
+            // Skip trailing formula-only balance rows where Date, Particular, Inward, and Outward are empty
             if (!rawDate && !part && inw === 0 && outw === 0) continue;
             if (inw === 0 && outw === 0) continue;
+
             const dt = normalizeSheetDate(rawDate) || '2026-01-01';
-            const isT = /bank withdrawal|cash deposit|withdrawn from bank|contra/i.test(part);
-            if (inw > 0) syncedEntries.push({ id: `cb_${i + 1}_in`, date: dt, book: 'Cash', type: 'income', amount: inw, desc: part || 'Cash Inward', category: isT ? 'Contra Transfer' : 'Cash Receipt', ref: 'Cash', isTransfer: isT });
-            if (outw > 0) syncedEntries.push({ id: `cb_${i + 1}_out`, date: dt, book: 'Cash', type: 'expense', amount: outw, desc: part || 'Cash Outward', category: isT ? 'Contra Transfer' : 'Cash Expense', ref: 'Cash', isTransfer: isT });
+            const purp = purpIdx >= 0 ? (r[purpIdx] || '').trim() : '';
+            const ref = refIdx >= 0 ? (r[refIdx] || '').trim() : '';
+            const isT = /bank withdrawal|cash deposit|withdrawn from bank|contra/i.test(part) || /contra/i.test(purp);
+            
+            if (inw > 0) syncedEntries.push({ id: `cb_${i}_in`, date: dt, book: 'Cash', type: 'income', amount: inw, desc: part || 'Cash Inward', category: purp || (isT ? 'Contra Transfer' : 'Cash Receipt'), ref: ref || (isT ? 'Contra' : 'Cash'), isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `cb_${i}_out`, date: dt, book: 'Cash', type: 'expense', amount: outw, desc: part || 'Cash Outward', category: purp || (isT ? 'Contra Transfer' : 'Cash Expense'), ref: ref || (isT ? 'Contra' : 'Cash'), isTransfer: isT });
           }
-// ... existing code ... -->
+
+          // Parse Book Collection: Street (col D = idx 3, rows 1..40), VIP/QR (col J = idx 9, rows 1..20)
+          let streetSum = 0, vipSum = 0;
+          for (let i = 1; i < Math.min(bookColRows.length, 41); i++) {
+            streetSum += toNum(bookColRows[i][3]);
+          }
+          for (let i = 1; i < Math.min(bookColRows.length, 21); i++) {
+            vipSum += toNum(bookColRows[i][9]);
+          }
+          const totalCol = streetSum + vipSum;
+
+          // Parse Cheques Issued
+          const syncedCheques = [];
+          let clearedCount = 0, clearedAmt = 0, pendingCount = 0, pendingAmt = 0;
+          for (let i = 1; i < chequeRows.length; i++) {
+            const r = chequeRows[i];
+            const amt = toNum(r[4]);
+            const payee = (r[2] || '').trim();
+            const chqNo = (r[3] || '').trim() || (r[1] || '').trim();
+            if (!amt && !payee) continue;
+            const rawSt = (r[6] || '').trim().toLowerCase();
+            const status = rawSt.includes('clear') ? 'Cleared' : rawSt.includes('cancel') || rawSt.includes('bounc') ? 'Cancelled' : 'Pending';
+            const dt = normalizeSheetDate(r[1]) || '2026-01-01';
+            const clearDt = normalizeSheetDate(r[7] || '');
+            const purpose = (r[5] || '').trim() || 'Cheque Payment';
+            syncedCheques.push({
+              id: `chq_${i}`,
+              date: dt,
+              chequeNo: chqNo || `CHQ-${i}`,
+              payee: payee || 'Payee',
+              purpose,
+              amount: amt,
+              status,
+              clearDate: clearDt
+            });
+            if (status === 'Cleared') { clearedCount++; clearedAmt += amt; }
+            else if (status === 'Pending') { pendingCount++; pendingAmt += amt; }
+          }
+
+          state.openingBank = newOpeningBank;
+          state.openingCash = newOpeningCash;
+          state.entries = syncedEntries;
+          state.cheques = syncedCheques;
+          state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          saveState();
+
+          document.getElementById('kpiCollection').textContent = fmtMoney(totalCol);
+          document.getElementById('kpiCollectionSub').textContent = `Street: ${fmtMoney(streetSum)} | VIP/QR: ${fmtMoney(vipSum)}`;
+          document.getElementById('auditHeaderSub').textContent = `60 Books · ${clearedCount + pendingCount} Cheques`;
+
+          // Parse Balance tab for Tally vs Bank Reconciliation
+          const balMap = {};
+          balanceRows.forEach(r => {
+            const k = (r[0] || '').trim().toLowerCase();
+            if (k) balMap[k] = r;
+          });
+          const bExp = balMap['bank exp'] ? toNum(balMap['bank exp'][1]) : 0;
+          const tExp = balMap['tally exp'] ? toNum(balMap['tally exp'][1]) : 0;
+          const bInc = balMap['bank income'] ? toNum(balMap['bank income'][1]) : 0;
+          const tInc = balMap['tally income'] ? toNum(balMap['tally income'][1]) : 0;
+          const rBank = balMap['bank income'] ? toNum(balMap['bank income'][3]) : 0;
+          const rTally = balMap['tally income'] ? toNum(balMap['tally income'][3]) : 0;
+          const netDiff = (tExp - bExp) + (tInc - bInc);
+          tallyRecon = [
+            { item: 'Total Expenses (Outward)', bank: bExp, tally: tExp, variance: tExp - bExp },
+            { item: 'Total Income (Inward)', bank: bInc, tally: tInc, variance: tInc - bInc },
+            { item: 'Receipts / Reversals', bank: rBank, tally: rTally, variance: rBank - rTally },
+            { item: 'Secondary Adjustments', bank: 0, tally: 0, variance: 0 },
+            { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: netDiff, isTotal: true }
+          ];
+
+          auditRows = [
+            { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: streetSum, status: streetSum > 0 ? 'Collected & Deposited' : 'Awaiting Entries' },
+            { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: vipSum, status: vipSum > 0 ? 'Tallied with Bank' : 'Awaiting Entries' },
+            { head: 'Total Book Collections', count: 'All 60 Books', amount: totalCol, status: totalCol > 0 ? 'Fully Reconciled' : 'Reset for 2026', isBold: true },
+            { head: 'Cheques Issued — Cleared', count: `${clearedCount} Cleared`, amount: clearedAmt, status: clearedCount ? 'Cleared' : 'Nil' },
+            { head: 'Cheques Issued — Pending', count: `${pendingCount} Pending`, amount: pendingAmt, status: pendingCount ? 'Pending' : 'Nil Pending' }
+          ];
+
+          renderAll();
+          if (!silent || syncedEntries.length) {
+            showToast(`Synced ${syncedEntries.length} ledger entries & ${syncedCheques.length} cheques from Google Sheet.`);
+          }
+        } catch (err) {
+          if (!silent) {
+            showToast(scriptErr ? ('Sync failed: ' + scriptErr) : 'Live sync needs Sheet sharing set to "Anyone with the link (Viewer)" or Apps Script "Anyone".');
+          }
+        } finally {
+          btn.disabled = false;
+          icon.classList.remove('animate-spin');
+        }
+      }
+
+      document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
+
       const APPS_SCRIPT_CODE = `function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   function readRows(name) {
@@ -106,10 +1714,388 @@ function doPost(e) {
     });
     sh.getRange(startRow, 1, values.length, cols).setValues(values);
   }
-  var bankEntries = data.entries.filter(function(x) { return x.book === 'Bank'; });
-  var cashEntries = data.entries.filter(function(x) { return x.book === 'Cash'; });
+  var bankEntries = (data.entries || []).filter(function(x) { return x.book === 'Bank'; });
+  var cashEntries = (data.entries || []).filter(function(x) { return x.book === 'Cash'; });
   writeBook('Bank Book', bankEntries, 3, 7);
-  writeBook('Cash Book', cashEntries, 2, 5);
-  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: data.entries.length })).setMimeType(ContentService.MimeType.JSON);
+  writeBook('Cash Book', cashEntries, 3, 7);
+
+  if (Array.isArray(data.cheques)) {
+    var chqSh = ss.getSheetByName('Cheques Issued');
+    if (chqSh) {
+      var chqClear = Math.max(chqSh.getLastRow() - 1, data.cheques.length, 1);
+      chqSh.getRange(2, 1, chqClear, 8).clearContent();
+      if (data.cheques.length) {
+        var chqVals = data.cheques.map(function(c, i) {
+          return [i + 1, fmtDate(c.date), c.payee, c.chequeNo, c.amount, c.purpose, c.status, fmtDate(c.clearDate)];
+        });
+        chqSh.getRange(2, 1, chqVals.length, 8).setValues(chqVals);
+      }
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: (data.entries || []).length })).setMimeType(ContentService.MimeType.JSON);
 }`;
-// ... existing code ... -->
+
+      function autoPushIfEnabled() {
+        const autoOn = state.autoSync !== false;
+        if (autoOn && (state.appsScriptUrl || '').trim()) {
+          pushToGoogleSheet(true);
+        }
+      }
+
+      async function pushToGoogleSheet(silent) {
+        const url = (state.appsScriptUrl || '').trim();
+        if (!url) {
+          if (!silent) {
+            activeTab = 'import';
+            renderAll();
+            showToast('Add your Apps Script Web App URL in Import / Export CSV to enable auto-save.');
+          }
+          return;
+        }
+        try {
+          await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              openingBank: state.openingBank,
+              openingCash: state.openingCash,
+              entries: state.entries,
+              cheques: state.cheques || []
+            })
+          });
+          state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          saveState();
+          const lrEl = document.getElementById('lastRefreshedText');
+          if (lrEl) lrEl.textContent = 'Last refreshed: ' + state.lastRefreshed;
+          showToast(silent ? 'Auto-saved to Google Sheet.' : `Saved ${state.entries.length} entries & ${(state.cheques || []).length} cheques to Income & Expenses - 2026.`);
+        } catch (err) {
+          if (!silent) showToast('Could not reach Apps Script URL. Check deployment permissions.');
+        }
+      }
+
+      document.getElementById('btnPushSheet').addEventListener('click', () => pushToGoogleSheet(false));
+      document.getElementById('autoSyncToggle').addEventListener('change', e => {
+        state.autoSync = e.target.checked;
+        saveState();
+      });
+      document.getElementById('btnSaveScriptUrl').addEventListener('click', () => {
+        state.appsScriptUrl = document.getElementById('appsScriptUrlInput').value.trim();
+        saveState();
+        showToast('Apps Script URL saved.');
+      });
+      document.getElementById('btnCopyAppsScript').addEventListener('click', () => {
+        const ta = document.createElement('textarea');
+        ta.value = APPS_SCRIPT_CODE;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Apps Script code copied.');
+      });
+
+      document.getElementById('navTabs').addEventListener('click', e => {
+        const btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        activeTab = btn.dataset.tab;
+        renderAll();
+      });
+
+      document.getElementById('currencySelect').addEventListener('change', e => {
+        state.currency = e.target.value;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btnDismissBanner').addEventListener('click', () => {
+        document.getElementById('sampleBanner').classList.add('hidden');
+      });
+
+      document.getElementById('btnViewAllBank').addEventListener('click', () => {
+        activeTab = 'bankbook';
+        renderAll();
+      });
+
+      document.getElementById('btnOpenChequesDash').addEventListener('click', () => {
+        activeTab = 'cheques';
+        renderAll();
+      });
+
+      document.getElementById('btnSaveOpening').addEventListener('click', () => {
+        state.openingBank = parseFloat(document.getElementById('openBankInput').value) || 0;
+        state.openingCash = parseFloat(document.getElementById('openCashInput').value) || 0;
+        saveState();
+        renderAll();
+        showToast('Opening balances updated.');
+      });
+
+      document.getElementById('btnOpenAdd').addEventListener('click', () => openEntryModal(null));
+      document.getElementById('btnAddToBook').addEventListener('click', () => openEntryModal(null));
+      document.getElementById('btnCloseEntryModal').addEventListener('click', closeEntryModal);
+      document.getElementById('btnCancelEntry').addEventListener('click', closeEntryModal);
+
+      document.getElementById('entryForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const id = document.getElementById('entryId').value;
+        const item = {
+          id: id || 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          date: document.getElementById('entryDate').value,
+          book: document.getElementById('entryBook').value,
+          type: document.getElementById('entryType').value,
+          amount: parseFloat(document.getElementById('entryAmount').value) || 0,
+          desc: document.getElementById('entryDesc').value.trim(),
+          category: document.getElementById('entryCat').value.trim() || 'Miscellaneous',
+          ref: document.getElementById('entryRef').value.trim()
+        };
+        if (id) {
+          const idx = state.entries.findIndex(x => x.id === id);
+          if (idx >= 0) state.entries[idx] = { ...state.entries[idx], ...item };
+          showToast('Entry updated.');
+        } else {
+          state.entries.push(item);
+          showToast('Entry added.');
+        }
+        saveState();
+        closeEntryModal();
+        renderAll();
+        autoPushIfEnabled();
+      });
+
+      document.getElementById('btnOpenTransfer').addEventListener('click', openTransferModal);
+      document.getElementById('btnCloseTransferModal').addEventListener('click', closeTransferModal);
+      document.getElementById('btnCancelTransfer').addEventListener('click', closeTransferModal);
+
+      document.getElementById('transferForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const dir = document.getElementById('transferDirection').value;
+        const date = document.getElementById('transferDate').value;
+        const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+        const note = document.getElementById('transferNote').value.trim();
+        const stamp = Date.now();
+        if (dir === 'bank_to_cash') {
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Bank', type: 'expense', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+        } else {
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Bank', type: 'income', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+        }
+        saveState();
+        closeTransferModal();
+        renderAll();
+        autoPushIfEnabled();
+        showToast('Contra transfer recorded in both books.');
+      });
+
+      document.getElementById('ledgerTableBody').addEventListener('click', e => {
+        const editId = e.target.dataset.edit;
+        const delId = e.target.dataset.del;
+        if (editId) {
+          const item = state.entries.find(x => x.id === editId);
+          if (item) openEntryModal(item);
+        } else if (delId) {
+          state.entries = state.entries.filter(x => x.id !== delId);
+          saveState();
+          renderAll();
+          showToast('Entry deleted.');
+          autoPushIfEnabled();
+        }
+      });
+
+      ['filterSearch', 'filterType', 'filterCategory', 'filterMonth'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          renderLedger(activeTab === 'cashbook' ? 'Cash' : 'Bank');
+        });
+      });
+
+      // Cheque modal & register events
+      document.getElementById('btnOpenChequeModal').addEventListener('click', () => openChequeModal(null));
+      document.getElementById('btnCloseChequeModal').addEventListener('click', closeChequeModal);
+      document.getElementById('btnCancelCheque').addEventListener('click', closeChequeModal);
+
+      document.getElementById('chequeStatus').addEventListener('change', e => {
+        const clearInput = document.getElementById('chequeClearDate');
+        if (e.target.value === 'Cleared' && !clearInput.value) {
+          clearInput.value = new Date().toISOString().slice(0, 10);
+        } else if (e.target.value !== 'Cleared') {
+          clearInput.value = '';
+        }
+      });
+
+      document.getElementById('chequeForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const id = document.getElementById('chequeId').value;
+        const status = document.getElementById('chequeStatus').value;
+        const clearDate = status === 'Cleared'
+          ? (document.getElementById('chequeClearDate').value || new Date().toISOString().slice(0, 10))
+          : '';
+        const item = {
+          id: id || 'chq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+          date: document.getElementById('chequeDate').value,
+          chequeNo: document.getElementById('chequeNo').value.trim(),
+          payee: document.getElementById('chequePayee').value.trim(),
+          purpose: document.getElementById('chequePurpose').value.trim() || 'Cheque Payment',
+          amount: parseFloat(document.getElementById('chequeAmount').value) || 0,
+          status,
+          clearDate
+        };
+        if (!Array.isArray(state.cheques)) state.cheques = [];
+        if (id) {
+          const idx = state.cheques.findIndex(x => x.id === id);
+          if (idx >= 0) state.cheques[idx] = item;
+          showToast('Cheque updated.');
+        } else {
+          state.cheques.push(item);
+          showToast('Cheque recorded.');
+        }
+        saveState();
+        closeChequeModal();
+        renderAll();
+        autoPushIfEnabled();
+      });
+
+      document.getElementById('chequesTableBody').addEventListener('click', e => {
+        const toggleId = e.target.dataset.chqToggle;
+        const editId = e.target.dataset.chqEdit;
+        const delId = e.target.dataset.chqDel;
+        if (toggleId) {
+          const item = (state.cheques || []).find(x => x.id === toggleId);
+          if (item) {
+            if (item.status === 'Cleared') {
+              item.status = 'Pending';
+              item.clearDate = '';
+              showToast(`Cheque #${item.chequeNo} marked Pending.`);
+            } else {
+              item.status = 'Cleared';
+              item.clearDate = new Date().toISOString().slice(0, 10);
+              showToast(`Cheque #${item.chequeNo} marked Cleared.`);
+            }
+            saveState();
+            renderAll();
+            autoPushIfEnabled();
+          }
+        } else if (editId) {
+          const item = (state.cheques || []).find(x => x.id === editId);
+          if (item) openChequeModal(item);
+        } else if (delId) {
+          state.cheques = (state.cheques || []).filter(x => x.id !== delId);
+          saveState();
+          renderAll();
+          showToast('Cheque deleted.');
+          autoPushIfEnabled();
+        }
+      });
+
+      ['chqFilterSearch', 'chqFilterStatus', 'chqFilterMonth'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderCheques);
+      });
+
+      document.getElementById('btnExportChequesCsv').addEventListener('click', () => {
+        exportChequesCsv(state.cheques || [], 'Cheques_Issued_2026.csv');
+      });
+
+      document.getElementById('btnExportBookCsv').addEventListener('click', () => {
+        const book = activeTab === 'cashbook' ? 'Cash' : 'Bank';
+        exportCsv(computeBookLedger(book), `${book}Book_2026.csv`);
+      });
+
+      document.getElementById('btnExportAllCsv').addEventListener('click', () => {
+        exportCsv(state.entries, 'Income_Expenses_2026_Export.csv');
+      });
+
+      document.getElementById('btnExportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'BankBook_CashBook_2026_Backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('btnResetSample').addEventListener('click', () => {
+        state = JSON.parse(JSON.stringify(SAMPLE_DATA));
+        saveState();
+        renderAll();
+        showToast('Restored Income & Expenses - 2026 snapshot.');
+      });
+
+      document.getElementById('btnClearAll').addEventListener('click', () => {
+        state.entries = [];
+        state.cheques = [];
+        saveState();
+        renderAll();
+        showToast('All entries & cheques cleared.');
+      });
+
+      document.getElementById('csvFileInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const rows = parseCsvText(ev.target.result);
+          if (rows.length < 2) {
+            showToast('CSV appears empty.');
+            return;
+          }
+          parsedCsvHeaders = rows[0];
+          parsedCsvRows = rows.slice(1);
+          const opts = parsedCsvHeaders.map((h, i) => `<option value="${i}">${escapeHtml(h || 'Column ' + (i + 1))}</option>`).join('');
+          const optNone = '<option value="-1">— None —</option>' + opts;
+          ['mapDate', 'mapDesc', 'mapCat', 'mapBook', 'mapIncome', 'mapExpense'].forEach(id => {
+            document.getElementById(id).innerHTML = (id === 'mapCat' || id === 'mapBook' || id === 'mapExpense') ? optNone : opts;
+          });
+          parsedCsvHeaders.forEach((h, i) => {
+            const l = h.toLowerCase();
+            if (l.includes('date')) document.getElementById('mapDate').value = i;
+            if (l.includes('partic') || l.includes('desc') || l.includes('item')) document.getElementById('mapDesc').value = i;
+            if (l.includes('purp') || l.includes('cat')) document.getElementById('mapCat').value = i;
+            if (l.includes('book') || l.includes('mode') || l.includes('ref')) document.getElementById('mapBook').value = i;
+            if (l.includes('inw') || l.includes('inc') || l.includes('cred')) document.getElementById('mapIncome').value = i;
+            if (l.includes('outw') || l.includes('exp') || l.includes('deb')) document.getElementById('mapExpense').value = i;
+          });
+          document.getElementById('csvMappingBox').classList.remove('hidden');
+          showToast(`Loaded ${parsedCsvRows.length} rows. Review column mapping.`);
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btnConfirmImport').addEventListener('click', () => {
+        const iDate = parseInt(document.getElementById('mapDate').value, 10);
+        const iDesc = parseInt(document.getElementById('mapDesc').value, 10);
+        const iCat = parseInt(document.getElementById('mapCat').value, 10);
+        const iBook = parseInt(document.getElementById('mapBook').value, 10);
+        const iInc = parseInt(document.getElementById('mapIncome').value, 10);
+        const iExp = parseInt(document.getElementById('mapExpense').value, 10);
+
+        const imported = [];
+        parsedCsvRows.forEach((r, idx) => {
+          const incAmt = iInc >= 0 ? parseFloat(String(r[iInc] || '').replace(/[^0-9.-]/g, '')) || 0 : 0;
+          const expAmt = iExp >= 0 ? parseFloat(String(r[iExp] || '').replace(/[^0-9.-]/g, '')) || 0 : 0;
+          if (!incAmt && !expAmt) return;
+          const rawBook = iBook >= 0 ? String(r[iBook] || '').toLowerCase() : '';
+          const book = rawBook.includes('cash') ? 'Cash' : 'Bank';
+          const date = normalizeSheetDate(r[iDate]) || '2026-01-01';
+          const desc = iDesc >= 0 ? (r[iDesc] || 'Imported Entry') : 'Imported Entry';
+          const category = iCat >= 0 ? (r[iCat] || 'Miscellaneous') : 'Miscellaneous';
+
+          if (incAmt > 0) imported.push({ id: 'imp_' + Date.now() + '_' + idx + 'i', date, book, type: 'income', amount: incAmt, desc, category, ref: rawBook || 'CSV' });
+          if (expAmt > 0) imported.push({ id: 'imp_' + Date.now() + '_' + idx + 'e', date, book, type: 'expense', amount: expAmt, desc, category, ref: rawBook || 'CSV' });
+        });
+
+        if (document.getElementById('csvReplaceMode').checked) {
+          state.entries = imported;
+        } else {
+          state.entries = state.entries.concat(imported);
+        }
+        saveState();
+        activeTab = 'dashboard';
+        renderAll();
+        showToast(`Imported ${imported.length} entries.`);
+      });
+
+      renderAll();
+      syncFromGoogleSheet(true);
+    })();
+  </script>
+</body>
+</html>
