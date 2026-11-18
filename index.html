@@ -1467,14 +1467,21 @@
       }
 
       async function fetchSheetCsv(sheetName) {
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-        const res = await fetch(url, { mode: 'cors' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        if (text.trim().startsWith('<!DOCTYPE') || text.includes('accounts.google.com')) {
-          throw new Error('Sheet is private');
+        const url1 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        let res = await fetch(url1, { mode: 'cors' });
+        if (res.ok) {
+          const text = await res.text();
+          if (!text.trim().startsWith('<!DOCTYPE') && !text.includes('accounts.google.com')) return parseCsvText(text);
         }
-        return parseCsvText(text);
+        
+        const url2 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName.replace(' ', ''))}`;
+        res = await fetch(url2, { mode: 'cors' });
+        if (res.ok) {
+          const text = await res.text();
+          if (!text.trim().startsWith('<!DOCTYPE') && !text.includes('accounts.google.com')) return parseCsvText(text);
+        }
+        
+        throw new Error('Sheet is private or missing');
       }
 
       async function syncFromGoogleSheet(silent) {
@@ -1525,64 +1532,79 @@
             ]);
           }
 
-          let newOpeningBank = 0;
-          const syncedEntries = [];
-
-          // Parse Bank Book: S No (0), Date (1), Particular (2), Purpose (3), Reference (4), Inward (5), Outward (6), Bank Balance (7)
-          for (let i = 1; i < bankRows.length; i++) {
-            const r = bankRows[i];
-            const rawDate = (r[1] || '').trim();
-            const part = (r[2] || '').trim();
-            const inw = toNum(r[5]);
-            const outw = toNum(r[6]);
-            if (part.toLowerCase() === 'opening balance') {
-              newOpeningBank = inw;
-              continue;
+          function parseLedger(rows, bookName) {
+            let openingBal = 0;
+            const entries = [];
+            let iDate=1, iPart=2, iPurp=-1, iRef=-1, iInw=-1, iOutw=-1;
+            let dataStartRow = 1;
+            
+            // Scan first 5 rows to dynamically find column mapping
+            for(let k=0; k<Math.min(rows.length, 5); k++) {
+                const rowStr = rows[k].join(' ').toLowerCase();
+                if(rowStr.includes('date') && (rowStr.includes('partic') || rowStr.includes('desc') || rowStr.includes('inward') || rowStr.includes('receipt'))) {
+                    const h = rows[k].map(x => String(x||'').toLowerCase());
+                    iDate = h.findIndex(x => x.includes('date')); if(iDate===-1) iDate=1;
+                    iPart = h.findIndex(x => x.includes('partic') || x.includes('desc')); if(iPart===-1) iPart=2;
+                    iPurp = h.findIndex(x => x.includes('purp') || x.includes('cat'));
+                    iRef = h.findIndex(x => x.includes('ref'));
+                    iInw = h.findIndex(x => x.includes('inw') || x.includes('inc') || x.includes('cred') || x.includes('receipt'));
+                    iOutw = h.findIndex(x => x.includes('outw') || x.includes('exp') || x.includes('deb') || x.includes('payment'));
+                    dataStartRow = k + 1;
+                    break;
+                }
             }
-            // Skip trailing formula-only balance rows where Date, Particular, Inward, and Outward are empty
-            if (!rawDate && !part && inw === 0 && outw === 0) continue;
-            if (inw === 0 && outw === 0) continue;
-
-            const dt = normalizeSheetDate(rawDate) || '2026-01-01';
-            const purp = (r[3] || '').trim() || 'Bank Transaction';
-            const ref = (r[4] || '').trim();
-            const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part) || /contra/i.test(purp);
-            if (inw > 0) syncedEntries.push({ id: `bb_${i}_in`, date: dt, book: 'Bank', type: 'income', amount: inw, desc: part || 'Bank Receipt', category: purp, ref, isTransfer: isT });
-            if (outw > 0) syncedEntries.push({ id: `bb_${i}_out`, date: dt, book: 'Bank', type: 'expense', amount: outw, desc: part || 'Bank Payment', category: purp, ref, isTransfer: isT });
+            
+            for (let i = dataStartRow; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || !r.length) continue;
+                
+                let part = (r[iPart] || '').trim();
+                let inw = iInw >= 0 ? toNum(r[iInw]) : 0;
+                let outw = iOutw >= 0 ? toNum(r[iOutw]) : 0;
+                
+                // Aggressive fallback if header detection failed or pointed to empty columns
+                if (inw === 0 && outw === 0) {
+                    const val3 = toNum(r[3]), val4 = toNum(r[4]);
+                    const val5 = toNum(r[5]), val6 = toNum(r[6]);
+                    if (val3 > 0 || val4 > 0) { inw = val3; outw = val4; }
+                    else if (val5 > 0 || val6 > 0) { inw = val5; outw = val6; }
+                }
+                
+                if (!part && r.length > 2) part = String(r[2] || '').trim();
+                
+                if (part.toLowerCase().includes('opening balance')) {
+                    openingBal = inw > 0 ? inw : openingBal;
+                    continue;
+                }
+                
+                if (!part && inw === 0 && outw === 0) continue;
+                
+                let dt = normalizeSheetDate(r[iDate]);
+                if (!dt || dt === '2026-01-01') {
+                    for(let j=0; j<Math.min(r.length, 4); j++) {
+                        let tDt = normalizeSheetDate(r[j]);
+                        if(tDt && tDt !== '2026-01-01') { dt = tDt; break; }
+                    }
+                }
+                if (!dt) dt = '2026-01-01';
+                
+                const purp = iPurp >= 0 ? (r[iPurp] || '').trim() : '';
+                const ref = iRef >= 0 ? (r[iRef] || '').trim() : (bookName === 'Cash' ? 'Cash' : '');
+                const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part);
+                
+                let cat = purp || (isT ? 'Contra Transfer' : (bookName === 'Bank' ? 'Bank Transaction' : (inw > 0 ? 'Cash Receipt' : 'Cash Expense')));
+                
+                if (inw > 0) entries.push({ id: `${bookName.charAt(0).toLowerCase()}b_${i}_in`, date: dt, book: bookName, type: 'income', amount: inw, desc: part || (bookName + ' Inward'), category: cat, ref, isTransfer: isT });
+                if (outw > 0) entries.push({ id: `${bookName.charAt(0).toLowerCase()}b_${i}_out`, date: dt, book: bookName, type: 'expense', amount: outw, desc: part || (bookName + ' Outward'), category: cat, ref, isTransfer: isT });
+            }
+            return { openingBal, entries };
           }
 
-          // Parse Cash Book
-          let newOpeningCash = 0;
-          for (let i = 1; i < cashRows.length; i++) {
-            const r = cashRows[i];
-            const rawDate = (r[1] || '').trim();
-            const part = (r[2] || '').trim();
-            
-            // Auto-detect columns (assuming it matches Bank Book's 7/8 cols, fallback to 5/6 cols)
-            let inwIdx = 5, outwIdx = 6, purpIdx = 3, refIdx = 4;
-            if (cashRows[0] && cashRows[0].length <= 6 && cashRows[1] && cashRows[1].length <= 6) {
-                inwIdx = 3; outwIdx = 4; purpIdx = -1; refIdx = -1;
-            }
-
-            const inw = toNum(r[inwIdx]);
-            const outw = toNum(r[outwIdx]);
-
-            if (part.toLowerCase() === 'opening balance') {
-              newOpeningCash = inw;
-              continue;
-            }
-            // Skip trailing formula-only balance rows where Date, Particular, Inward, and Outward are empty
-            if (!rawDate && !part && inw === 0 && outw === 0) continue;
-            if (inw === 0 && outw === 0) continue;
-
-            const dt = normalizeSheetDate(rawDate) || '2026-01-01';
-            const purp = purpIdx >= 0 ? (r[purpIdx] || '').trim() : '';
-            const ref = refIdx >= 0 ? (r[refIdx] || '').trim() : '';
-            const isT = /bank withdrawal|cash deposit|withdrawn from bank|contra/i.test(part) || /contra/i.test(purp);
-            
-            if (inw > 0) syncedEntries.push({ id: `cb_${i}_in`, date: dt, book: 'Cash', type: 'income', amount: inw, desc: part || 'Cash Inward', category: purp || (isT ? 'Contra Transfer' : 'Cash Receipt'), ref: ref || (isT ? 'Contra' : 'Cash'), isTransfer: isT });
-            if (outw > 0) syncedEntries.push({ id: `cb_${i}_out`, date: dt, book: 'Cash', type: 'expense', amount: outw, desc: part || 'Cash Outward', category: purp || (isT ? 'Contra Transfer' : 'Cash Expense'), ref: ref || (isT ? 'Contra' : 'Cash'), isTransfer: isT });
-          }
+          const parsedBank = parseLedger(bankRows, 'Bank');
+          const parsedCash = parseLedger(cashRows, 'Cash');
+          const newOpeningBank = parsedBank.openingBal;
+          const newOpeningCash = parsedCash.openingBal;
+          const syncedEntries = [...parsedBank.entries, ...parsedCash.entries];
 
           // Parse Book Collection: Street (col D = idx 3, rows 1..40), VIP/QR (col J = idx 9, rows 1..20)
           let streetSum = 0, vipSum = 0;
@@ -1681,8 +1703,14 @@
       const APPS_SCRIPT_CODE = `function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   function readRows(name) {
-    var sh = ss.getSheetByName(name);
-    return sh ? sh.getDataRange().getDisplayValues() : [];
+    var sheets = ss.getSheets();
+    var target = name.toLowerCase().replace(/ /g, '');
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getName().toLowerCase().replace(/ /g, '') === target) {
+        return sheets[i].getDataRange().getDisplayValues();
+      }
+    }
+    return [];
   }
   var payload = {
     status: 'ok',
@@ -1698,41 +1726,38 @@
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  function fmtDate(iso) {
-    var m = String(iso || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
-    return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso || '');
-  }
-  function writeBook(sheetName, rows, startRow, cols) {
-    var sh = ss.getSheetByName(sheetName);
-    if (!sh) return;
-    var clearRows = Math.max(sh.getLastRow() - startRow + 1, rows.length, 1);
-    sh.getRange(startRow, 1, clearRows, cols).clearContent();
-    if (!rows.length) return;
+  
+  function writeBook(sheetName, rows, startRow) {
+    var sheets = ss.getSheets();
+    var target = sheetName.toLowerCase().replace(/ /g, '');
+    var sh = null;
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getName().toLowerCase().replace(/ /g, '') === target) {
+        sh = sheets[i];
+        break;
+      }
+    }
+    if (!sh || !rows.length) return;
+    
+    // Auto-detect if 8-column layout (Purpose/Reference) or 5-column by checking width
+    var cols = sh.getLastColumn() >= 7 ? 7 : 5;
+    
+    sh.getRange(startRow, 1, Math.max(rows.length, 1), cols).clearContent();
     var values = rows.map(function(r, i) {
-      if (cols === 7) return [i + 1, fmtDate(r.date), r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
-      return [i + 1, fmtDate(r.date), r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+      if (cols >= 7) return [i + 1, r.date, r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
+      return [i + 1, r.date, r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
     });
     sh.getRange(startRow, 1, values.length, cols).setValues(values);
   }
-  var bankEntries = (data.entries || []).filter(function(x) { return x.book === 'Bank'; });
-  var cashEntries = (data.entries || []).filter(function(x) { return x.book === 'Cash'; });
-  writeBook('Bank Book', bankEntries, 3, 7);
-  writeBook('Cash Book', cashEntries, 3, 7);
-
-  if (Array.isArray(data.cheques)) {
-    var chqSh = ss.getSheetByName('Cheques Issued');
-    if (chqSh) {
-      var chqClear = Math.max(chqSh.getLastRow() - 1, data.cheques.length, 1);
-      chqSh.getRange(2, 1, chqClear, 8).clearContent();
-      if (data.cheques.length) {
-        var chqVals = data.cheques.map(function(c, i) {
-          return [i + 1, fmtDate(c.date), c.payee, c.chequeNo, c.amount, c.purpose, c.status, fmtDate(c.clearDate)];
-        });
-        chqSh.getRange(2, 1, chqVals.length, 8).setValues(chqVals);
-      }
-    }
-  }
-  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: (data.entries || []).length })).setMimeType(ContentService.MimeType.JSON);
+  
+  var bankEntries = data.entries.filter(function(x) { return x.book === 'Bank'; });
+  var cashEntries = data.entries.filter(function(x) { return x.book === 'Cash'; });
+  
+  // Start rows assume opening balances remain untouched in the sheet.
+  writeBook('Bank Book', bankEntries, 3);
+  writeBook('Cash Book', cashEntries, 2);
+  
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: data.entries.length })).setMimeType(ContentService.MimeType.JSON);
 }`;
 
       function autoPushIfEnabled() {
