@@ -72,19 +72,30 @@
 
     <!-- Sub-navigation Tabs -->
     <nav class="bg-brand-900/60 border-t border-white/10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto gap-1 py-1.5" id="navTabs">
-        <button data-tab="dashboard" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition bg-white text-brand-900">
-          Executive Dashboard
-        </button>
-        <button data-tab="bankbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
-          BankBook
-        </button>
-        <button data-tab="cashbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
-          CashBook
-        </button>
-        <button data-tab="import" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
-          Import / Export CSV
-        </button>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-2 py-1.5">
+        <div class="flex overflow-x-auto gap-1" id="navTabs">
+          <button data-tab="dashboard" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition bg-white text-brand-900">
+            Executive Dashboard
+          </button>
+          <button data-tab="bankbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
+            BankBook
+          </button>
+          <button data-tab="cashbook" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
+            CashBook
+          </button>
+          <button data-tab="import" type="button" class="tab-btn px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition text-sky-100 hover:bg-white/10">
+            Import / Export CSV
+          </button>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="lastRefreshedText" class="text-[11px] text-sky-200/85 whitespace-nowrap">Last refreshed: —</span>
+          <button id="btnSyncSheet" type="button" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet" class="w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+            <span id="syncIcon" class="text-base leading-none">↻</span>
+          </button>
+          <button id="btnPushSheet" type="button" title="Save data to Google Sheet" aria-label="Save data to Google Sheet" class="w-8 h-8 rounded-md bg-sky-400/20 hover:bg-sky-400/35 text-sky-100 flex items-center justify-center transition border border-sky-300/25">
+            <span class="text-base leading-none">↑</span>
+          </button>
+        </div>
       </div>
     </nav>
   </header>
@@ -92,7 +103,7 @@
   <!-- Synced Sheet Banner -->
   <div id="sampleBanner" class="bg-sky-50 border-b border-sky-200 text-slate-900 text-xs sm:text-sm px-4 py-2">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <span>Synced with <strong>Income &amp; Expenses - 2026 (Dashboard)</strong> — Bank Opening ₹5,37,610 · Cash in Hand ₹0 · Book Collection ₹10,68,149 · Cleared Cheques ₹31,375.</span>
+      <span>Synced with <strong>Income &amp; Expenses - 2026 (Dashboard)</strong> — Bank Opening ₹5,37,610 · Cash in Hand ₹0 · Book Collection ₹0 · Cheques Cleared ₹0.</span>
       <button id="btnDismissBanner" type="button" class="text-brand-700 hover:text-brand-900 font-medium underline text-xs">Dismiss</button>
     </div>
   </div>
@@ -122,8 +133,8 @@
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Book Collection</p>
-          <p id="kpiCollection" class="mt-1.5 text-xl sm:text-2xl font-bold text-teal-700 tabular-nums">₹10,68,149</p>
-          <p class="mt-1 text-xs text-slate-500">Street: ₹1,81,096 | VIP/QR: ₹8,87,053</p>
+          <p id="kpiCollection" class="mt-1.5 text-xl sm:text-2xl font-bold text-teal-700 tabular-nums">₹0</p>
+          <p id="kpiCollectionSub" class="mt-1 text-xs text-slate-500">Street: ₹0 | VIP/QR: ₹0</p>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">2025 Expenses (Actual)</p>
@@ -204,7 +215,7 @@
         <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm sm:text-base font-semibold text-slatex-900">Book Collection &amp; Cheques Issued Audit</h2>
-            <span class="text-xs text-slate-500">60 Books · 4 Cheques</span>
+            <span id="auditHeaderSub" class="text-xs text-slate-500">60 Books · 0 Cheques</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
@@ -417,6 +428,18 @@
               Clear All Entries
             </button>
           </div>
+
+          <div id="appsScriptCard" class="pt-4 border-t border-slate-200 space-y-2.5">
+            <h3 class="text-sm font-semibold text-slatex-900">Save Directly to Google Sheet (Apps Script)</h3>
+            <p class="text-xs text-slate-600">
+              In <strong>Income &amp; Expenses - 2026</strong>, open <em>Extensions → Apps Script</em>, paste the sync script, deploy as a Web App (<em>Anyone</em>), and save the URL below to enable the <strong>↑</strong> button.
+            </p>
+            <div class="flex gap-2">
+              <input id="appsScriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-600" />
+              <button id="btnSaveScriptUrl" type="button" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-xs font-medium transition">Save URL</button>
+            </div>
+            <button id="btnCopyAppsScript" type="button" class="text-xs font-medium text-brand-700 hover:underline">Copy Apps Script code</button>
+          </div>
         </div>
       </div>
     </section>
@@ -533,7 +556,7 @@
 
   <script>
     (function () {
-      const STORAGE_KEY = 'bankbook_cashbook_2026_v4_dashboard';
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v7_balance_synced';
       const CURRENCIES = {
         INR: { symbol: '₹', locale: 'en-IN' },
         USD: { symbol: '$', locale: 'en-US' },
@@ -542,19 +565,19 @@
       };
 
       // Grounded Dashboard Sheet Reference Data (Income & Expenses - 2026)
-      const TALLY_RECON = [
-        { item: 'Total Expenses (Outward)', bank: 1708038, tally: 1709541, variance: 1503 },
-        { item: 'Total Income (Inward)', bank: 2651842, tally: 2638962, variance: -12880 },
-        { item: 'Receipts / Reversals', bank: 59807, tally: 21648, variance: 38159 },
-        { item: 'Secondary Adjustments', bank: 0, tally: 5950, variance: 5950 },
-        { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: -6930, isTotal: true }
+      let tallyRecon = [
+        { item: 'Total Expenses (Outward)', bank: 0, tally: 0, variance: 0 },
+        { item: 'Total Income (Inward)', bank: 0, tally: 0, variance: 0 },
+        { item: 'Receipts / Reversals', bank: 0, tally: 0, variance: 0 },
+        { item: 'Secondary Adjustments', bank: 0, tally: 0, variance: 0 },
+        { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: 0, isTotal: true }
       ];
 
-      const AUDIT_ROWS = [
-        { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: 181096, status: 'Collected & Deposited' },
-        { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: 887053, status: 'Tallied with Bank' },
-        { head: 'Total Book Collections', count: 'All 60 Books', amount: 1068149, status: 'Fully Reconciled', isBold: true },
-        { head: 'Cheques Issued — Cleared', count: '4 Cleared', amount: 31375, status: 'Cleared (100%)' },
+      let auditRows = [
+        { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: 0, status: 'Awaiting Entries' },
+        { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: 0, status: 'Awaiting Entries' },
+        { head: 'Total Book Collections', count: 'All 60 Books', amount: 0, status: 'Reset for 2026', isBold: true },
+        { head: 'Cheques Issued — Cleared', count: '0 Cleared', amount: 0, status: 'Nil' },
         { head: 'Cheques Issued — Pending', count: '0 Pending', amount: 0, status: 'Nil Pending' }
       ];
 
@@ -574,6 +597,7 @@
         currency: 'INR',
         openingBank: 537610.0,
         openingCash: 0,
+        lastRefreshed: '18 Nov, 07:20 pm',
         entries: []
       };
 
@@ -729,7 +753,7 @@
         `;
 
         // Tally vs Bank Reconciliation
-        document.getElementById('tallyReconBody').innerHTML = TALLY_RECON.map(r => `
+        document.getElementById('tallyReconBody').innerHTML = tallyRecon.map(r => `
           <tr class="${r.isTotal ? 'bg-slate-50 font-semibold border-t border-slate-200' : 'hover:bg-slate-50'}">
             <td class="py-2.5 pr-3 text-slate-800">${escapeHtml(r.item)}</td>
             <td class="py-2.5 pr-3 text-right tabular-nums text-slate-700">${fmtMoney(r.bank)}</td>
@@ -739,7 +763,7 @@
         `).join('');
 
         // Book Collection & Cheques Audit
-        document.getElementById('auditTableBody').innerHTML = AUDIT_ROWS.map(r => `
+        document.getElementById('auditTableBody').innerHTML = auditRows.map(r => `
           <tr class="${r.isBold ? 'bg-slate-50 font-semibold' : 'hover:bg-slate-50'}">
             <td class="py-2.5 pr-3 text-slate-800">${escapeHtml(r.head)}</td>
             <td class="py-2.5 pr-3 text-slate-600">${escapeHtml(r.count)}</td>
@@ -882,9 +906,13 @@
       }
 
       function renderAll() {
+        const lrEl = document.getElementById('lastRefreshedText');
+        if (lrEl) lrEl.textContent = 'Last refreshed: ' + (state.lastRefreshed || new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }));
         document.getElementById('currencySelect').value = state.currency || 'INR';
         document.getElementById('openBankInput').value = state.openingBank ?? 0;
         document.getElementById('openCashInput').value = state.openingCash ?? 0;
+        const urlIn = document.getElementById('appsScriptUrlInput');
+        if (urlIn) urlIn.value = state.appsScriptUrl || '';
 
         renderKPIs();
 
@@ -986,6 +1014,228 @@
         if (val !== '' || cur.length) { cur.push(val.trim()); lines.push(cur); }
         return lines;
       }
+
+      
+      const SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
+
+      function normalizeSheetDate(raw) {
+        const t = String(raw || '').trim();
+        if (!t) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+        const m = t.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+        if (m) {
+          const d = m[1].padStart(2, '0');
+          const mo = m[2].padStart(2, '0');
+          const y = m[3].length === 2 ? '20' + m[3] : m[3];
+          return `${y}-${mo}-${d}`;
+        }
+        return t;
+      }
+
+      function toNum(v) {
+        const n = parseFloat(String(v || '').replace(/[^0-9.-]/g, ''));
+        return isNaN(n) ? 0 : n;
+      }
+
+      async function fetchSheetCsv(sheetName) {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        if (text.trim().startsWith('<!DOCTYPE') || text.includes('accounts.google.com')) {
+          throw new Error('Sheet is private');
+        }
+        return parseCsvText(text);
+      }
+
+      async function syncFromGoogleSheet() {
+        const btn = document.getElementById('btnSyncSheet');
+        const icon = document.getElementById('syncIcon');
+        btn.disabled = true;
+        icon.classList.add('animate-spin');
+        try {
+          const [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
+            fetchSheetCsv('Bank Book'),
+            fetchSheetCsv('Cash Book'),
+            fetchSheetCsv('Book Collection'),
+            fetchSheetCsv('Cheques Issued'),
+            fetchSheetCsv('Balance')
+          ]);
+
+          let newOpeningBank = 0;
+          const syncedEntries = [];
+
+          // Parse Bank Book: S No, Date, Particular, Purpose, Reference, Inward, Outward, Bank Balance
+          for (let i = 1; i < bankRows.length; i++) {
+            const r = bankRows[i];
+            const part = (r[2] || '').trim();
+            const inw = toNum(r[5]);
+            const outw = toNum(r[6]);
+            if (part.toLowerCase() === 'opening balance') {
+              newOpeningBank = inw;
+              continue;
+            }
+            if (!part && !inw && !outw) continue;
+            const dt = normalizeSheetDate(r[1]) || '2026-01-01';
+            const purp = (r[3] || '').trim() || 'Bank Transaction';
+            const ref = (r[4] || '').trim();
+            const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part);
+            if (inw > 0) syncedEntries.push({ id: `bb_${i}_in`, date: dt, book: 'Bank', type: 'income', amount: inw, desc: part, category: purp, ref, isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `bb_${i}_out`, date: dt, book: 'Bank', type: 'expense', amount: outw, desc: part, category: purp, ref, isTransfer: isT });
+          }
+
+          // Parse Cash Book: S No, Date, Particular, Inward, Outward, Current Balance
+          let newOpeningCash = 0;
+          for (let i = 1; i < cashRows.length; i++) {
+            const r = cashRows[i];
+            const part = (r[2] || '').trim();
+            const inw = toNum(r[3]);
+            const outw = toNum(r[4]);
+            if (part.toLowerCase() === 'opening balance') {
+              newOpeningCash = inw;
+              continue;
+            }
+            if (!part && !inw && !outw) continue;
+            const dt = normalizeSheetDate(r[1]) || '2026-01-01';
+            const isT = /bank withdrawal|cash deposit|withdrawn from bank|contra/i.test(part);
+            if (inw > 0) syncedEntries.push({ id: `cb_${i}_in`, date: dt, book: 'Cash', type: 'income', amount: inw, desc: part || 'Cash Inward', category: isT ? 'Contra Transfer' : 'Cash Receipt', ref: 'Cash', isTransfer: isT });
+            if (outw > 0) syncedEntries.push({ id: `cb_${i}_out`, date: dt, book: 'Cash', type: 'expense', amount: outw, desc: part || 'Cash Outward', category: isT ? 'Contra Transfer' : 'Cash Expense', ref: 'Cash', isTransfer: isT });
+          }
+
+          // Parse Book Collection: Street (col D = idx 3, rows 1..40), VIP/QR (col J = idx 9, rows 1..20)
+          let streetSum = 0, vipSum = 0;
+          for (let i = 1; i < Math.min(bookColRows.length, 41); i++) {
+            streetSum += toNum(bookColRows[i][3]);
+          }
+          for (let i = 1; i < Math.min(bookColRows.length, 21); i++) {
+            vipSum += toNum(bookColRows[i][9]);
+          }
+          const totalCol = streetSum + vipSum;
+
+          // Parse Cheques Issued
+          let clearedCount = 0, clearedAmt = 0, pendingCount = 0, pendingAmt = 0;
+          for (let i = 1; i < chequeRows.length; i++) {
+            const r = chequeRows[i];
+            const amt = toNum(r[4]);
+            const name = (r[2] || '').trim();
+            if (!amt && !name) continue;
+            const st = (r[6] || '').toLowerCase();
+            if (st.includes('clear')) { clearedCount++; clearedAmt += amt; }
+            else { pendingCount++; pendingAmt += amt; }
+          }
+
+          state.openingBank = newOpeningBank;
+          state.openingCash = newOpeningCash;
+          state.entries = syncedEntries;
+          state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          saveState();
+
+          document.getElementById('kpiCollection').textContent = fmtMoney(totalCol);
+          document.getElementById('kpiCollectionSub').textContent = `Street: ${fmtMoney(streetSum)} | VIP/QR: ${fmtMoney(vipSum)}`;
+          document.getElementById('auditHeaderSub').textContent = `60 Books · ${clearedCount + pendingCount} Cheques`;
+
+          // Parse Balance tab for Tally vs Bank Reconciliation
+          const balMap = {};
+          balanceRows.forEach(r => {
+            const k = (r[0] || '').trim().toLowerCase();
+            if (k) balMap[k] = r;
+          });
+          const bExp = balMap['bank exp'] ? toNum(balMap['bank exp'][1]) : 0;
+          const tExp = balMap['tally exp'] ? toNum(balMap['tally exp'][1]) : 0;
+          const bInc = balMap['bank income'] ? toNum(balMap['bank income'][1]) : 0;
+          const tInc = balMap['tally income'] ? toNum(balMap['tally income'][1]) : 0;
+          const rBank = balMap['bank income'] ? toNum(balMap['bank income'][3]) : 0;
+          const rTally = balMap['tally income'] ? toNum(balMap['tally income'][3]) : 0;
+          const netDiff = (tExp - bExp) + (tInc - bInc);
+          tallyRecon = [
+            { item: 'Total Expenses (Outward)', bank: bExp, tally: tExp, variance: tExp - bExp },
+            { item: 'Total Income (Inward)', bank: bInc, tally: tInc, variance: tInc - bInc },
+            { item: 'Receipts / Reversals', bank: rBank, tally: rTally, variance: rBank - rTally },
+            { item: 'Secondary Adjustments', bank: 0, tally: 0, variance: 0 },
+            { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: netDiff, isTotal: true }
+          ];
+
+          auditRows = [
+            { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: streetSum, status: streetSum > 0 ? 'Collected & Deposited' : 'Awaiting Entries' },
+            { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: vipSum, status: vipSum > 0 ? 'Tallied with Bank' : 'Awaiting Entries' },
+            { head: 'Total Book Collections', count: 'All 60 Books', amount: totalCol, status: totalCol > 0 ? 'Fully Reconciled' : 'Reset for 2026', isBold: true },
+            { head: 'Cheques Issued — Cleared', count: `${clearedCount} Cleared`, amount: clearedAmt, status: clearedCount ? 'Cleared' : 'Nil' },
+            { head: 'Cheques Issued — Pending', count: `${pendingCount} Pending`, amount: pendingAmt, status: pendingCount ? 'Pending' : 'Nil Pending' }
+          ];
+
+          renderAll();
+          showToast(`Synced ${syncedEntries.length} entries from Google Sheet.`);
+        } catch (err) {
+          showToast('Live sync needs Sheet sharing set to "Anyone with the link (Viewer)" or use Import CSV.');
+        } finally {
+          btn.disabled = false;
+          icon.classList.remove('animate-spin');
+        }
+      }
+
+      document.getElementById('btnSyncSheet').addEventListener('click', syncFromGoogleSheet);
+
+      const APPS_SCRIPT_CODE = `function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var bankSheet = ss.getSheetByName('Bank Book');
+  var cashSheet = ss.getSheetByName('Cash Book');
+  var bankEntries = data.entries.filter(function(x) { return x.book === 'Bank'; });
+  var cashEntries = data.entries.filter(function(x) { return x.book === 'Cash'; });
+  if (bankEntries.length) {
+    bankEntries.forEach(function(r, idx) {
+      bankSheet.appendRow([idx + 1, r.date, r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : '']);
+    });
+  }
+  if (cashEntries.length) {
+    cashEntries.forEach(function(r, idx) {
+      cashSheet.appendRow([idx + 1, r.date, r.desc, r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : '']);
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', saved: data.entries.length })).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+      async function pushToGoogleSheet() {
+        const url = (state.appsScriptUrl || '').trim();
+        if (!url) {
+          activeTab = 'import';
+          renderAll();
+          showToast('Add your Apps Script Web App URL in Import / Export CSV to save directly to Google Sheets.');
+          return;
+        }
+        try {
+          await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ openingBank: state.openingBank, openingCash: state.openingCash, entries: state.entries })
+          });
+          showToast(`Sent ${state.entries.length} entries to Income & Expenses - 2026.`);
+        } catch (err) {
+          showToast('Could not reach Apps Script URL. Check deployment permissions.');
+        }
+      }
+
+      document.getElementById('btnPushSheet').addEventListener('click', pushToGoogleSheet);
+      document.getElementById('btnSaveScriptUrl').addEventListener('click', () => {
+        state.appsScriptUrl = document.getElementById('appsScriptUrlInput').value.trim();
+        saveState();
+        showToast('Apps Script URL saved.');
+      });
+      document.getElementById('btnCopyAppsScript').addEventListener('click', () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => showToast('Apps Script code copied.')).catch(() => {});
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = APPS_SCRIPT_CODE;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('Apps Script code copied.');
+        }
+      });
+
 
       document.getElementById('navTabs').addEventListener('click', e => {
         const btn = e.target.closest('.tab-btn');
