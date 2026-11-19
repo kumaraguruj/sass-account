@@ -679,9 +679,10 @@
           </div>
 
           <div id="appsScriptCard" class="pt-4 border-t border-slate-200 space-y-2.5">
-            <h3 class="text-sm font-semibold text-slatex-900">Save Directly to Google Sheet (Apps Script)</h3>
+            <h3 class="text-sm font-semibold text-slatex-900">Direct Google Sheet Connection</h3>
             <p class="text-xs text-slate-600">
-              In <strong>Income &amp; Expenses - 2026</strong>, open <em>Extensions → Apps Script</em>, paste the sync script, deploy as a Web App (<em>Anyone</em>), and save the URL below.
+              <strong>Reading (Pulling):</strong> Works directly from <strong>Income &amp; Expenses - 2026</strong> without any script as long as Share is set to <em>Anyone with the link (Viewer)</em>.<br />
+              <strong>Writing (Saving):</strong> Optional Apps Script Web App URL below enables automatic two-way saving when you add/edit entries.
             </p>
             <div class="flex gap-2">
               <input id="appsScriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="form-control text-xs py-1.5 flex-1" />
@@ -1500,22 +1501,45 @@
         });
       }
 
-      async function fetchSheetCsv(sheetName) {
-        const url1 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-        let res = await fetch(url1, { mode: 'cors' });
-        if (res.ok) {
-          const text = await res.text();
-          if (!text.trim().startsWith('<!DOCTYPE') && !text.includes('accounts.google.com')) return parseCsvText(text);
-        }
-        
-        const url2 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName.replace(' ', ''))}`;
-        res = await fetch(url2, { mode: 'cors' });
-        if (res.ok) {
-          const text = await res.text();
-          if (!text.trim().startsWith('<!DOCTYPE') && !text.includes('accounts.google.com')) return parseCsvText(text);
-        }
-        
-        throw new Error('Sheet is private or missing');
+      function fetchSheetDirectJsonp(sheetName) {
+        return new Promise((resolve, reject) => {
+          const cbName = '__gvizCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+          const script = document.createElement('script');
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error('Direct sheet read timed out (check Share: Anyone with link)'));
+          }, 10000);
+          function cleanup() {
+            clearTimeout(timer);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+          window[cbName] = function (resp) {
+            cleanup();
+            if (!resp || resp.status !== 'ok' || !resp.table) {
+              reject(new Error('Sheet private or tab "' + sheetName + '" not found'));
+              return;
+            }
+            const cols = resp.table.cols || [];
+            const headerRow = cols.map(c => c.label || c.id || '');
+            const rows = [headerRow];
+            (resp.table.rows || []).forEach(r => {
+              const cells = (r.c || []).map(cell => {
+                if (!cell || cell.v === null || cell.v === undefined) return '';
+                if (cell.f) return String(cell.f);
+                return String(cell.v);
+              });
+              rows.push(cells);
+            });
+            resolve(rows);
+          };
+          script.onerror = function () {
+            cleanup();
+            reject(new Error('Sheet is private — set Share to "Anyone with the link (Viewer)"'));
+          };
+          script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}&_t=${Date.now()}`;
+          document.head.appendChild(script);
+        });
       }
 
       async function syncFromGoogleSheet(silent) {
@@ -1526,56 +1550,35 @@
         let scriptErr = '';
         try {
           let bankRows, cashRows, bookColRows, chequeRows, balanceRows;
-          const scriptUrl = (state.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL || '').trim();
           let pulledViaScript = false;
 
-          if (scriptUrl) {
-            try {
-              const sep = scriptUrl.includes('?') ? '&' : '?';
-              const res = await fetch(scriptUrl + sep + '_t=' + Date.now(), { redirect: 'follow' });
-              const rawText = await res.text();
-              if (!res.ok) {
-                scriptErr = 'HTTP ' + res.status;
-              } else if (rawText.trim().startsWith('<')) {
-                scriptErr = 'Apps Script returned HTML (check "Who has access: Anyone" & New version)';
-              } else {
-                const json = JSON.parse(rawText);
-                if (json && json.status === 'ok') {
-                  bankRows = json.bankBook || [];
-                  cashRows = json.cashBook || [];
-                  bookColRows = json.bookCollection || [];
-                  chequeRows = json.chequesIssued || [];
-                  balanceRows = json.balance || [];
-                  pulledViaScript = true;
-                } else {
-                  scriptErr = 'Unexpected JSON from Apps Script';
-                }
-              }
-            } catch (e) {
-              try {
-                const jsonpData = await fetchAppsScriptJsonp(scriptUrl);
-                if (jsonpData && jsonpData.status === 'ok') {
-                  bankRows = jsonpData.bankBook || [];
-                  cashRows = jsonpData.cashBook || [];
-                  bookColRows = jsonpData.bookCollection || [];
-                  chequeRows = jsonpData.chequesIssued || [];
-                  balanceRows = jsonpData.balance || [];
-                  pulledViaScript = true;
-                }
-              } catch (jsonpErr) {
-                scriptErr = (e && e.message ? e.message : 'Failed to fetch') + ' (redeploy Apps Script with JSONP support)';
-              }
-            }
-          }
-
-          if (!pulledViaScript) {
+          // 1. Primary: Direct Google Sheet JSONP read (requires zero Apps Script)
+          try {
             [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
-              fetchSheetCsv('Bank Book'),
-              fetchSheetCsv('Cash Book'),
-              fetchSheetCsv('Book Collection'),
-              fetchSheetCsv('Cheques Issued'),
-              fetchSheetCsv('Balance')
+              fetchSheetDirectJsonp('Bank Book'),
+              fetchSheetDirectJsonp('Cash Book'),
+              fetchSheetDirectJsonp('Book Collection'),
+              fetchSheetDirectJsonp('Cheques Issued'),
+              fetchSheetDirectJsonp('Balance')
             ]);
+          } catch (directErr) {
+            scriptErr = directErr && directErr.message ? directErr.message : 'Direct sheet read blocked';
+            // 2. Fallback: Apps Script Web App if Sheet is strictly private
+            const scriptUrl = (state.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL || '').trim();
+            if (scriptUrl) {
+              const jsonpData = await fetchAppsScriptJsonp(scriptUrl);
+              if (jsonpData && jsonpData.status === 'ok') {
+                bankRows = jsonpData.bankBook || [];
+                cashRows = jsonpData.cashBook || [];
+                bookColRows = jsonpData.bookCollection || [];
+                chequeRows = jsonpData.chequesIssued || [];
+                balanceRows = jsonpData.balance || [];
+                pulledViaScript = true;
+                scriptErr = '';
+              }
+            } else {
+              throw directErr;
+            }
           }
 
           function parseLedger(rows, bookName) {
