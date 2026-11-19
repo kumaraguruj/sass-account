@@ -320,22 +320,22 @@
         <div class="bg-brand-800 text-white rounded-xl p-4 shadow-sm lg:col-span-2">
           <p class="text-[11px] font-medium text-sky-200 uppercase tracking-wider">Combined Liquidity</p>
           <p id="kpiTotal" class="mt-1.5 text-xl sm:text-2xl font-bold tabular-nums">₹5,37,610</p>
-          <p id="kpiTotalSub" class="mt-1 text-[11px] text-sky-200">Bank: ₹5,37,610 | Cash: ₹0</p>
+          <p id="kpiTotalSub" class="mt-1 text-[11px] text-sky-200">Bank: ₹4,80,355 | Cash: ₹57,255</p>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cash at Bank</p>
-          <p id="kpiBank" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹5,37,610</p>
-          <p id="kpiBankSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹5,37,610 | Out: ₹0</p>
+          <p id="kpiBank" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹4,80,355</p>
+          <p id="kpiBankSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹5,41,110 | Out: ₹60,755</p>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cash in Hand</p>
-          <p id="kpiCash" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹0</p>
-          <p id="kpiCashSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹0 | Outward: ₹0</p>
+          <p id="kpiCash" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹57,255</p>
+          <p id="kpiCashSub" class="mt-1 text-[11px] text-slate-500">Inward: ₹60,755 | Out: ₹3,500</p>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Net Period Flow</p>
-          <p id="kpiNetFlow" class="mt-1.5 text-xl font-bold text-rose-700 tabular-nums">-₹57,255</p>
-          <p id="kpiNetFlowSub" class="mt-1 text-[11px] text-slate-500">In: ₹3,500 | Out: ₹60,755</p>
+          <p id="kpiNetFlow" class="mt-1.5 text-xl font-bold text-slatex-900 tabular-nums">₹0</p>
+          <p id="kpiNetFlowSub" class="mt-1 text-[11px] text-slate-500">In: ₹64,255 | Out: ₹64,255</p>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Cheques Cleared</p>
@@ -689,7 +689,7 @@
             <div class="space-y-2">
               <div>
                 <label for="googleSheetIdInput" class="block text-[11px] font-medium text-slate-600 mb-1">Google Spreadsheet ID (from Sheet URL <code>/d/SPREADSHEET_ID/edit</code>)</label>
-                <input id="googleSheetIdInput" type="text" placeholder="Paste Receipts 2026 Spreadsheet ID..." class="form-control text-xs py-1.5 font-mono" />
+                <input id="googleSheetIdInput" type="text" placeholder="Paste Spreadsheet ID..." class="form-control text-xs py-1.5 font-mono" />
               </div>
               <div>
                 <label for="googleClientIdInput" class="block text-[11px] font-medium text-slate-600 mb-1">Google OAuth 2.0 Web Client ID (Google Cloud Console → APIs &amp; Services → Credentials)</label>
@@ -890,9 +890,10 @@
 
   <script>
     (function () {
-      const STORAGE_KEY = 'bankbook_cashbook_2026_v13_oauth_v4';
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v15_clean';
+      const OAUTH_SESSION_KEY = 'bankbook_oauth_token_v15';
       const DEFAULT_SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
-      const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdsKqJiPy6D46nQQChB2Nc9RJy_igDTtyF1NTStHBEMfYMkrlKG3Jq3A5ph9WqHwG-/exec';
+      const DEFAULT_CLIENT_ID = '674713422029-okcbm6pe56s30ep2j11u9nmqrvug6scu.apps.googleusercontent.com';
       const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
       const CURRENCIES = {
@@ -902,7 +903,6 @@
         GBP: { symbol: '£', locale: 'en-GB' }
       };
 
-      // Grounded Dashboard Sheet Reference Data (Income & Expenses - 2026)
       let tallyRecon = [
         { item: 'Total Expenses (Outward)', bank: 0, tally: 0, variance: 0 },
         { item: 'Total Income (Inward)', bank: 0, tally: 0, variance: 0 },
@@ -923,10 +923,9 @@
         currency: 'INR',
         openingBank: 537610.0,
         openingCash: 0,
-        lastRefreshed: '19 Nov, 07:51 pm',
+        lastRefreshed: '19 Nov, 08:16 pm',
         sheetId: DEFAULT_SHEET_ID,
-        googleClientId: '',
-        appsScriptUrl: DEFAULT_APPS_SCRIPT_URL,
+        googleClientId: DEFAULT_CLIENT_ID,
         autoSync: true,
         entries: [
           { id: 'bb_3_out', date: '2026-11-16', book: 'Bank', type: 'expense', amount: 55555, desc: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true },
@@ -947,9 +946,34 @@
       let parsedCsvHeaders = [];
       let oauthAccessToken = '';
       let oauthTokenExpiresAt = 0;
+      let resolvedTabNames = {
+        bank: 'Bank Book',
+        cash: 'Cash Book',
+        collection: 'Book Collection',
+        cheques: 'Cheques Issued',
+        balance: 'Balance'
+      };
+
+      try {
+        const savedTok = JSON.parse(sessionStorage.getItem(OAUTH_SESSION_KEY) || 'null');
+        if (savedTok && savedTok.token && Date.now() < savedTok.expiresAt - 15000) {
+          oauthAccessToken = savedTok.token;
+          oauthTokenExpiresAt = savedTok.expiresAt;
+        }
+      } catch (e) { /* ignore sessionStorage issues */ }
 
       function activeSheetId() {
-        return (state.sheetId || DEFAULT_SHEET_ID).trim();
+        const raw = (state.sheetId || DEFAULT_SHEET_ID).trim();
+        const m = raw.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        return m ? m[1] : raw;
+      }
+
+      function activeClientId() {
+        return (state.googleClientId || DEFAULT_CLIENT_ID).trim();
+      }
+
+      function hasValidOAuthToken() {
+        return Boolean(oauthAccessToken && Date.now() < oauthTokenExpiresAt - 15000);
       }
 
       function loadState() {
@@ -959,19 +983,19 @@
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.entries)) {
               if (!parsed.sheetId) parsed.sheetId = DEFAULT_SHEET_ID;
-              if (!parsed.appsScriptUrl) parsed.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL;
+              if (!parsed.googleClientId) parsed.googleClientId = DEFAULT_CLIENT_ID;
               if (!Array.isArray(parsed.cheques)) parsed.cheques = [];
               return parsed;
             }
           }
-        } catch (e) { /* fallback to snapshot */ }
+        } catch (e) { /* fallback */ }
         return JSON.parse(JSON.stringify(SAMPLE_DATA));
       }
 
       function saveState() {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (e) { /* ignore quota errors */ }
+        } catch (e) {}
       }
 
       function fmtMoney(val) {
@@ -984,14 +1008,33 @@
 
       function showToast(msg) {
         const el = document.getElementById('toast');
+        if (!el) return;
         el.textContent = msg;
         el.classList.remove('hidden');
         clearTimeout(el._timer);
-        el._timer = setTimeout(() => el.classList.add('hidden'), 3200);
+        el._timer = setTimeout(() => el.classList.add('hidden'), 3600);
       }
 
       function escapeHtml(str) {
         return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      }
+
+      function updateOAuthUiBadge() {
+        const badge = document.getElementById('oauthStatusBadge');
+        const signInBtn = document.getElementById('btnGoogleSignIn');
+        const signOutBtn = document.getElementById('btnGoogleSignOut');
+        if (!badge) return;
+        if (hasValidOAuthToken()) {
+          badge.textContent = 'OAuth Connected (Read & Write)';
+          badge.className = 'badge-pill bg-teal-50 text-teal-800 border border-teal-200';
+          if (signInBtn) signInBtn.textContent = 'Reconnect Google';
+          if (signOutBtn) signOutBtn.classList.remove('hidden');
+        } else {
+          badge.textContent = 'Not Signed In (Read-Only Fallback)';
+          badge.className = 'badge-pill bg-slate-100 text-slate-600';
+          if (signInBtn) signInBtn.textContent = 'Sign in with Google';
+          if (signOutBtn) signOutBtn.classList.add('hidden');
+        }
       }
 
       function computeBookLedger(bookName) {
@@ -1010,23 +1053,23 @@
 
       function computeChequeStats() {
         const list = Array.isArray(state.cheques) ? state.cheques : [];
-        const cleared = list.filter(c => c.status === 'Cleared');
-        const pending = list.filter(c => c.status === 'Pending');
-        const cancelled = list.filter(c => c.status === 'Cancelled');
-        const totalAmt = list.filter(c => c.status !== 'Cancelled').reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        const clearedAmt = cleared.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        const pendingAmt = pending.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        const cancelledAmt = cancelled.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        return {
-          totalCount: list.length,
-          totalAmt,
-          clearedCount: cleared.length,
-          clearedAmt,
-          pendingCount: pending.length,
-          pendingAmt,
-          cancelledCount: cancelled.length,
-          cancelledAmt
-        };
+        let totalAmt = 0, clearedAmt = 0, clearedCount = 0, pendingAmt = 0, pendingCount = 0, cancelledAmt = 0, cancelledCount = 0;
+        list.forEach(c => {
+          const amt = Number(c.amount) || 0;
+          totalAmt += amt;
+          const st = String(c.status || 'Pending').toLowerCase();
+          if (st.includes('clear')) {
+            clearedAmt += amt;
+            clearedCount++;
+          } else if (st.includes('cancel') || st.includes('bounc')) {
+            cancelledAmt += amt;
+            cancelledCount++;
+          } else {
+            pendingAmt += amt;
+            pendingCount++;
+          }
+        });
+        return { totalCount: list.length, totalAmt, clearedAmt, clearedCount, pendingAmt, pendingCount, cancelledAmt, cancelledCount };
       }
 
       function renderKPIs() {
@@ -1040,9 +1083,9 @@
         const cashInward = Number(state.openingCash || 0) + cashRows.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
         const cashOutward = cashRows.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-        const totalTxIn = state.entries.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-        const totalTxOut = state.entries.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-        const netFlow = totalTxIn - totalTxOut;
+        const periodIn = state.entries.filter(r => r.type === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const periodOut = state.entries.filter(r => r.type === 'expense').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const netFlow = periodIn - periodOut;
 
         const chq = computeChequeStats();
 
@@ -1051,61 +1094,67 @@
         document.getElementById('kpiBank').textContent = fmtMoney(bankBal);
         document.getElementById('kpiBankSub').textContent = `Inward: ${fmtMoney(bankInward)} | Out: ${fmtMoney(bankOutward)}`;
         document.getElementById('kpiCash').textContent = fmtMoney(cashBal);
-        document.getElementById('kpiCashSub').textContent = `Inward: ${fmtMoney(cashInward)} | Outward: ${fmtMoney(cashOutward)}`;
+        document.getElementById('kpiCashSub').textContent = `Inward: ${fmtMoney(cashInward)} | Out: ${fmtMoney(cashOutward)}`;
 
         const netEl = document.getElementById('kpiNetFlow');
         netEl.textContent = (netFlow > 0 ? '+' : '') + fmtMoney(netFlow);
-        netEl.className = `mt-1.5 text-xl font-bold tabular-nums ${netFlow >= 0 ? 'text-teal-700' : 'text-rose-700'}`;
-        document.getElementById('kpiNetFlowSub').textContent = `In: ${fmtMoney(totalTxIn)} | Out: ${fmtMoney(totalTxOut)}`;
+        netEl.className = `mt-1.5 text-xl font-bold tabular-nums ${netFlow < 0 ? 'text-rose-700' : netFlow > 0 ? 'text-teal-700' : 'text-slatex-900'}`;
+        document.getElementById('kpiNetFlowSub').textContent = `In: ${fmtMoney(periodIn)} | Out: ${fmtMoney(periodOut)}`;
 
         document.getElementById('kpiChequesCleared').textContent = fmtMoney(chq.clearedAmt);
         document.getElementById('kpiChequesSub').textContent = `${chq.clearedCount} Cleared | ${chq.pendingCount} Pending`;
-
-        const bannerEl = document.getElementById('bannerSummaryText');
-        if (bannerEl) {
-          const modeLabel = hasValidOAuthToken() ? 'OAuth 2.0 Read/Write' : 'Direct Read (Sign in for Write)';
-          bannerEl.innerHTML = `Connected to <strong>Google Sheets API v4</strong> (${modeLabel}) — Combined Liquidity ${fmtMoney(bankBal + cashBal)} · Cash at Bank ${fmtMoney(bankBal)} · Cash in Hand ${fmtMoney(cashBal)} · Cheques Cleared ${fmtMoney(chq.clearedAmt)}.`;
-        }
       }
 
       function renderCharts() {
-        const monthSet = new Set(['2026-11']);
-        state.entries.forEach(e => {
-          const m = (e.date || '').slice(0, 7);
-          if (m) monthSet.add(m);
-        });
-        const allMonths = Array.from(monthSet).sort();
-        const inData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0));
-        const outData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'expense').reduce((s, e) => s + (Number(e.amount) || 0), 0));
+        const allMonths = Array.from(new Set(state.entries.map(e => (e.date || '').slice(0, 7)).filter(Boolean))).sort();
+        const labels = allMonths.length ? allMonths : ['2026-11'];
+        const inData = labels.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0));
+        const outData = labels.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'expense').reduce((s, e) => s + (Number(e.amount) || 0), 0));
 
         const catTotals = {};
         state.entries.forEach(e => {
-          const cat = e.category || 'Miscellaneous';
+          const cat = (e.category || 'Uncategorized').trim();
           catTotals[cat] = (catTotals[cat] || 0) + (Number(e.amount) || 0);
         });
-        const catLabels = Object.keys(catTotals).length ? Object.keys(catTotals) : ['No Entries Yet'];
-        const catValues = Object.keys(catTotals).length ? Object.values(catTotals) : [0];
+        const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 7);
+        const catLabels = catEntries.length ? catEntries.map(x => x[0]) : ['No Entries'];
+        const catValues = catEntries.length ? catEntries.map(x => x[1]) : [0];
 
         const monthlyCanvas = document.getElementById('monthlyChart');
         const categoryCanvas = document.getElementById('categoryChart');
         if (!monthlyCanvas || !categoryCanvas) return;
 
-        // Safe fallback if Chart.js CDN is blocked or offline
         if (typeof window.Chart === 'undefined') {
-          drawFallbackBarChart(monthlyCanvas, allMonths, inData, outData);
-          drawFallbackHorizontalChart(categoryCanvas, catLabels, catValues);
+          const drawFallback = (canvas, items, color) => {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.parentElement.clientWidth || 360;
+            const h = canvas.height = 240;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Inter, sans-serif';
+            const max = Math.max(...items.map(x => x.v), 1);
+            items.forEach((it, idx) => {
+              const y = 24 + idx * 32;
+              const barW = Math.max(4, ((w - 170) * it.v) / max);
+              ctx.fillStyle = '#334155';
+              ctx.fillText(it.l.slice(0, 18), 8, y + 13);
+              ctx.fillStyle = color;
+              ctx.fillRect(140, y, barW, 18);
+            });
+          };
+          drawFallback(monthlyCanvas, labels.map((l, i) => ({ l, v: Math.max(inData[i], outData[i]) })), '#2b4c7e');
+          drawFallback(categoryCanvas, catLabels.map((l, i) => ({ l, v: catValues[i] })), '#1b365d');
           return;
         }
 
-        const ctxMonthly = monthlyCanvas.getContext('2d');
         if (monthlyChartInstance) monthlyChartInstance.destroy();
-        monthlyChartInstance = new window.Chart(ctxMonthly, {
+        monthlyChartInstance = new window.Chart(monthlyCanvas.getContext('2d'), {
           type: 'bar',
           data: {
-            labels: allMonths,
+            labels,
             datasets: [
-              { label: 'Inward (+)', data: inData, backgroundColor: '#2b4c7e', borderRadius: 5 },
-              { label: 'Outward (-)', data: outData, backgroundColor: '#64748b', borderRadius: 5 }
+              { label: 'Inward', data: inData, backgroundColor: '#2b4c7e', borderRadius: 4 },
+              { label: 'Outward', data: outData, backgroundColor: '#64748b', borderRadius: 4 }
             ]
           },
           options: {
@@ -1116,14 +1165,13 @@
           }
         });
 
-        const ctxCategory = categoryCanvas.getContext('2d');
         if (categoryChartInstance) categoryChartInstance.destroy();
-        categoryChartInstance = new window.Chart(ctxCategory, {
+        categoryChartInstance = new window.Chart(categoryCanvas.getContext('2d'), {
           type: 'bar',
           data: {
             labels: catLabels,
             datasets: [
-              { label: 'Total Volume', data: catValues, backgroundColor: '#1b365d', borderRadius: 5 }
+              { label: 'Volume', data: catValues, backgroundColor: '#1b365d', borderRadius: 4 }
             ]
           },
           options: {
@@ -1136,89 +1184,45 @@
         });
       }
 
-      function drawFallbackBarChart(canvas, labels, inData, outData) {
-        const parent = canvas.parentElement;
-        canvas.width = parent ? parent.clientWidth || 420 : 420;
-        canvas.height = parent ? parent.clientHeight || 240 : 240;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const maxVal = Math.max(1, ...inData, ...outData);
-        const pad = 36;
-        const chartW = canvas.width - pad * 2;
-        const chartH = canvas.height - pad * 2;
-        const groupW = chartW / Math.max(1, labels.length);
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.beginPath();
-        ctx.moveTo(pad, pad + chartH);
-        ctx.lineTo(pad + chartW, pad + chartH);
-        ctx.stroke();
-        labels.forEach((lbl, i) => {
-          const x0 = pad + i * groupW + groupW * 0.2;
-          const barW = Math.min(28, groupW * 0.26);
-          const h1 = (inData[i] / maxVal) * (chartH - 12);
-          const h2 = (outData[i] / maxVal) * (chartH - 12);
-          ctx.fillStyle = '#2b4c7e';
-          ctx.fillRect(x0, pad + chartH - h1, barW, h1);
-          ctx.fillStyle = '#64748b';
-          ctx.fillRect(x0 + barW + 4, pad + chartH - h2, barW, h2);
-          ctx.fillStyle = '#475569';
-          ctx.font = '11px Inter, sans-serif';
-          ctx.fillText(lbl, x0, pad + chartH + 16);
-        });
-      }
-
-      function drawFallbackHorizontalChart(canvas, labels, values) {
-        const parent = canvas.parentElement;
-        canvas.width = parent ? parent.clientWidth || 420 : 420;
-        canvas.height = parent ? parent.clientHeight || 240 : 240;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const maxVal = Math.max(1, ...values);
-        const leftPad = 120;
-        const rightPad = 24;
-        const barAreaW = Math.max(80, canvas.width - leftPad - rightPad);
-        const rowH = Math.min(34, (canvas.height - 24) / Math.max(1, labels.length));
-        labels.forEach((lbl, i) => {
-          const y = 16 + i * rowH;
-          const w = (values[i] / maxVal) * barAreaW;
-          ctx.fillStyle = '#334155';
-          ctx.font = '11px Inter, sans-serif';
-          ctx.fillText(String(lbl).slice(0, 18), 8, y + 14);
-          ctx.fillStyle = '#1b365d';
-          ctx.fillRect(leftPad, y + 3, Math.max(4, w), 16);
-        });
-      }
-
       function renderSheetDashboardTables() {
         const chq = computeChequeStats();
         const bankRows = computeBookLedger('Bank');
         const bankBal = bankRows.length ? bankRows[bankRows.length - 1].balance : Number(state.openingBank || 0);
-        const effectiveClearedBal = bankBal + chq.pendingAmt;
+
+        document.getElementById('auditHeaderSub').textContent = `60 Books · ${chq.totalCount} Cheques`;
+        document.getElementById('auditTableBody').innerHTML = auditRows.map(r => `
+          <tr class="${r.isBold ? 'bg-slate-50 font-semibold' : ''}">
+            <td class="py-2.5 px-2 text-slate-800">${escapeHtml(r.head)}</td>
+            <td class="py-2.5 px-2 text-slate-600">${escapeHtml(r.count)}</td>
+            <td class="py-2.5 px-2 text-right tabular-nums text-slatex-900">${fmtMoney(r.amount)}</td>
+            <td class="py-2.5 px-2 text-right"><span class="badge-pill bg-sky-50 text-brand-800">${escapeHtml(r.status)}</span></td>
+          </tr>
+        `).join('');
 
         document.getElementById('dashChequeSummaryBody').innerHTML = `
           <tr>
-            <td class="py-2.5 px-2 font-medium text-teal-800">Cleared Cheques</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${chq.clearedCount}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums font-medium text-teal-700">${fmtMoney(chq.clearedAmt)}</td>
-            <td class="py-2.5 px-2 text-right text-xs text-slate-500">Debited in Bank</td>
+            <td class="py-2 px-2 font-medium text-teal-800">Cleared</td>
+            <td class="py-2 px-2 text-right tabular-nums">${chq.clearedCount}</td>
+            <td class="py-2 px-2 text-right tabular-nums font-medium text-teal-700">${fmtMoney(chq.clearedAmt)}</td>
+            <td class="py-2 px-2 text-right text-slate-500">Debited</td>
           </tr>
           <tr>
-            <td class="py-2.5 px-2 font-medium text-amber-800">Pending / Uncleared</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-slate-700">${chq.pendingCount}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums font-medium text-amber-700">${fmtMoney(chq.pendingAmt)}</td>
-            <td class="py-2.5 px-2 text-right text-xs text-amber-700">+${fmtMoney(chq.pendingAmt)} Float</td>
+            <td class="py-2 px-2 font-medium text-amber-800">Pending</td>
+            <td class="py-2 px-2 text-right tabular-nums">${chq.pendingCount}</td>
+            <td class="py-2 px-2 text-right tabular-nums font-medium text-amber-700">${fmtMoney(chq.pendingAmt)}</td>
+            <td class="py-2 px-2 text-right text-slate-500">+Float</td>
           </tr>
           <tr>
-            <td class="py-2.5 px-2 text-slate-600">Cancelled / Bounced</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-slate-600">${chq.cancelledCount}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-slate-500">${fmtMoney(chq.cancelledAmt)}</td>
-            <td class="py-2.5 px-2 text-right text-xs text-slate-400">No Bank Impact</td>
+            <td class="py-2 px-2 font-medium text-slate-600">Cancelled</td>
+            <td class="py-2 px-2 text-right tabular-nums">${chq.cancelledCount}</td>
+            <td class="py-2 px-2 text-right tabular-nums text-slate-500">${fmtMoney(chq.cancelledAmt)}</td>
+            <td class="py-2 px-2 text-right text-slate-400">Nil</td>
           </tr>
           <tr class="bg-slate-50 font-semibold border-t border-slate-200">
-            <td class="py-2.5 px-2 text-slatex-900">Effective Cleared Bank Bal</td>
-            <td class="py-2.5 px-2 text-right tabular-nums">${chq.totalCount}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums">${fmtMoney(chq.totalAmt)}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-brand-800">${fmtMoney(effectiveClearedBal)}</td>
+            <td class="py-2 px-2 text-slatex-900">Effective Bank</td>
+            <td class="py-2 px-2 text-right tabular-nums">${chq.totalCount}</td>
+            <td class="py-2 px-2 text-right tabular-nums">${fmtMoney(chq.totalAmt)}</td>
+            <td class="py-2 px-2 text-right tabular-nums text-brand-800">${fmtMoney(bankBal + chq.pendingAmt)}</td>
           </tr>
         `;
 
@@ -1230,22 +1234,13 @@
             <td class="py-2.5 px-2 text-right tabular-nums font-medium ${r.variance < 0 ? 'text-rose-700' : 'text-teal-700'}">${fmtMoney(r.variance)}</td>
           </tr>
         `).join('');
-
-        document.getElementById('auditTableBody').innerHTML = auditRows.map(r => `
-          <tr class="${r.isBold ? 'bg-slate-50 font-semibold' : ''}">
-            <td class="py-2.5 px-2 text-slate-800">${escapeHtml(r.head)}</td>
-            <td class="py-2.5 px-2 text-slate-600">${escapeHtml(r.count)}</td>
-            <td class="py-2.5 px-2 text-right tabular-nums text-slatex-900">${fmtMoney(r.amount)}</td>
-            <td class="py-2.5 px-2 text-right"><span class="badge-pill bg-sky-50 text-brand-800">${escapeHtml(r.status)}</span></td>
-          </tr>
-        `).join('');
       }
 
       function renderDashboardRecent() {
         const tbody = document.getElementById('recentTableBody');
         const sorted = state.entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
         if (!sorted.length) {
-          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No ledger transactions yet. Click "+ New Entry" or import a CSV to add transactions.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No ledger transactions yet. Click "+ New Entry" or sign in with Google to sync.</td></tr>';
           return;
         }
         tbody.innerHTML = sorted.map(e => `
@@ -1307,9 +1302,9 @@
               <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(r.date)}</td>
               <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(r.desc)}</td>
               <td class="py-2.5 px-3 text-slate-600">${escapeHtml(r.category)}</td>
-              <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">${escapeHtml(r.ref || '—')}</td>
-              <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-teal-700 font-medium">${r.type === 'income' ? fmtMoney(r.amount) : ''}</td>
-              <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-rose-700 font-medium">${r.type === 'expense' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-slate-500">${escapeHtml(r.ref || '—')}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums text-teal-700 font-medium whitespace-nowrap">${r.type === 'income' ? fmtMoney(r.amount) : ''}</td>
+              <td class="py-2.5 px-3 text-right tabular-nums text-rose-700 font-medium whitespace-nowrap">${r.type === 'expense' ? fmtMoney(r.amount) : ''}</td>
               <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
                 <button data-edit="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
                 <button data-del="${escapeHtml(r.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
@@ -1323,8 +1318,8 @@
         document.getElementById('ledgerTableFoot').innerHTML = `
           <tr>
             <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Totals (${filtered.length} entries)</td>
-            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-teal-700">${fmtMoney(sumCredit)}</td>
-            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-rose-700">${fmtMoney(sumDebit)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-teal-700 whitespace-nowrap">${fmtMoney(sumCredit)}</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-rose-700 whitespace-nowrap">${fmtMoney(sumDebit)}</td>
             <td></td>
           </tr>
         `;
@@ -1343,49 +1338,50 @@
         document.getElementById('chqKpiPendingSub').textContent = `${chq.pendingCount} Uncleared / In-Transit`;
         document.getElementById('chqKpiEffectiveBank').textContent = fmtMoney(bankBal + chq.pendingAmt);
 
-        const list = (state.cheques || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const list = Array.isArray(state.cheques) ? state.cheques : [];
         const months = Array.from(new Set(list.map(c => (c.date || '').slice(0, 7)).filter(Boolean))).sort();
         const mSel = document.getElementById('chqFilterMonth');
-        const prevM = mSel.value;
+        const prevMonth = mSel.value;
         mSel.innerHTML = '<option value="all">All Issue Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
-        if (months.includes(prevM)) mSel.value = prevM;
+        if (months.includes(prevMonth)) mSel.value = prevMonth;
 
         const q = document.getElementById('chqFilterSearch').value.trim().toLowerCase();
         const fStatus = document.getElementById('chqFilterStatus').value;
         const fMonth = mSel.value;
 
-        const filtered = list.filter(c => {
-          if (q && !(c.chequeNo || '').toLowerCase().includes(q) && !(c.payee || '').toLowerCase().includes(q) && !(c.purpose || '').toLowerCase().includes(q)) return false;
-          if (fStatus !== 'all' && c.status !== fStatus) return false;
-          if (fMonth !== 'all' && !(c.date || '').startsWith(fMonth)) return false;
-          return true;
-        });
+        const filtered = list
+          .slice()
+          .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+          .filter(c => {
+            if (q && !(c.chequeNo || '').toLowerCase().includes(q) && !(c.payee || '').toLowerCase().includes(q) && !(c.purpose || '').toLowerCase().includes(q)) return false;
+            if (fStatus !== 'all' && (c.status || 'Pending') !== fStatus) return false;
+            if (fMonth !== 'all' && !(c.date || '').startsWith(fMonth)) return false;
+            return true;
+          });
 
         const tbody = document.getElementById('chequesTableBody');
         if (!filtered.length) {
-          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">No cheques recorded yet. Click "+ Issue Cheque" or refresh from Google Sheet.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-400">No cheques recorded yet. Click "+ Issue Cheque" to log one.</td></tr>';
         } else {
           tbody.innerHTML = filtered.map(c => {
-            const isCleared = c.status === 'Cleared';
-            const isCancelled = c.status === 'Cancelled';
+            const st = c.status || 'Pending';
+            const isCleared = st === 'Cleared';
             const badgeCls = isCleared
               ? 'bg-teal-50 text-teal-800 border border-teal-200'
-              : isCancelled
-              ? 'bg-slate-100 text-slate-600 border border-slate-200'
+              : st === 'Cancelled'
+              ? 'bg-rose-50 text-rose-700 border border-rose-200'
               : 'bg-amber-50 text-amber-800 border border-amber-200';
-            const toggleLabel = isCleared ? 'Undo' : 'Mark Cleared';
-            const toggleCls = isCleared ? 'text-amber-700 hover:underline' : 'text-teal-700 hover:underline';
             return `
               <tr>
-                <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(c.date)}</td>
-                <td class="py-2.5 px-3 whitespace-nowrap font-semibold text-brand-800 tabular-nums">${escapeHtml(c.chequeNo || '—')}</td>
-                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(c.payee)}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(c.date || '—')}</td>
+                <td class="py-2.5 px-3 font-mono font-semibold text-slatex-900 whitespace-nowrap">${escapeHtml(c.chequeNo || '—')}</td>
+                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(c.payee || '—')}</td>
                 <td class="py-2.5 px-3 text-slate-600">${escapeHtml(c.purpose || '—')}</td>
-                <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap font-semibold text-slatex-900">${fmtMoney(c.amount)}</td>
-                <td class="py-2.5 px-3 whitespace-nowrap"><span class="badge-pill ${badgeCls}">${escapeHtml(c.status)}</span></td>
+                <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-slatex-900 whitespace-nowrap">${fmtMoney(c.amount)}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap"><span class="badge-pill ${badgeCls}">${escapeHtml(st)}</span></td>
                 <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 tabular-nums">${escapeHtml(c.clearDate || '—')}</td>
                 <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2">
-                  <button data-chq-toggle="${escapeHtml(c.id)}" type="button" class="text-xs font-semibold ${toggleCls}">${toggleLabel}</button>
+                  <button data-chq-toggle="${escapeHtml(c.id)}" type="button" class="text-xs font-medium ${isCleared ? 'text-amber-700' : 'text-teal-700'} hover:underline">${isCleared ? 'Undo' : 'Mark Cleared'}</button>
                   <button data-chq-edit="${escapeHtml(c.id)}" type="button" class="text-xs font-medium text-brand-700 hover:underline">Edit</button>
                   <button data-chq-del="${escapeHtml(c.id)}" type="button" class="text-xs font-medium text-rose-600 hover:underline">Delete</button>
                 </td>
@@ -1397,8 +1393,8 @@
         const sumFiltered = filtered.reduce((s, c) => s + (Number(c.amount) || 0), 0);
         document.getElementById('chequesTableFoot').innerHTML = `
           <tr>
-            <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Cheques (${filtered.length} items)</td>
-            <td class="py-2.5 px-3 text-right tabular-nums whitespace-nowrap text-slatex-900">${fmtMoney(sumFiltered)}</td>
+            <td colspan="4" class="py-2.5 px-3 text-slate-700">Filtered Cheque Total (${filtered.length} cheques)</td>
+            <td class="py-2.5 px-3 text-right tabular-nums text-slatex-900 whitespace-nowrap">${fmtMoney(sumFiltered)}</td>
             <td colspan="3"></td>
           </tr>
         `;
@@ -1406,21 +1402,19 @@
 
       function renderAll() {
         const lrEl = document.getElementById('lastRefreshedText');
-        if (lrEl) {
-          lrEl.textContent = 'Last refreshed: ' + (state.lastRefreshed || new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }));
-        }
+        if (lrEl) lrEl.textContent = 'Last refreshed: ' + (state.lastRefreshed || '—');
         document.getElementById('currencySelect').value = state.currency || 'INR';
         document.getElementById('openBankInput').value = state.openingBank ?? 0;
         document.getElementById('openCashInput').value = state.openingCash ?? 0;
         const sidIn = document.getElementById('googleSheetIdInput');
         if (sidIn) sidIn.value = activeSheetId();
         const cidIn = document.getElementById('googleClientIdInput');
-        if (cidIn) cidIn.value = state.googleClientId || '';
+        if (cidIn) cidIn.value = activeClientId();
+        const autoEl = document.getElementById('autoSyncToggle');
+        if (autoEl) autoEl.checked = state.autoSync !== false;
         const originHint = document.getElementById('currentOriginHint');
         if (originHint) originHint.textContent = window.location.origin || 'https://kumaraguru-j.github.io';
         updateOAuthUiBadge();
-        const autoEl = document.getElementById('autoSyncToggle');
-        if (autoEl) autoEl.checked = state.autoSync !== false;
 
         renderKPIs();
 
@@ -1449,7 +1443,7 @@
       function openEntryModal(entry) {
         document.getElementById('entryModalTitle').textContent = entry ? 'Edit Ledger Entry' : 'New Ledger Entry';
         document.getElementById('entryId').value = entry ? entry.id : '';
-        document.getElementById('entryDate').value = entry ? entry.date : new Date().toISOString().slice(0, 10);
+        document.getElementById('entryDate').value = entry ? entry.date : '2026-11-16';
         document.getElementById('entryBook').value = entry ? entry.book : (activeTab === 'cashbook' ? 'Cash' : 'Bank');
         document.getElementById('entryType').value = entry ? entry.type : 'expense';
         document.getElementById('entryAmount').value = entry ? entry.amount : '';
@@ -1466,7 +1460,7 @@
       }
 
       function openTransferModal() {
-        document.getElementById('transferDate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('transferDate').value = '2026-11-16';
         document.getElementById('transferAmount').value = '';
         document.getElementById('transferNote').value = '';
         document.getElementById('transferModal').classList.remove('hidden');
@@ -1478,17 +1472,16 @@
         document.getElementById('transferModal').classList.remove('flex');
       }
 
-      function openChequeModal(cheque) {
-        const today = new Date().toISOString().slice(0, 10);
-        document.getElementById('chequeModalTitle').textContent = cheque ? 'Edit Cheque Record' : 'Issue New Cheque';
-        document.getElementById('chequeId').value = cheque ? cheque.id : '';
-        document.getElementById('chequeDate').value = cheque ? cheque.date : today;
-        document.getElementById('chequeNo').value = cheque ? (cheque.chequeNo || '') : '';
-        document.getElementById('chequePayee').value = cheque ? (cheque.payee || '') : '';
-        document.getElementById('chequePurpose').value = cheque ? (cheque.purpose || '') : '';
-        document.getElementById('chequeAmount').value = cheque ? cheque.amount : '';
-        document.getElementById('chequeStatus').value = cheque ? (cheque.status || 'Pending') : 'Pending';
-        document.getElementById('chequeClearDate').value = cheque ? (cheque.clearDate || '') : '';
+      function openChequeModal(chq) {
+        document.getElementById('chequeModalTitle').textContent = chq ? 'Edit Cheque Entry' : 'Issue New Cheque';
+        document.getElementById('chequeId').value = chq ? chq.id : '';
+        document.getElementById('chequeDate').value = chq ? (chq.date || '2026-11-16') : '2026-11-16';
+        document.getElementById('chequeNo').value = chq ? (chq.chequeNo || '') : '';
+        document.getElementById('chequePayee').value = chq ? (chq.payee || '') : '';
+        document.getElementById('chequePurpose').value = chq ? (chq.purpose || '') : '';
+        document.getElementById('chequeAmount').value = chq ? (chq.amount || '') : '';
+        document.getElementById('chequeStatus').value = chq ? (chq.status || 'Pending') : 'Pending';
+        document.getElementById('chequeClearDate').value = chq ? (chq.clearDate || '') : '';
         document.getElementById('chequeModal').classList.remove('hidden');
         document.getElementById('chequeModal').classList.add('flex');
       }
@@ -1517,10 +1510,10 @@
 
       function exportChequesCsv(rows, filename) {
         const headers = ['Issue Date', 'Cheque No', 'Payee', 'Purpose', 'Amount', 'Status', 'Clearance Date'];
-        const csvLines = [headers.join(',')].concat(rows.map(c =>
-          [c.date, c.chequeNo, c.payee, c.purpose, c.amount, c.status, c.clearDate || '']
-            .map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')
-        ));
+        const csvLines = [headers.join(',')].concat(rows.map(c => {
+          return [c.date, c.chequeNo, c.payee, c.purpose, c.amount, c.status, c.clearDate || '']
+            .map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',');
+        }));
         const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1568,36 +1561,102 @@
         return t;
       }
 
+      function formatIsoToSheetDate(iso) {
+        const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso || '');
+      }
+
       function toNum(v) {
         const n = parseFloat(String(v || '').replace(/[^0-9.-]/g, ''));
         return isNaN(n) ? 0 : n;
       }
 
-      function hasValidOAuthToken() {
-        return Boolean(oauthAccessToken && Date.now() < oauthTokenExpiresAt - 15000);
-      }
+      function parseBookRows(rows, bookName) {
+        let opening = 0;
+        const out = [];
+        if (!Array.isArray(rows) || !rows.length) return { opening, entries: out };
 
-      function updateOAuthUiBadge() {
-        const badge = document.getElementById('oauthStatusBadge');
-        const btnIn = document.getElementById('btnGoogleSignIn');
-        const btnOut = document.getElementById('btnGoogleSignOut');
-        if (!badge || !btnIn || !btnOut) return;
-        if (hasValidOAuthToken()) {
-          badge.textContent = 'OAuth Connected (Read & Write)';
-          badge.className = 'badge-pill bg-teal-50 text-teal-800 border border-teal-200';
-          btnIn.textContent = 'Refresh OAuth Token';
-          btnOut.classList.remove('hidden');
-        } else {
-          badge.textContent = 'Not Signed In';
-          badge.className = 'badge-pill bg-slate-100 text-slate-600';
-          btnIn.textContent = 'Sign in with Google';
-          btnOut.classList.add('hidden');
+        let headerIdx = -1;
+        let colDate = 1, colPart = 2, colPurp = -1, colRef = -1, colIn = bookName === 'Bank' ? 5 : 3, colOut = bookName === 'Bank' ? 6 : 4;
+
+        for (let r = 0; r < Math.min(rows.length, 6); r++) {
+          const cells = (rows[r] || []).map(c => String(c || '').trim().toLowerCase());
+          const inIdx = cells.findIndex(c => c === 'inward' || c.startsWith('inward') || c === 'credit');
+          const outIdx = cells.findIndex(c => c === 'outward' || c.startsWith('outward') || c === 'debit');
+          if (inIdx !== -1 || outIdx !== -1) {
+            headerIdx = r;
+            const dIdx = cells.findIndex(c => c === 'date' || c.includes('date'));
+            const pIdx = cells.findIndex(c => c.includes('partic') || c.includes('desc'));
+            const purpIdx = cells.findIndex(c => c.includes('purp') || c.includes('cat'));
+            const refIdx = cells.findIndex(c => c.includes('ref') || c.includes('mode'));
+            if (dIdx !== -1) colDate = dIdx;
+            if (pIdx !== -1) colPart = pIdx;
+            if (purpIdx !== -1) colPurp = purpIdx;
+            if (refIdx !== -1) colRef = refIdx;
+            if (inIdx !== -1) colIn = inIdx;
+            if (outIdx !== -1) colOut = outIdx;
+            break;
+          }
         }
+
+        const startRow = headerIdx >= 0 ? headerIdx + 1 : 1;
+        for (let i = startRow; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const rawDate = String(r[colDate] || '').trim();
+          const part = String(r[colPart] || '').trim();
+          const inw = toNum(r[colIn]);
+          const outw = toNum(r[colOut]);
+
+          if (part.toLowerCase() === 'opening balance') {
+            opening = inw || outw;
+            continue;
+          }
+          if (!rawDate && !part && inw === 0 && outw === 0) continue;
+          if (inw === 0 && outw === 0) continue;
+
+          const dt = normalizeSheetDate(rawDate) || '2026-01-01';
+          const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part);
+          const purp = colPurp >= 0 && String(r[colPurp] || '').trim()
+            ? String(r[colPurp]).trim()
+            : (isT ? 'Contra Transfer' : (bookName === 'Bank' ? 'Bank Transaction' : 'Cash Transaction'));
+          const ref = colRef >= 0 && String(r[colRef] || '').trim()
+            ? String(r[colRef]).trim()
+            : (bookName === 'Cash' ? 'Cash' : '');
+          const prefix = bookName === 'Bank' ? 'bb' : 'cb';
+
+          if (inw > 0) {
+            out.push({
+              id: `${prefix}_${i}_in`,
+              date: dt,
+              book: bookName,
+              type: 'income',
+              amount: inw,
+              desc: part || `${bookName} Inward`,
+              category: purp,
+              ref,
+              isTransfer: isT
+            });
+          }
+          if (outw > 0) {
+            out.push({
+              id: `${prefix}_${i}_out`,
+              date: dt,
+              book: bookName,
+              type: 'expense',
+              amount: outw,
+              desc: part || `${bookName} Outward`,
+              category: purp,
+              ref,
+              isTransfer: isT
+            });
+          }
+        }
+        return { opening, entries: out };
       }
 
       function requestGoogleOAuthToken(interactive) {
         return new Promise((resolve, reject) => {
-          const clientId = (state.googleClientId || '').trim();
+          const clientId = activeClientId();
           if (!clientId) {
             reject(new Error('Enter your Google OAuth 2.0 Web Client ID first'));
             return;
@@ -1613,6 +1672,12 @@
               if (resp && resp.access_token) {
                 oauthAccessToken = resp.access_token;
                 oauthTokenExpiresAt = Date.now() + (Number(resp.expires_in || 3500) * 1000);
+                try {
+                  sessionStorage.setItem(OAUTH_SESSION_KEY, JSON.stringify({
+                    token: oauthAccessToken,
+                    expiresAt: oauthTokenExpiresAt
+                  }));
+                } catch (e) {}
                 updateOAuthUiBadge();
                 resolve(oauthAccessToken);
               } else {
@@ -1627,8 +1692,53 @@
         });
       }
 
+      async function resolveSheetTabNames(sheetId, token) {
+        const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sheetId)}?fields=sheets.properties.title`;
+        const res = await fetch(metaUrl, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            oauthAccessToken = '';
+            oauthTokenExpiresAt = 0;
+            try { sessionStorage.removeItem(OAUTH_SESSION_KEY); } catch (e) {}
+            updateOAuthUiBadge();
+          }
+          throw new Error((errJson.error && errJson.error.message) || `Sheets API HTTP ${res.status}`);
+        }
+        const meta = await res.json();
+        const titles = (meta.sheets || []).map(s => s.properties && s.properties.title).filter(Boolean);
+        const findTab = (patterns, fallback) => {
+          const exact = titles.find(t => patterns.some(p => t.trim().toLowerCase() === p));
+          if (exact) return exact;
+          const partial = titles.find(t => patterns.some(p => t.trim().toLowerCase().includes(p)));
+          return partial || fallback;
+        };
+        resolvedTabNames = {
+          bank: findTab(['bank book', 'bankbook'], 'Bank Book'),
+          cash: findTab(['cash book', 'cashbook'], 'Cash Book'),
+          collection: findTab(['book collection', 'collection'], 'Book Collection'),
+          cheques: findTab(['cheques issued', 'cheque'], 'Cheques Issued'),
+          balance: findTab(['balance', 'recon'], 'Balance')
+        };
+        return titles;
+      }
+
       async function fetchSheetsApiV4BatchGet(sheetId, token) {
-        const ranges = ['Bank Book', 'Cash Book', 'Book Collection', 'Cheques Issued', 'Balance']
+        const availableTabs = await resolveSheetTabNames(sheetId, token);
+        const tabOrder = [
+          resolvedTabNames.bank,
+          resolvedTabNames.cash,
+          resolvedTabNames.collection,
+          resolvedTabNames.cheques,
+          resolvedTabNames.balance
+        ];
+        const validTabs = tabOrder.filter(t => availableTabs.includes(t));
+        if (!validTabs.length) {
+          throw new Error(`No matching tabs found in sheet. Tabs present: ${availableTabs.join(', ')}`);
+        }
+        const ranges = validTabs
           .map(name => 'ranges=' + encodeURIComponent(`'${name}'!A1:Z500`))
           .join('&');
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sheetId)}/values:batchGet?${ranges}&valueRenderOption=FORMATTED_VALUE`;
@@ -1642,52 +1752,58 @@
         }
         const data = await res.json();
         const vr = data.valueRanges || [];
+        const byTab = {};
+        validTabs.forEach((name, idx) => {
+          byTab[name] = (vr[idx] && vr[idx].values) || [];
+        });
         return {
-          bankBook: (vr[0] && vr[0].values) || [],
-          cashBook: (vr[1] && vr[1].values) || [],
-          bookCollection: (vr[2] && vr[2].values) || [],
-          chequesIssued: (vr[3] && vr[3].values) || [],
-          balance: (vr[4] && vr[4].values) || []
+          availableTabs,
+          bankBook: byTab[resolvedTabNames.bank] || [],
+          cashBook: byTab[resolvedTabNames.cash] || [],
+          bookCollection: byTab[resolvedTabNames.collection] || [],
+          chequesIssued: byTab[resolvedTabNames.cheques] || [],
+          balance: byTab[resolvedTabNames.balance] || []
         };
       }
 
       function fetchSheetDirectJsonp(sheetName) {
         return new Promise((resolve, reject) => {
-          const cbName = '__gvizCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+          const sid = activeSheetId();
+          const cbName = '__gviz_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
           const script = document.createElement('script');
           const timer = setTimeout(() => {
             cleanup();
-            reject(new Error('Direct sheet read timed out (Sign in with Google OAuth 2.0 or set Share: Anyone with link)'));
-          }, 10000);
+            reject(new Error('Direct Sheet read timed out'));
+          }, 12000);
           function cleanup() {
             clearTimeout(timer);
-            delete window[cbName];
+            try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
             if (script.parentNode) script.parentNode.removeChild(script);
           }
           window[cbName] = function (resp) {
             cleanup();
-            if (!resp || resp.status !== 'ok' || !resp.table) {
-              reject(new Error('Sheet private or tab "' + sheetName + '" not found'));
+            if (!resp || resp.status === 'error' || !resp.table) {
+              reject(new Error((resp && resp.errors && resp.errors[0] && resp.errors[0].detailed_message) || 'Sheet unavailable'));
               return;
             }
             const cols = resp.table.cols || [];
-            const headerRow = cols.map(c => c.label || c.id || '');
-            const rows = [headerRow];
-            (resp.table.rows || []).forEach(r => {
-              const cells = (r.c || []).map(cell => {
+            const header = cols.map(c => (c && (c.label || c.id)) || '');
+            const rows = [header];
+            (resp.table.rows || []).forEach(rowObj => {
+              const cells = (rowObj && rowObj.c) || [];
+              rows.push(cols.map((_, idx) => {
+                const cell = cells[idx];
                 if (!cell || cell.v === null || cell.v === undefined) return '';
-                if (cell.f) return String(cell.f);
-                return String(cell.v);
-              });
-              rows.push(cells);
+                return cell.f !== undefined && cell.f !== null ? String(cell.f) : String(cell.v);
+              }));
             });
             resolve(rows);
           };
           script.onerror = function () {
             cleanup();
-            reject(new Error('Sheet is private — click "Sign in with Google" in Import / Export CSV'));
+            reject(new Error('Direct Sheet connection blocked (Sign in with Google OAuth)'));
           };
-          script.src = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(activeSheetId())}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}&_t=${Date.now()}`;
+          script.src = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sid)}/gviz/tq?tqx=${encodeURIComponent('responseHandler:' + cbName)}&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
           document.head.appendChild(script);
         });
       }
@@ -1695,24 +1811,24 @@
       async function syncFromGoogleSheet(silent) {
         const btn = document.getElementById('btnSyncSheet');
         const icon = document.getElementById('syncIcon');
-        btn.disabled = true;
-        icon.classList.add('animate-spin');
-        let scriptErr = '';
-        try {
-          let bankRows, cashRows, bookColRows, chequeRows, balanceRows;
-          let syncSource = 'Google Sheets API v4 (OAuth 2.0)';
-          const sid = activeSheetId();
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('animate-spin');
 
-          // 1. Primary: Official Google Sheets API v4 via OAuth 2.0 token (works on private & shared sheets)
+        try {
+          const sid = activeSheetId();
+          let bankRows = [], cashRows = [], bookColRows = [], chequeRows = [], balanceRows = [];
+          let syncSource = 'Google Sheets API v4 (OAuth)';
+          let availableTabs = [];
+
           if (hasValidOAuthToken()) {
             const v4 = await fetchSheetsApiV4BatchGet(sid, oauthAccessToken);
+            availableTabs = v4.availableTabs || [];
             bankRows = v4.bankBook;
             cashRows = v4.cashBook;
             bookColRows = v4.bookCollection;
             chequeRows = v4.chequesIssued;
             balanceRows = v4.balance;
           } else {
-            // 2. Fallback: Script-free public GViz JSONP read
             syncSource = 'Direct Sheet GViz';
             [bankRows, cashRows, bookColRows, chequeRows, balanceRows] = await Promise.all([
               fetchSheetDirectJsonp('Bank Book'),
@@ -1723,153 +1839,62 @@
             ]);
           }
 
-          function parseLedger(rows, bookName) {
-            let openingBal = 0;
-            const entries = [];
-            let iDate=1, iPart=2, iPurp=-1, iRef=-1, iInw=-1, iOutw=-1;
-            let dataStartRow = 1;
-            
-            // Scan first 5 rows to dynamically find column mapping
-            for(let k=0; k<Math.min(rows.length, 5); k++) {
-                const rowStr = rows[k].join(' ').toLowerCase();
-                if(rowStr.includes('date') && (rowStr.includes('partic') || rowStr.includes('desc') || rowStr.includes('inward') || rowStr.includes('receipt'))) {
-                    const h = rows[k].map(x => String(x||'').toLowerCase());
-                    iDate = h.findIndex(x => x.includes('date')); if(iDate===-1) iDate=1;
-                    iPart = h.findIndex(x => x.includes('partic') || x.includes('desc')); if(iPart===-1) iPart=2;
-                    iPurp = h.findIndex(x => x.includes('purp') || x.includes('cat'));
-                    iRef = h.findIndex(x => x.includes('ref'));
-                    iInw = h.findIndex(x => x.includes('inw') || x.includes('inc') || x.includes('cred') || x.includes('receipt'));
-                    iOutw = h.findIndex(x => x.includes('outw') || x.includes('exp') || x.includes('deb') || x.includes('payment'));
-                    dataStartRow = k + 1;
-                    break;
-                }
-            }
-            
-            for (let i = dataStartRow; i < rows.length; i++) {
-                const r = rows[i];
-                if (!r || !r.length) continue;
-                
-                let part = (r[iPart] || '').trim();
-                let inw = iInw >= 0 ? toNum(r[iInw]) : 0;
-                let outw = iOutw >= 0 ? toNum(r[iOutw]) : 0;
-                
-                // Aggressive fallback if header detection failed or pointed to empty columns
-                if (inw === 0 && outw === 0) {
-                    const val3 = toNum(r[3]), val4 = toNum(r[4]);
-                    const val5 = toNum(r[5]), val6 = toNum(r[6]);
-                    if (val3 > 0 || val4 > 0) { inw = val3; outw = val4; }
-                    else if (val5 > 0 || val6 > 0) { inw = val5; outw = val6; }
-                }
-                
-                if (!part && r.length > 2) part = String(r[2] || '').trim();
-                
-                if (part.toLowerCase().includes('opening balance')) {
-              openingBal = inw > 0 ? inw : openingBal;
-              continue;
-            }
+          const parsedBank = parseBookRows(bankRows, 'Bank');
+          const parsedCash = parseBookRows(cashRows, 'Cash');
+          const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
 
-            // Skip empty trailing formula rows (where S No, Date, Particular, Inward, Outward are all blank)
-            const hasSNo = String(r[0] || '').trim() !== '';
-            const hasDate = String(r[iDate] || '').trim() !== '';
-            if (!hasSNo && !hasDate && !part && inw === 0 && outw === 0) continue;
-            if (inw === 0 && outw === 0) continue;
-
-            let dt = normalizeSheetDate(r[iDate]);
-                if (!dt || dt === '2026-01-01') {
-                    for(let j=0; j<Math.min(r.length, 4); j++) {
-                        let tDt = normalizeSheetDate(r[j]);
-                        if(tDt && tDt !== '2026-01-01') { dt = tDt; break; }
-                    }
-                }
-                if (!dt) dt = '2026-01-01';
-                
-                const purp = iPurp >= 0 ? (r[iPurp] || '').trim() : '';
-                const ref = iRef >= 0 ? (r[iRef] || '').trim() : (bookName === 'Cash' ? 'Cash' : '');
-                const isT = /withdrawn|withdrawal|cash deposit|contra/i.test(part);
-                
-                let cat = purp || (isT ? 'Contra Transfer' : (bookName === 'Bank' ? 'Bank Transaction' : (inw > 0 ? 'Cash Receipt' : 'Cash Expense')));
-                
-                if (inw > 0) entries.push({ id: `${bookName.charAt(0).toLowerCase()}b_${i}_in`, date: dt, book: bookName, type: 'income', amount: inw, desc: part || (bookName + ' Inward'), category: cat, ref, isTransfer: isT });
-                if (outw > 0) entries.push({ id: `${bookName.charAt(0).toLowerCase()}b_${i}_out`, date: dt, book: bookName, type: 'expense', amount: outw, desc: part || (bookName + ' Outward'), category: cat, ref, isTransfer: isT });
-            }
-            return { openingBal, entries };
-          }
-
-          const parsedBank = parseLedger(bankRows, 'Bank');
-          const parsedCash = parseLedger(cashRows, 'Cash');
-          const newOpeningBank = parsedBank.openingBal;
-          const newOpeningCash = parsedCash.openingBal;
-          const syncedEntries = [...parsedBank.entries, ...parsedCash.entries];
-
-          // Parse Book Collection: Street (col D = idx 3, rows 1..40), VIP/QR (col J = idx 9, rows 1..20)
           let streetSum = 0, vipSum = 0;
           for (let i = 1; i < Math.min(bookColRows.length, 41); i++) {
-            streetSum += toNum(bookColRows[i][3]);
+            streetSum += toNum((bookColRows[i] || [])[3]);
           }
           for (let i = 1; i < Math.min(bookColRows.length, 21); i++) {
-            vipSum += toNum(bookColRows[i][9]);
+            vipSum += toNum((bookColRows[i] || [])[9]);
           }
           const totalCol = streetSum + vipSum;
 
-          // Parse Cheques Issued
           const syncedCheques = [];
-          let clearedCount = 0, clearedAmt = 0, pendingCount = 0, pendingAmt = 0;
           for (let i = 1; i < chequeRows.length; i++) {
-            const r = chequeRows[i];
-            const amt = toNum(r[4]);
-            const payee = (r[2] || '').trim();
-            const chqNo = (r[3] || '').trim() || (r[1] || '').trim();
-            if (!amt && !payee) continue;
-            const rawSt = (r[6] || '').trim().toLowerCase();
-            const status = rawSt.includes('clear') ? 'Cleared' : rawSt.includes('cancel') || rawSt.includes('bounc') ? 'Cancelled' : 'Pending';
-            const dt = normalizeSheetDate(r[1]) || '2026-01-01';
-            const clearDt = normalizeSheetDate(r[7] || '');
-            const purpose = (r[5] || '').trim() || 'Cheque Payment';
+            const r = chequeRows[i] || [];
+            const rawDate = String(r[1] || '').trim();
+            const chqNo = String(r[2] || '').trim();
+            const payee = String(r[3] || '').trim();
+            const purpose = String(r[4] || '').trim();
+            const amt = toNum(r[5]);
+            const rawSt = String(r[6] || '').trim();
+            const clearDt = normalizeSheetDate(r[7]);
+            if (!chqNo && !payee && amt === 0) continue;
+            const status = /clear/i.test(rawSt) ? 'Cleared' : (/cancel|bounc/i.test(rawSt) ? 'Cancelled' : 'Pending');
             syncedCheques.push({
               id: `chq_${i}`,
-              date: dt,
-              chequeNo: chqNo || `CHQ-${i}`,
-              payee: payee || 'Payee',
+              date: normalizeSheetDate(rawDate) || '2026-01-01',
+              chequeNo,
+              payee,
               purpose,
               amount: amt,
               status,
               clearDate: clearDt
             });
-            if (status === 'Cleared') { clearedCount++; clearedAmt += amt; }
-            else if (status === 'Pending') { pendingCount++; pendingAmt += amt; }
           }
 
-          const dbgEl = document.getElementById('syncDebugOutput');
-          if (dbgEl && !dbgEl.classList.contains('hidden')) {
-            dbgEl.textContent = JSON.stringify({
-              syncSource,
-              sheetId: sid,
-              oauthConnected: hasValidOAuthToken(),
-              bankRowsCount: (bankRows || []).length,
-              cashRowsCount: (cashRows || []).length,
-              parsedBankCount: parsedBank.entries.length,
-              parsedCashCount: parsedCash.entries.length,
-              chequesCount: syncedCheques.length
-            }, null, 2);
-          }
-
-          state.openingBank = newOpeningBank;
-          state.openingCash = newOpeningCash;
+          state.openingBank = parsedBank.opening || state.openingBank;
+          state.openingCash = parsedCash.opening;
           state.entries = syncedEntries;
           state.cheques = syncedCheques;
           state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
           saveState();
 
-          const kpiColEl = document.getElementById('kpiCollection');
-          const kpiColSubEl = document.getElementById('kpiCollectionSub');
-          if (kpiColEl) kpiColEl.textContent = fmtMoney(totalCol);
-          if (kpiColSubEl) kpiColSubEl.textContent = `Street: ${fmtMoney(streetSum)} | VIP/QR: ${fmtMoney(vipSum)}`;
-          const auditSubEl = document.getElementById('auditHeaderSub');
-          if (auditSubEl) auditSubEl.textContent = `60 Books · ${clearedCount + pendingCount} Cheques`;
+          const chq = computeChequeStats();
+          auditRows = [
+            { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: streetSum, status: streetSum > 0 ? 'Collected & Deposited' : 'Awaiting Entries' },
+            { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: vipSum, status: vipSum > 0 ? 'Tallied with Bank' : 'Awaiting Entries' },
+            { head: 'Total Book Collections', count: 'All 60 Books', amount: totalCol, status: totalCol > 0 ? 'Fully Reconciled' : 'Reset for 2026', isBold: true },
+            { head: 'Cheques Issued — Cleared', count: `${chq.clearedCount} Cleared`, amount: chq.clearedAmt, status: chq.clearedCount ? 'Cleared' : 'Nil' },
+            { head: 'Cheques Issued — Pending', count: `${chq.pendingCount} Pending`, amount: chq.pendingAmt, status: chq.pendingCount ? 'Pending' : 'Nil Pending' }
+          ];
 
           const balMap = {};
           balanceRows.forEach(r => {
-            const k = (r[0] || '').trim().toLowerCase();
+            const k = String((r || [])[0] || '').trim().toLowerCase();
             if (k) balMap[k] = r;
           });
           const bExp = balMap['bank exp'] ? toNum(balMap['bank exp'][1]) : 0;
@@ -1887,63 +1912,50 @@
             { item: 'Net Unreconciled Balance', bank: null, tally: null, variance: netDiff, isTotal: true }
           ];
 
-          auditRows = [
-            { head: 'Street / Area Collections', count: 'Books 1–40 (40 Books)', amount: streetSum, status: streetSum > 0 ? 'Collected & Deposited' : 'Awaiting Entries' },
-            { head: 'Special / VIP & QR Collections', count: 'Books 0–20 (21 Books)', amount: vipSum, status: vipSum > 0 ? 'Tallied with Bank' : 'Awaiting Entries' },
-            { head: 'Total Book Collections', count: 'All 60 Books', amount: totalCol, status: totalCol > 0 ? 'Fully Reconciled' : 'Reset for 2026', isBold: true },
-            { head: 'Cheques Issued — Cleared', count: `${clearedCount} Cleared`, amount: clearedAmt, status: clearedCount ? 'Cleared' : 'Nil' },
-            { head: 'Cheques Issued — Pending', count: `${pendingCount} Pending`, amount: pendingAmt, status: pendingCount ? 'Pending' : 'Nil Pending' }
-          ];
+          const dbgEl = document.getElementById('syncDebugOutput');
+          if (dbgEl && !dbgEl.classList.contains('hidden')) {
+            dbgEl.textContent = JSON.stringify({
+              syncSource,
+              sheetId: sid,
+              oauthConnected: hasValidOAuthToken(),
+              availableTabs,
+              resolvedTabNames,
+              bankRowsCount: (bankRows || []).length,
+              cashRowsCount: (cashRows || []).length,
+              parsedBankCount: parsedBank.entries.length,
+              parsedCashCount: parsedCash.entries.length,
+              chequesCount: syncedCheques.length
+            }, null, 2);
+          }
 
           renderAll();
-          if (!silent || syncedEntries.length) {
-            showToast(`Pulled ${parsedBank.entries.length} BankBook, ${parsedCash.entries.length} CashBook & ${syncedCheques.length} cheques via ${syncSource}.`);
+          if (!silent || syncedEntries.length || syncedCheques.length) {
+            showToast(`Synced via ${syncSource}: ${parsedBank.entries.length} Bank, ${parsedCash.entries.length} Cash & ${syncedCheques.length} Cheques.`);
           }
         } catch (err) {
+          const msg = err && err.message ? err.message : 'Connection failed';
+          const dbgEl = document.getElementById('syncDebugOutput');
+          if (dbgEl && !dbgEl.classList.contains('hidden')) {
+            dbgEl.textContent = 'Sync Error: ' + msg + '\nTip: Open Import / Export CSV and click "Sign in with Google".';
+          }
           if (!silent) {
-            showToast(scriptErr ? ('Sync failed: ' + scriptErr) : ('Sync error: ' + (err && err.message ? err.message : 'Sign in with Google OAuth 2.0')));
+            showToast(`Sync failed: ${msg}`);
           }
         } finally {
-          btn.disabled = false;
-          icon.classList.remove('animate-spin');
+          if (btn) btn.disabled = false;
+          if (icon) icon.classList.remove('animate-spin');
         }
-      }
-
-      document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
-      document.getElementById('btnTestScript').addEventListener('click', () => {
-        const dbgEl = document.getElementById('syncDebugOutput');
-        dbgEl.classList.remove('hidden');
-        dbgEl.textContent = 'Testing Google Sheets API v4 live sync...';
-        syncFromGoogleSheet(false);
-      });
-
-      function autoPushIfEnabled() {
-        const autoOn = state.autoSync !== false;
-        if (autoOn && hasValidOAuthToken()) {
-          pushToGoogleSheet(true);
-        }
-      }
-
-      function isoToSheetDate(iso) {
-        const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso || '');
       }
 
       async function pushToGoogleSheet(silent) {
-        const sid = activeSheetId();
         if (!hasValidOAuthToken()) {
           if (!silent) {
-            if ((state.googleClientId || '').trim()) {
-              try {
-                await requestGoogleOAuthToken(true);
-              } catch (e) {
-                showToast(e.message || 'Sign in with Google first to write to Sheet.');
-                return;
-              }
-            } else {
+            try {
+              await requestGoogleOAuthToken(true);
+            } catch (e) {
               activeTab = 'import';
               renderAll();
-              showToast('Enter your Google OAuth Client ID & Sign in with Google to enable two-way writes.');
+              showToast('Click "Sign in with Google" in Import / Export CSV to write to your Sheet.');
               return;
             }
           } else {
@@ -1951,74 +1963,75 @@
           }
         }
 
+        const sid = activeSheetId();
+        const bankEntries = state.entries.filter(x => x.book === 'Bank');
+        const cashEntries = state.entries.filter(x => x.book === 'Cash');
+        const cheques = Array.isArray(state.cheques) ? state.cheques : [];
+
+        const bankValues = bankEntries.map((r, i) => [
+          i + 1,
+          formatIsoToSheetDate(r.date),
+          r.desc || '',
+          r.category || '',
+          r.ref || '',
+          r.type === 'income' ? Number(r.amount) || 0 : '',
+          r.type === 'expense' ? Number(r.amount) || 0 : ''
+        ]);
+
+        const cashValues = cashEntries.map((r, i) => [
+          i + 1,
+          formatIsoToSheetDate(r.date),
+          r.desc || '',
+          r.type === 'income' ? Number(r.amount) || 0 : '',
+          r.type === 'expense' ? Number(r.amount) || 0 : ''
+        ]);
+
+        const chequeValues = cheques.map((c, i) => [
+          i + 1,
+          formatIsoToSheetDate(c.date),
+          c.chequeNo || '',
+          c.payee || '',
+          c.purpose || '',
+          Number(c.amount) || 0,
+          c.status || 'Pending',
+          c.clearDate ? formatIsoToSheetDate(c.clearDate) : ''
+        ]);
+
         try {
-          const bankEntries = state.entries.filter(x => x.book === 'Bank');
-          const cashEntries = state.entries.filter(x => x.book === 'Cash');
-          const cheques = state.cheques || [];
+          const availableTabs = await resolveSheetTabNames(sid, oauthAccessToken);
+          const clearRanges = [];
+          if (availableTabs.includes(resolvedTabNames.bank)) clearRanges.push(`'${resolvedTabNames.bank}'!A3:G500`);
+          if (availableTabs.includes(resolvedTabNames.cash)) clearRanges.push(`'${resolvedTabNames.cash}'!A2:E500`);
+          if (availableTabs.includes(resolvedTabNames.cheques)) clearRanges.push(`'${resolvedTabNames.cheques}'!A2:H500`);
 
-          const bankValues = bankEntries.map((r, i) => [
-            i + 1,
-            isoToSheetDate(r.date),
-            r.desc,
-            r.category,
-            r.ref || '',
-            r.type === 'income' ? Number(r.amount) : '',
-            r.type === 'expense' ? Number(r.amount) : ''
-          ]);
-
-          const cashValues = cashEntries.map((r, i) => [
-            i + 1,
-            isoToSheetDate(r.date),
-            r.desc,
-            r.type === 'income' ? Number(r.amount) : '',
-            r.type === 'expense' ? Number(r.amount) : ''
-          ]);
-
-          const chequeValues = cheques.map((c, i) => [
-            i + 1,
-            isoToSheetDate(c.date),
-            c.payee,
-            c.chequeNo,
-            Number(c.amount),
-            c.purpose,
-            c.status,
-            isoToSheetDate(c.clearDate)
-          ]);
-
-          // Step 1: Clear existing data ranges (preserves header rows & Column H Bank Balance formulas)
-          const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sid)}/values:batchClear`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${oauthAccessToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              ranges: [
-                "'Bank Book'!A3:G500",
-                "'Cash Book'!A2:E500",
-                "'Cheques Issued'!A2:H500"
-              ]
-            })
-          });
-          if (!clearRes.ok) {
-            const errJson = await clearRes.json().catch(() => ({}));
-            throw new Error((errJson.error && errJson.error.message) || `Sheets API clear HTTP ${clearRes.status}`);
+          if (clearRanges.length) {
+            const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sid)}/values:batchClear`, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${oauthAccessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ ranges: clearRanges })
+            });
+            if (!clearRes.ok) {
+              const errJson = await clearRes.json().catch(() => ({}));
+              throw new Error((errJson.error && errJson.error.message) || `Sheets API clear HTTP ${clearRes.status}`);
+            }
           }
 
-          // Step 2: Batch write updated rows directly via Google Sheets API v4
           const dataUpdates = [];
-          if (bankValues.length) {
-            dataUpdates.push({ range: `'Bank Book'!A3:G${2 + bankValues.length}`, values: bankValues });
+          if (bankValues.length && availableTabs.includes(resolvedTabNames.bank)) {
+            dataUpdates.push({ range: `'${resolvedTabNames.bank}'!A3:G${2 + bankValues.length}`, values: bankValues });
           }
-          if (cashValues.length) {
-            dataUpdates.push({ range: `'Cash Book'!A2:E${1 + cashValues.length}`, values: cashValues });
+          if (cashValues.length && availableTabs.includes(resolvedTabNames.cash)) {
+            dataUpdates.push({ range: `'${resolvedTabNames.cash}'!A2:E${1 + cashValues.length}`, values: cashValues });
           }
-          if (chequeValues.length) {
-            dataUpdates.push({ range: `'Cheques Issued'!A2:H${1 + chequeValues.length}`, values: chequeValues });
+          if (chequeValues.length && availableTabs.includes(resolvedTabNames.cheques)) {
+            dataUpdates.push({ range: `'${resolvedTabNames.cheques}'!A2:H${1 + chequeValues.length}`, values: chequeValues });
           }
 
           if (dataUpdates.length) {
-            const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sid)}/values:batchUpdate`, {
+            const updRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sid)}/values:batchUpdate`, {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${oauthAccessToken}`,
@@ -2029,9 +2042,9 @@
                 data: dataUpdates
               })
             });
-            if (!writeRes.ok) {
-              const errJson = await writeRes.json().catch(() => ({}));
-              throw new Error((errJson.error && errJson.error.message) || `Sheets API write HTTP ${writeRes.status}`);
+            if (!updRes.ok) {
+              const errJson = await updRes.json().catch(() => ({}));
+              throw new Error((errJson.error && errJson.error.message) || `Sheets API write HTTP ${updRes.status}`);
             }
           }
 
@@ -2039,27 +2052,36 @@
           saveState();
           const lrEl = document.getElementById('lastRefreshedText');
           if (lrEl) lrEl.textContent = 'Last refreshed: ' + state.lastRefreshed;
-          showToast(silent ? 'Synced changes directly to Google Sheet via API v4.' : `Saved ${state.entries.length} entries & ${cheques.length} cheques via Sheets API v4.`);
+          showToast(silent ? 'Google Sheet synced via API v4!' : `Saved ${bankValues.length} Bank, ${cashValues.length} Cash & ${chequeValues.length} Cheque rows.`);
         } catch (err) {
-          showToast('Sheets API v4 write error: ' + (err && err.message ? err.message : 'Check OAuth permissions'));
+          showToast('Sheet write failed: ' + (err && err.message ? err.message : 'Check OAuth permissions'));
         }
       }
 
+      function autoPushIfEnabled() {
+        if (state.autoSync !== false && hasValidOAuthToken()) {
+          pushToGoogleSheet(true);
+        }
+      }
+
+      // Event Listeners
+      document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
       document.getElementById('btnPushSheet').addEventListener('click', () => pushToGoogleSheet(false));
-      document.getElementById('autoSyncToggle').addEventListener('change', e => {
-        state.autoSync = e.target.checked;
-        saveState();
-      });
+
       document.getElementById('btnSaveOAuthConfig').addEventListener('click', () => {
         const sidVal = document.getElementById('googleSheetIdInput').value.trim();
-        state.sheetId = sidVal || DEFAULT_SHEET_ID;
-        state.googleClientId = document.getElementById('googleClientIdInput').value.trim();
+        const m = sidVal.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        state.sheetId = m ? m[1] : (sidVal || DEFAULT_SHEET_ID);
+        state.googleClientId = document.getElementById('googleClientIdInput').value.trim() || DEFAULT_CLIENT_ID;
         saveState();
         showToast('Spreadsheet ID & OAuth Client ID saved.');
       });
+
       document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
-        state.sheetId = document.getElementById('googleSheetIdInput').value.trim() || DEFAULT_SHEET_ID;
-        state.googleClientId = document.getElementById('googleClientIdInput').value.trim();
+        const sidVal = document.getElementById('googleSheetIdInput').value.trim();
+        const m = sidVal.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        state.sheetId = m ? m[1] : (sidVal || DEFAULT_SHEET_ID);
+        state.googleClientId = document.getElementById('googleClientIdInput').value.trim() || DEFAULT_CLIENT_ID;
         saveState();
         try {
           await requestGoogleOAuthToken(true);
@@ -2069,14 +2091,30 @@
           showToast(err && err.message ? err.message : 'Google OAuth sign-in failed.');
         }
       });
+
       document.getElementById('btnGoogleSignOut').addEventListener('click', () => {
         if (oauthAccessToken && window.google && window.google.accounts && window.google.accounts.oauth2) {
           window.google.accounts.oauth2.revoke(oauthAccessToken, () => {});
         }
         oauthAccessToken = '';
         oauthTokenExpiresAt = 0;
+        try { sessionStorage.removeItem(OAUTH_SESSION_KEY); } catch (e) {}
         renderAll();
         showToast('Signed out of Google OAuth.');
+      });
+
+      document.getElementById('btnTestScript').addEventListener('click', () => {
+        const dbgEl = document.getElementById('syncDebugOutput');
+        if (dbgEl) {
+          dbgEl.classList.remove('hidden');
+          dbgEl.textContent = 'Testing live Google Sheet connection...';
+        }
+        syncFromGoogleSheet(false);
+      });
+
+      document.getElementById('autoSyncToggle').addEventListener('change', e => {
+        state.autoSync = e.target.checked;
+        saveState();
       });
 
       document.getElementById('navTabs').addEventListener('click', e => {
@@ -2159,9 +2197,9 @@
         const stamp = Date.now();
         if (dir === 'bank_to_cash') {
           state.entries.push({ id: 't1_' + stamp, date, book: 'Bank', type: 'expense', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
-          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't2_' + stamp, date, book: 'Cash', type: 'income', amount, desc: note || 'Bank Withdrawal (Contra)', category: 'Contra Transfer', ref: 'Cash', isTransfer: true });
         } else {
-          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
+          state.entries.push({ id: 't1_' + stamp, date, book: 'Cash', type: 'expense', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Cash', isTransfer: true });
           state.entries.push({ id: 't2_' + stamp, date, book: 'Bank', type: 'income', amount, desc: note || 'Cash Deposit (Contra)', category: 'Contra Transfer', ref: 'Contra', isTransfer: true });
         }
         saveState();
@@ -2192,17 +2230,15 @@
         });
       });
 
-      // Cheque modal & register events
+      // Cheque Modal & Register Listeners
       document.getElementById('btnOpenChequeModal').addEventListener('click', () => openChequeModal(null));
       document.getElementById('btnCloseChequeModal').addEventListener('click', closeChequeModal);
       document.getElementById('btnCancelCheque').addEventListener('click', closeChequeModal);
 
       document.getElementById('chequeStatus').addEventListener('change', e => {
-        const clearInput = document.getElementById('chequeClearDate');
-        if (e.target.value === 'Cleared' && !clearInput.value) {
-          clearInput.value = new Date().toISOString().slice(0, 10);
-        } else if (e.target.value !== 'Cleared') {
-          clearInput.value = '';
+        const clearIn = document.getElementById('chequeClearDate');
+        if (e.target.value === 'Cleared' && !clearIn.value) {
+          clearIn.value = document.getElementById('chequeDate').value || '2026-11-16';
         }
       });
 
@@ -2210,23 +2246,24 @@
         e.preventDefault();
         const id = document.getElementById('chequeId').value;
         const status = document.getElementById('chequeStatus').value;
-        const clearDate = status === 'Cleared'
-          ? (document.getElementById('chequeClearDate').value || new Date().toISOString().slice(0, 10))
-          : '';
+        let clearDate = document.getElementById('chequeClearDate').value;
+        if (status === 'Cleared' && !clearDate) {
+          clearDate = document.getElementById('chequeDate').value;
+        }
         const item = {
-          id: id || 'chq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+          id: id || 'chq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           date: document.getElementById('chequeDate').value,
           chequeNo: document.getElementById('chequeNo').value.trim(),
           payee: document.getElementById('chequePayee').value.trim(),
           purpose: document.getElementById('chequePurpose').value.trim() || 'Cheque Payment',
           amount: parseFloat(document.getElementById('chequeAmount').value) || 0,
           status,
-          clearDate
+          clearDate: status === 'Cleared' ? clearDate : ''
         };
         if (!Array.isArray(state.cheques)) state.cheques = [];
         if (id) {
           const idx = state.cheques.findIndex(x => x.id === id);
-          if (idx >= 0) state.cheques[idx] = item;
+          if (idx >= 0) state.cheques[idx] = { ...state.cheques[idx], ...item };
           showToast('Cheque updated.');
         } else {
           state.cheques.push(item);
@@ -2242,8 +2279,9 @@
         const toggleId = e.target.dataset.chqToggle;
         const editId = e.target.dataset.chqEdit;
         const delId = e.target.dataset.chqDel;
+        if (!Array.isArray(state.cheques)) state.cheques = [];
         if (toggleId) {
-          const item = (state.cheques || []).find(x => x.id === toggleId);
+          const item = state.cheques.find(x => x.id === toggleId);
           if (item) {
             if (item.status === 'Cleared') {
               item.status = 'Pending';
@@ -2251,7 +2289,7 @@
               showToast(`Cheque #${item.chequeNo} marked Pending.`);
             } else {
               item.status = 'Cleared';
-              item.clearDate = new Date().toISOString().slice(0, 10);
+              item.clearDate = item.clearDate || item.date || '2026-11-16';
               showToast(`Cheque #${item.chequeNo} marked Cleared.`);
             }
             saveState();
@@ -2259,10 +2297,10 @@
             autoPushIfEnabled();
           }
         } else if (editId) {
-          const item = (state.cheques || []).find(x => x.id === editId);
+          const item = state.cheques.find(x => x.id === editId);
           if (item) openChequeModal(item);
         } else if (delId) {
-          state.cheques = (state.cheques || []).filter(x => x.id !== delId);
+          state.cheques = state.cheques.filter(x => x.id !== delId);
           saveState();
           renderAll();
           showToast('Cheque deleted.');
@@ -2271,7 +2309,7 @@
       });
 
       ['chqFilterSearch', 'chqFilterStatus', 'chqFilterMonth'].forEach(id => {
-        document.getElementById(id).addEventListener('input', renderCheques);
+        document.getElementById(id).addEventListener('input', () => renderCheques());
       });
 
       document.getElementById('btnExportChequesCsv').addEventListener('click', () => {
@@ -2301,7 +2339,7 @@
         state = JSON.parse(JSON.stringify(SAMPLE_DATA));
         saveState();
         renderAll();
-        showToast('Restored Income & Expenses - 2026 snapshot.');
+        showToast('Restored Sheet Snapshot.');
       });
 
       document.getElementById('btnClearAll').addEventListener('click', () => {
@@ -2309,7 +2347,7 @@
         state.cheques = [];
         saveState();
         renderAll();
-        showToast('All entries & cheques cleared.');
+        showToast('All entries cleared.');
       });
 
       document.getElementById('csvFileInput').addEventListener('change', e => {
@@ -2376,6 +2414,7 @@
         activeTab = 'dashboard';
         renderAll();
         showToast(`Imported ${imported.length} entries.`);
+        autoPushIfEnabled();
       });
 
       renderAll();
