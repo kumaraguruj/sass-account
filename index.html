@@ -10,33 +10,32 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            display: ['Playfair Display', 'Georgia', 'serif']
-          },
-          colors: {
-            brand: {
-              900: '#0f2442',
-              800: '#1b365d',
-              700: '#2b4c7e',
-              600: '#405f90',
-              100: '#d9e3f9',
-              50: '#eef3fb'
-            },
-            slatex: {
-              900: '#0f172a',
-              800: '#1e293b',
-              700: '#334155',
-              600: '#475569',
-              100: '#f1f5f9'
+    if (window.tailwind) {
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Playfair Display', 'Georgia', 'serif'] },
+            colors: {
+              brand: {
+                900: '#0f2442',
+                800: '#1b365d',
+                700: '#2b4c7e',
+                600: '#405f90',
+                100: '#d9e3f9',
+                50: '#eef3fb'
+              },
+              slatex: {
+                900: '#0f172a',
+                800: '#1e293b',
+                700: '#334155',
+                600: '#475569',
+                100: '#f1f5f9'
+              }
             }
           }
         }
-      }
-    };
+      };
+    }
   </script>
   <style>
     :root {
@@ -1048,9 +1047,28 @@
         const inData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0));
         const outData = allMonths.map(m => state.entries.filter(e => (e.date || '').startsWith(m) && e.type === 'expense').reduce((s, e) => s + (Number(e.amount) || 0), 0));
 
-        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        const catTotals = {};
+        state.entries.forEach(e => {
+          const cat = e.category || 'Miscellaneous';
+          catTotals[cat] = (catTotals[cat] || 0) + (Number(e.amount) || 0);
+        });
+        const catLabels = Object.keys(catTotals).length ? Object.keys(catTotals) : ['No Entries Yet'];
+        const catValues = Object.keys(catTotals).length ? Object.values(catTotals) : [0];
+
+        const monthlyCanvas = document.getElementById('monthlyChart');
+        const categoryCanvas = document.getElementById('categoryChart');
+        if (!monthlyCanvas || !categoryCanvas) return;
+
+        // Safe fallback if Chart.js CDN is blocked or offline
+        if (typeof window.Chart === 'undefined') {
+          drawFallbackBarChart(monthlyCanvas, allMonths, inData, outData);
+          drawFallbackHorizontalChart(categoryCanvas, catLabels, catValues);
+          return;
+        }
+
+        const ctxMonthly = monthlyCanvas.getContext('2d');
         if (monthlyChartInstance) monthlyChartInstance.destroy();
-        monthlyChartInstance = new Chart(ctxMonthly, {
+        monthlyChartInstance = new window.Chart(ctxMonthly, {
           type: 'bar',
           data: {
             labels: allMonths,
@@ -1067,17 +1085,9 @@
           }
         });
 
-        const catTotals = {};
-        state.entries.forEach(e => {
-          const cat = e.category || 'Miscellaneous';
-          catTotals[cat] = (catTotals[cat] || 0) + (Number(e.amount) || 0);
-        });
-        const catLabels = Object.keys(catTotals).length ? Object.keys(catTotals) : ['No Entries Yet'];
-        const catValues = Object.keys(catTotals).length ? Object.values(catTotals) : [0];
-
-        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        const ctxCategory = categoryCanvas.getContext('2d');
         if (categoryChartInstance) categoryChartInstance.destroy();
-        categoryChartInstance = new Chart(ctxCategory, {
+        categoryChartInstance = new window.Chart(ctxCategory, {
           type: 'bar',
           data: {
             labels: catLabels,
@@ -1092,6 +1102,59 @@
             plugins: { legend: { position: 'bottom' } },
             scales: { x: { beginAtZero: true } }
           }
+        });
+      }
+
+      function drawFallbackBarChart(canvas, labels, inData, outData) {
+        const parent = canvas.parentElement;
+        canvas.width = parent ? parent.clientWidth || 420 : 420;
+        canvas.height = parent ? parent.clientHeight || 240 : 240;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const maxVal = Math.max(1, ...inData, ...outData);
+        const pad = 36;
+        const chartW = canvas.width - pad * 2;
+        const chartH = canvas.height - pad * 2;
+        const groupW = chartW / Math.max(1, labels.length);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.beginPath();
+        ctx.moveTo(pad, pad + chartH);
+        ctx.lineTo(pad + chartW, pad + chartH);
+        ctx.stroke();
+        labels.forEach((lbl, i) => {
+          const x0 = pad + i * groupW + groupW * 0.2;
+          const barW = Math.min(28, groupW * 0.26);
+          const h1 = (inData[i] / maxVal) * (chartH - 12);
+          const h2 = (outData[i] / maxVal) * (chartH - 12);
+          ctx.fillStyle = '#2b4c7e';
+          ctx.fillRect(x0, pad + chartH - h1, barW, h1);
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(x0 + barW + 4, pad + chartH - h2, barW, h2);
+          ctx.fillStyle = '#475569';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText(lbl, x0, pad + chartH + 16);
+        });
+      }
+
+      function drawFallbackHorizontalChart(canvas, labels, values) {
+        const parent = canvas.parentElement;
+        canvas.width = parent ? parent.clientWidth || 420 : 420;
+        canvas.height = parent ? parent.clientHeight || 240 : 240;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const maxVal = Math.max(1, ...values);
+        const leftPad = 120;
+        const rightPad = 24;
+        const barAreaW = Math.max(80, canvas.width - leftPad - rightPad);
+        const rowH = Math.min(34, (canvas.height - 24) / Math.max(1, labels.length));
+        labels.forEach((lbl, i) => {
+          const y = 16 + i * rowH;
+          const w = (values[i] / maxVal) * barAreaW;
+          ctx.fillStyle = '#334155';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText(String(lbl).slice(0, 18), 8, y + 14);
+          ctx.fillStyle = '#1b365d';
+          ctx.fillRect(leftPad, y + 3, Math.max(4, w), 16);
         });
       }
 
