@@ -1087,9 +1087,19 @@
       </div>
 
       <div class="space-y-3 text-xs">
-        <div class="p-3 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-950 space-y-1">
-          <p class="font-bold">How it works without Apps Script:</p>
-          <p>Paste your <strong>Google Sheet URL</strong> (or ID) and a Google Cloud <strong>OAuth 2.0 Web Client ID</strong> (with Google Sheets API enabled). The app will directly read &amp; write <code class="font-mono font-semibold">Receipts!A2:J</code> using your Google account.</p>
+        <div class="p-3 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-950 space-y-1.5">
+          <p class="font-bold">Required Google Cloud Origin (Fixes Error 400: origin_mismatch):</p>
+          <p>In Google Cloud Console &rarr; <strong>Credentials &rarr; OAuth 2.0 Client ID &rarr; Authorized JavaScript origins</strong>, add this exact URL:</p>
+          <div class="flex items-center gap-2 pt-0.5">
+            <code id="gs-detected-origin" class="flex-1 px-2.5 py-1.5 rounded bg-white border border-blue-300 font-mono text-[11px] font-bold text-slatex-900 select-all truncate"></code>
+            <button type="button" onclick="copyDetectedOrigin()"
+              class="px-2.5 py-1.5 rounded bg-brand-800 hover:bg-brand-700 text-white text-[11px] font-semibold shrink-0 cursor-pointer">
+              Copy Origin
+            </button>
+          </div>
+          <p id="gs-origin-warning" class="hidden text-[11px] font-semibold text-amber-800 bg-amber-100/80 px-2 py-1 rounded">
+            Note: If this preview runs inside a sandboxed/null iframe, host this single HTML file on GitHub Pages, Netlify, or localhost (e.g. <code>http://localhost:5500</code>) to sign in with Google OAuth.
+          </p>
         </div>
 
         <div>
@@ -1422,274 +1432,255 @@
       document.getElementById('gs-tab-name-input').value = cfg.sheetName || 'Receipts';
       document.getElementById('gs-client-id-input').value = cfg.clientId || '';
       document.getElementById('gs-auto-sync-checkbox').checked = cfg.autoSync !== false;
+
+      const originEl = document.getElementById('gs-detected-origin');
+      const warnEl = document.getElementById('gs-origin-warning');
+      const currentOrigin = window.location.origin;
+      if (originEl) {
+        originEl.textContent = (!currentOrigin || currentOrigin === 'null' || currentOrigin.startsWith('file:'))
+          ? 'null / sandboxed preview (host on https:// or http://localhost)'
+          : currentOrigin;
+      }
+      if (warnEl) {
+        const isInvalidOrigin = !currentOrigin || currentOrigin === 'null' || currentOrigin.startsWith('file:') || currentOrigin.includes('googleusercontent.com');
+        warnEl.classList.toggle('hidden', !isInvalidOrigin);
+      }
+
       document.getElementById('sheets-connect-modal').classList.remove('hidden');
     }
 
+    function copyDetectedOrigin() {
+      const currentOrigin = window.location.origin;
+      if (!currentOrigin || currentOrigin === 'null') {
+        showToast('Origin is null in sandboxed preview — host the HTML file on localhost or HTTPS first.', 'info');
+        return;
+      }
+      const buffer = document.getElementById('clipboard-buffer');
+      buffer.value = currentOrigin;
+      buffer.classList.remove('sr-only');
+      buffer.select();
+      buffer.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        showToast(`Copied origin: ${currentOrigin}`);
+      } catch (e) {}
+      buffer.classList.add('sr-only');
+    }
+
     function closeSheetsConnectModal() {
-      document.getElementById('sheets-connect-modal').classList.add('hidden');
+      document.getElementById('sheets-connect-modal')?.classList.add('hidden');
     }
 
     function disconnectGoogleSheet() {
       gsAccessToken = null;
       gsTokenExpiresAt = 0;
-      localStorage.removeItem(GS_CONFIG_KEY);
+      saveGoogleSheetsConfig({ spreadsheetId: '', sheetName: 'Receipts', clientId: '', autoSync: true });
       updateGoogleSheetsUIStatus();
       closeSheetsConnectModal();
-      showToast('Disconnected Google Sheet.', 'info');
+      showToast('Disconnected from Google Sheets.');
     }
 
-    function ensureGoogleSheetsToken() {
-      return new Promise((resolve, reject) => {
-        const cfg = getGoogleSheetsConfig();
-        if (!cfg.spreadsheetId || !cfg.clientId) {
-          openSheetsConnectModal();
-          reject(new Error('Google Sheet ID and OAuth Client ID are required.'));
-          return;
-        }
-
-        if (gsAccessToken && Date.now() < gsTokenExpiresAt - 30000) {
-          resolve(gsAccessToken);
-          return;
-        }
-
-        if (!window.google || !google.accounts || !google.accounts.oauth2) {
-          reject(new Error('Google Identity Services script is still loading. Try again in a moment.'));
-          return;
-        }
-
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: cfg.clientId,
-          scope: 'https://www.googleapis.com/auth/spreadsheets',
-          callback: (resp) => {
-            if (resp && resp.access_token) {
-              gsAccessToken = resp.access_token;
-              gsTokenExpiresAt = Date.now() + (Number(resp.expires_in) || 3500) * 1000;
-              updateGoogleSheetsUIStatus();
-              resolve(gsAccessToken);
-            } else {
-              reject(new Error(resp?.error_description || 'Google OAuth authorization cancelled.'));
-            }
+    function requestGoogleOAuthToken(clientId, callback, interactive = true) {
+      if (!window.google || !google.accounts || !google.accounts.oauth2) {
+        showToast('Google Identity script is still loading. Please try again in 2 seconds.', 'error');
+        return;
+      }
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/spreadsheets',
+        callback: (resp) => {
+          if (resp.error) {
+            showToast(`Google Auth Error: ${resp.error_description || resp.error}`, 'error');
+            return;
           }
-        });
-
-        tokenClient.requestAccessToken({ prompt: gsAccessToken ? '' : 'consent' });
+          gsAccessToken = resp.access_token;
+          gsTokenExpiresAt = Date.now() + ((Number(resp.expires_in) || 3500) * 1000);
+          updateGoogleSheetsUIStatus();
+          if (typeof callback === 'function') callback(gsAccessToken);
+        }
       });
+      tokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
     }
 
-    async function saveAndAuthorizeGoogleSheet() {
-      const spreadsheetId = extractSpreadsheetId(document.getElementById('gs-spreadsheet-input').value);
+    function saveAndAuthorizeGoogleSheet() {
+      const rawSheet = document.getElementById('gs-spreadsheet-input').value;
       const sheetName = (document.getElementById('gs-tab-name-input').value || 'Receipts').trim();
       const clientId = (document.getElementById('gs-client-id-input').value || '').trim();
       const autoSync = document.getElementById('gs-auto-sync-checkbox').checked;
+      const spreadsheetId = extractSpreadsheetId(rawSheet);
 
-      if (!spreadsheetId) {
-        showToast('Please enter a valid Google Sheet URL or Spreadsheet ID.', 'error');
-        return;
-      }
-      if (!clientId) {
-        showToast('Please enter your Google OAuth 2.0 Web Client ID.', 'error');
+      if (!spreadsheetId || !clientId) {
+        showToast('Please enter both Spreadsheet ID/URL and OAuth Client ID.', 'error');
         return;
       }
 
       saveGoogleSheetsConfig({ spreadsheetId, sheetName, clientId, autoSync });
       updateGoogleSheetsUIStatus();
-      closeSheetsConnectModal();
 
-      try {
-        await ensureGoogleSheetsToken();
-        showToast('Google Sheet authorized! Reading latest rows...');
-        await pullFromGoogleSheet();
-      } catch (err) {
-        showToast(err.message || 'Authorization failed.', 'error');
+      requestGoogleOAuthToken(clientId, () => {
+        closeSheetsConnectModal();
+        showToast('Google Sheet authorized! Reading existing rows...');
+        pullFromGoogleSheet(true);
+      }, true);
+    }
+
+    function ensureGoogleAuthThen(actionFn) {
+      const cfg = getGoogleSheetsConfig();
+      if (!cfg.spreadsheetId || !cfg.clientId) {
+        openSheetsConnectModal();
+        return;
+      }
+      if (gsAccessToken && Date.now() < gsTokenExpiresAt) {
+        actionFn(gsAccessToken, cfg);
+      } else {
+        requestGoogleOAuthToken(cfg.clientId, (token) => actionFn(token, cfg), false);
       }
     }
 
-    function parseSheetDateToISO(rawDate) {
-      const val = String(rawDate || '').trim();
-      if (!val) return new Date().toISOString().split('T')[0];
-      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-      const dmy = val.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-      if (dmy) {
-        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
-      }
-      return val;
-    }
-
-    function parseSheetMaterialsCell(rawMatStr) {
-      const text = String(rawMatStr || '').trim();
-      if (!text) return [];
-      return text.split(',').map(part => {
-        const seg = part.trim();
-        // Matches "Item - 10 kg" or "Item 10 kg"
-        const hyphenMatch = seg.match(/^(.+?)\s*-\s*([\d.]+)\s*(.*)$/);
+    function parseSheetMaterialsString(matStr) {
+      if (!matStr || !String(matStr).trim()) return [];
+      return String(matStr).split(',').map(part => {
+        const clean = part.trim();
+        const hyphenMatch = clean.match(/^(.+?)\s*-\s*([\d.]+)\s*(.*)$/);
         if (hyphenMatch) {
-          return {
-            item: hyphenMatch[1].trim(),
-            qty: parseFloat(hyphenMatch[2]) || 1,
-            unit: (hyphenMatch[3] || 'kg').trim()
-          };
+          return { item: hyphenMatch[1].trim(), qty: parseFloat(hyphenMatch[2]) || 1, unit: (hyphenMatch[3] || 'kg').trim() };
         }
-        const spaceMatch = seg.match(/^(.+?)\s+([\d.]+)\s*(.*)$/);
+        const spaceMatch = clean.match(/^(.+?)\s+([\d.]+)\s*(.*)$/);
         if (spaceMatch) {
-          return {
-            item: spaceMatch[1].trim(),
-            qty: parseFloat(spaceMatch[2]) || 1,
-            unit: (spaceMatch[3] || 'kg').trim()
-          };
+          return { item: spaceMatch[1].trim(), qty: parseFloat(spaceMatch[2]) || 1, unit: (spaceMatch[3] || 'kg').trim() };
         }
-        return { item: seg, qty: 1, unit: 'nos' };
+        return { item: clean, qty: 1, unit: 'unit' };
       }).filter(m => m.item);
     }
 
-    async function pullFromGoogleSheet() {
-      try {
-        const token = await ensureGoogleSheetsToken();
-        const cfg = getGoogleSheetsConfig();
-        const range = encodeURIComponent(`${cfg.sheetName || 'Receipts'}!A2:J`);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(cfg.spreadsheetId)}/values/${range}`;
-
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error?.message || 'Failed to read from Google Sheet.');
-        }
-
-        const rows = Array.isArray(data.values) ? data.values : [];
-        if (rows.length === 0) {
-          showToast('Sheet is empty (no rows in A2:J). Kept local rows.', 'info');
-          return;
-        }
-
-        const imported = rows
-          .filter(row => (row[3] || '').trim() !== '' || (row[6] || '').trim() !== '' || (row[8] || '').trim() !== '')
-          .map((row, idx) => {
-            const rawAmt = String(row[6] || '0').replace(/[^0-9.]/g, '');
-            return {
-              serialNo: idx + 1,
-              receiptNo: String(row[1] || '').trim(),
-              date: parseSheetDateToISO(row[2]),
-              donorName: String(row[3] || '').trim() || 'Donor',
-              careOf: String(row[4] || '').trim(),
-              phoneNo: String(row[5] || '').replace(/\D/g, '').slice(-10),
-              amount: Number(rawAmt) || 0,
-              mode: String(row[7] || 'Cash').trim() || 'Cash',
-              materials: parseSheetMaterialsCell(row[8])
-            };
-          });
-
-        receipts = normalizeReceiptsData(imported);
-        persistReceipts();
-        refreshAll();
-        showToast(`Read ${receipts.length} rows from "${cfg.sheetName || 'Receipts'}"!`);
-      } catch (err) {
-        showToast(err.message || 'Could not read Google Sheet.', 'error');
+    function parseSheetDateToISO(dateVal) {
+      const s = String(dateVal || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const dmy = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
       }
+      return new Date().toISOString().split('T')[0];
     }
 
-    async function pushAllToGoogleSheet(silent = false) {
-      const cfg = getGoogleSheetsConfig();
-      if (!cfg.spreadsheetId || !cfg.clientId) {
-        if (!silent) openSheetsConnectModal();
-        return;
-      }
-
-      try {
-        const token = await ensureGoogleSheetsToken();
-        const sheet = cfg.sheetName || 'Receipts';
-        const rowsWithBal = getReceiptsWithRunningBalance();
-
-        const values = rowsWithBal.map(r => [
-          r.serialNo,
-          r.receiptNo || '',
-          toDisplayDate(r.date),
-          r.donorName || '',
-          r.careOf || '',
-          r.phoneNo || '',
-          Number(r.amount) > 0 ? Number(r.amount) : 0,
-          r.mode || 'Cash',
-          formatMaterialsString(r.materials),
-          r.runningBalance
-        ]);
-
-        // Clear existing A2:J first so deleted rows don't linger at bottom
-        const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(cfg.spreadsheetId)}/values/${encodeURIComponent(`${sheet}!A2:J1000`)}:clear`;
-        await fetch(clearUrl, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (values.length > 0) {
-          const writeRange = encodeURIComponent(`${sheet}!A2:J${values.length + 1}`);
-          const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(cfg.spreadsheetId)}/values/${writeRange}?valueInputOption=USER_ENTERED`;
-          const res = await fetch(writeUrl, {
-            method: 'PUT',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values })
+    async function pullFromGoogleSheet(silentIfEmpty = false) {
+      ensureGoogleAuthThen(async (token, cfg) => {
+        try {
+          const range = encodeURIComponent(`${cfg.sheetName || 'Receipts'}!A2:J`);
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}/values/${range}`;
+          const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          const data = await res.json();
           if (!res.ok) {
-            throw new Error(data.error?.message || 'Failed to write to Google Sheet.');
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${res.status}`);
           }
-        }
+          const data = await res.json();
+          const rows = data.values || [];
+          if (rows.length === 0) {
+            if (!silentIfEmpty) showToast('Sheet is currently empty (rows A2:J). Click Write Sheet to upload.', 'info');
+            return;
+          }
 
-        if (!silent) {
-          showToast(`Wrote ${values.length} rows to "${sheet}!A2:J"!`);
+          const parsed = rows
+            .filter(r => r && (r[3] || r[6] || r[8]))
+            .map((r, idx) => ({
+              serialNo: parseInt(r[0], 10) || (idx + 1),
+              receiptNo: String(r[1] || '').trim(),
+              date: parseSheetDateToISO(r[2]),
+              donorName: String(r[3] || '').trim() || 'Donor',
+              careOf: String(r[4] || '').trim(),
+              phoneNo: String(r[5] || '').replace(/\D/g, '').slice(-10),
+              amount: parseFloat(String(r[6] || '0').replace(/[^0-9.]/g, '')) || 0,
+              mode: String(r[7] || 'Cash').trim() || 'Cash',
+              materials: parseSheetMaterialsString(r[8])
+            }));
+
+          receipts = normalizeReceiptsData(parsed);
+          persistReceipts();
+          refreshAll();
+          showToast(`Read ${receipts.length} rows from Google Sheet "${cfg.sheetName}"!`);
+        } catch (err) {
+          showToast(`Read Sheet failed: ${err.message}`, 'error');
         }
-      } catch (err) {
-        if (!silent) {
-          showToast(err.message || 'Could not write to Google Sheet.', 'error');
-        }
-      }
+      });
     }
 
-    function autoSyncGoogleSheetIfEnabled() {
+    async function pushAllToGoogleSheet(silentSuccess = false) {
+      ensureGoogleAuthThen(async (token, cfg) => {
+        try {
+          const sheetTab = cfg.sheetName || 'Receipts';
+          const clearRange = encodeURIComponent(`${sheetTab}!A2:J1000`);
+          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}/values/${clearRange}:clear`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          const rowsWithBal = getReceiptsWithRunningBalance();
+          if (rowsWithBal.length > 0) {
+            const values = rowsWithBal.map(r => [
+              r.serialNo,
+              r.receiptNo || '',
+              toDisplayDate(r.date),
+              r.donorName || '',
+              r.careOf || '',
+              r.phoneNo || '',
+              Number(r.amount) > 0 ? Number(r.amount) : '',
+              r.mode || 'Cash',
+              formatMaterialsString(r.materials),
+              r.runningBalance
+            ]);
+
+            const writeRange = encodeURIComponent(`${sheetTab}!A2:J${values.length + 1}`);
+            const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}/values/${writeRange}?valueInputOption=USER_ENTERED`;
+            const res = await fetch(writeUrl, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ values })
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.error?.message || `HTTP ${res.status}`);
+            }
+          }
+
+          if (!silentSuccess) {
+            showToast(`Wrote ${rowsWithBal.length} rows to "${sheetTab}!A2:J"!`);
+          }
+        } catch (err) {
+          showToast(`Write Sheet failed: ${err.message}`, 'error');
+        }
+      });
+    }
+
+    function maybeAutoPushToGoogleSheet() {
       const cfg = getGoogleSheetsConfig();
-      if (cfg.spreadsheetId && cfg.clientId && cfg.autoSync !== false && gsAccessToken && Date.now() < gsTokenExpiresAt) {
+      if (cfg.autoSync && cfg.spreadsheetId && cfg.clientId && gsAccessToken && Date.now() < gsTokenExpiresAt) {
         pushAllToGoogleSheet(true);
       }
     }
 
-    function resetToWorkbookDefaults() {
-      receipts = normalizeReceiptsData(JSON.parse(JSON.stringify(INITIAL_RECEIPTS)));
-      persistReceipts();
-      clearForm();
-      refreshAll();
-      showToast('Restored and normalized initial workbook rows.');
-    }
-
     // =========================================================================
-    // 4. FORMATTING & VALIDATION HELPERS
+    // 4. FORMATTING, VALIDATION & RUNNING BALANCE HELPERS
     // =========================================================================
     function formatINR(num) {
       const n = Number(num) || 0;
-      return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+      return '₹' + n.toLocaleString('en-IN');
     }
 
     function toDisplayDate(isoDate) {
       if (!isoDate) return '';
-      const parts = isoDate.split('-');
+      const parts = String(isoDate).split('-');
       if (parts.length !== 3) return isoDate;
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
 
-    function formatMaterialsString(materialsArr) {
-      if (!Array.isArray(materialsArr) || materialsArr.length === 0) return '';
-      return materialsArr
-        .map(m => `${m.item} - ${m.qty} ${m.unit}`.trim())
-        .join(', ');
-    }
-
-    function validatePhone(phoneStr) {
-      if (!phoneStr) return true;
-      return /^[6-9]\d{9}$/.test(phoneStr.trim());
+    function formatMaterialsString(materials) {
+      if (!Array.isArray(materials) || materials.length === 0) return '';
+      return materials.map(m => `${m.item} - ${m.qty} ${m.unit}`).join(', ');
     }
 
     function escapeHTML(str) {
@@ -1701,45 +1692,26 @@
         .replace(/'/g, '&#39;');
     }
 
+    function validatePhone(phone) {
+      if (!phone) return true;
+      return /^\d{10}$/.test(phone);
+    }
+
     function getModeBadgeClasses(mode) {
       switch (mode) {
-        case 'Cash':
-          return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-        case 'Online':
-          return 'bg-blue-50 text-blue-700 border-blue-200';
-        case 'Cheque':
-          return 'bg-purple-50 text-purple-700 border-purple-200';
-        case 'Annadhanam':
-          return 'bg-amber-50 text-amber-800 border-amber-200';
-        case 'Pooja Items':
-          return 'bg-rose-50 text-rose-700 border-rose-200';
-        default:
-          return 'bg-slate-100 text-slate-700 border-slate-200';
+        case 'Cash': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        case 'Online': return 'bg-blue-50 text-blue-700 border-blue-200';
+        case 'Cheque': return 'bg-purple-50 text-purple-700 border-purple-200';
+        case 'Annadhanam': return 'bg-amber-50 text-amber-800 border-amber-200';
+        case 'Pooja Items': return 'bg-rose-50 text-rose-700 border-rose-200';
+        default: return 'bg-slate-100 text-slate-700 border-slate-200';
       }
     }
 
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const toast = document.createElement('div');
-      const bg = type === 'error' ? 'bg-red-600' : type === 'info' ? 'bg-brand-800' : 'bg-slate-900';
-      toast.className = `${bg} text-white px-4 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 pointer-events-auto transition-all duration-200`;
-      toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-1');
-        setTimeout(() => toast.remove(), 220);
-      }, 2800);
-    }
-
-    // =========================================================================
-    // 5. RUNNING BALANCE & REQUIREMENTS ENGINE
-    // =========================================================================
     function getReceiptsWithRunningBalance() {
       let running = 0;
       return receipts.map((r, idx) => {
-        const amt = Number(r.amount) || 0;
-        running += amt;
+        running += Number(r.amount) || 0;
         return {
           ...r,
           serialNo: idx + 1,
@@ -1749,156 +1721,151 @@
     }
 
     function computeRequirementsProgress() {
-      return REQUIREMENTS_CATALOG.map(reqItem => {
-        const targets = [reqItem.en.toLowerCase(), ...(reqItem.aliases || []).map(a => a.toLowerCase())];
-        let receivedQty = 0;
+      const receivedTotals = {};
+      REQUIREMENTS_CATALOG.forEach(item => {
+        receivedTotals[item.id] = 0;
+      });
 
-        receipts.forEach(r => {
-          if (!Array.isArray(r.materials)) return;
-          r.materials.forEach(m => {
-            const nameNorm = (m.item || '').trim().toLowerCase();
-            if (targets.includes(nameNorm)) {
-              receivedQty += Number(m.qty) || 0;
-            }
+      receipts.forEach(r => {
+        if (!Array.isArray(r.materials)) return;
+        r.materials.forEach(mat => {
+          const matName = String(mat.item || '').trim().toLowerCase();
+          const qty = Number(mat.qty) || 0;
+          if (!matName || qty <= 0) return;
+
+          const matched = REQUIREMENTS_CATALOG.find(req => {
+            if (req.en.toLowerCase() === matName) return true;
+            if (req.ta.toLowerCase() === matName) return true;
+            if (req.aliases.some(a => a.toLowerCase() === matName)) return true;
+            return req.en.toLowerCase().startsWith(matName + ' ');
           });
+
+          if (matched) {
+            receivedTotals[matched.id] += qty;
+          }
         });
+      });
 
-        const pendingQty = Math.max(0, Number((reqItem.required - receivedQty).toFixed(2)));
+      return REQUIREMENTS_CATALOG.map(req => {
+        const rec = Math.round((receivedTotals[req.id] || 0) * 100) / 100;
+        const pend = Math.max(0, Math.round((req.required - rec) * 100) / 100);
         let status = 'PENDING';
-        if (receivedQty >= reqItem.required) {
-          status = 'FULFILLED';
-        } else if (receivedQty > 0) {
-          status = 'PARTIAL';
-        }
-
+        if (rec >= req.required) status = 'FULFILLED';
+        else if (rec > 0) status = 'PARTIAL';
         return {
-          ...reqItem,
-          received: Number(receivedQty.toFixed(2)),
-          pending: pendingQty,
+          ...req,
+          received: rec,
+          pending: pend,
           status
         };
       });
     }
 
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      const colors = type === 'error'
+        ? 'bg-red-700 text-white border-red-800'
+        : type === 'info'
+          ? 'bg-slate-800 text-white border-slate-700'
+          : 'bg-emerald-700 text-white border-emerald-800';
+      el.className = `px-4 py-2.5 rounded-xl border shadow-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${colors}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 220);
+      }, 3000);
+    }
+
     // =========================================================================
-    // 6. FORM CONTROLS, MATERIAL BUILDER & WHATSAPP
+    // 5. FORM HANDLING, MATERIALS BUILDER & MODE AUTO-ASSIGNMENT
     // =========================================================================
     function populateMaterialsDropdown() {
       const sel = document.getElementById('material-item-select');
       if (!sel) return;
-      const previousValue = sel.value;
+      const prevVal = sel.value;
       const progressList = computeRequirementsProgress();
 
-      sel.innerHTML = '<option value="">Choose item...</option>';
-      progressList.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.en;
-        opt.dataset.unit = item.unit;
-        opt.dataset.required = item.required;
-        opt.dataset.pending = item.pending;
-        const needText = item.pending > 0 ? `Need: ${item.pending} ${item.unit}` : `Fulfilled (${item.required} ${item.unit})`;
-        opt.textContent = `${item.id}. ${item.en} (${item.ta}) — ${needText}`;
-        sel.appendChild(opt);
-      });
+      sel.innerHTML = `<option value="">Choose item...</option>` + progressList.map(item => {
+        const needLabel = item.pending > 0 ? `Need: ${item.pending} ${item.unit}` : 'Fulfilled';
+        return `<option value="${escapeHTML(item.en)}" data-unit="${escapeHTML(item.unit)}" data-pending="${item.pending}" data-required="${item.required}">
+          ${item.id}. ${escapeHTML(item.en)} (${escapeHTML(item.ta)}) — ${needLabel}
+        </option>`;
+      }).join('');
 
-      if (previousValue) {
-        sel.value = previousValue;
-      }
+      if (prevVal) sel.value = prevVal;
     }
 
     function populateDonorDatalist() {
-      const dl = document.getElementById('donor-suggestions');
-      if (dl) {
-        const names = Array.from(new Set(receipts.map(r => r.donorName).filter(Boolean)));
-        dl.innerHTML = names.map(n => `<option value="${escapeHTML(n)}"></option>`).join('');
+      const donorList = document.getElementById('donor-suggestions');
+      if (donorList) {
+        const uniqueDonors = [...new Set(receipts.map(r => r.donorName).filter(Boolean))].sort();
+        donorList.innerHTML = uniqueDonors.map(d => `<option value="${escapeHTML(d)}"></option>`).join('');
       }
 
-      const careoffDl = document.getElementById('careoff-suggestions');
-      if (careoffDl) {
-        const careOffs = Array.from(new Set([
-          ...CAREOFF_CATALOG,
-          ...receipts.map(r => (r.careOf || '').trim()).filter(Boolean)
-        ]));
-        careoffDl.innerHTML = careOffs.map(c => `<option value="${escapeHTML(c)}"></option>`).join('');
+      const careoffList = document.getElementById('careoff-suggestions');
+      if (careoffList) {
+        const dynamicCareoffs = receipts.map(r => (r.careOf || '').trim()).filter(Boolean);
+        const merged = [...new Set([...CAREOFF_CATALOG, ...dynamicCareoffs])];
+        careoffList.innerHTML = merged.map(c => `<option value="${escapeHTML(c)}"></option>`).join('');
       }
     }
 
-    function addQuickAmount(val) {
-      const input = document.getElementById('amount');
-      const current = Number(input.value) || 0;
-      input.value = current + val;
-      const curMode = document.getElementById('payment-mode').value;
-      if (currentDraftMaterials.length === 0 && (curMode === 'Annadhanam' || curMode === 'Pooja Items')) {
-        setModePill('Cash');
-      }
-      input.focus();
-    }
-
-    function setModePill(selectedMode) {
-      document.getElementById('payment-mode').value = selectedMode;
+    function setModePill(mode) {
+      document.getElementById('payment-mode').value = mode;
       document.querySelectorAll('.mode-pill').forEach(btn => {
-        if (btn.dataset.mode === selectedMode) {
-          btn.className = 'mode-pill min-h-[46px] px-4 py-2.5 rounded-xl text-sm font-semibold border transition cursor-pointer bg-brand-800 text-white border-brand-800 shadow-xs';
-        } else {
-          btn.className = 'mode-pill min-h-[46px] px-4 py-2.5 rounded-xl text-sm font-semibold border transition cursor-pointer bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
-        }
+        const isActive = btn.dataset.mode === mode;
+        const colSpan = btn.dataset.mode === 'Pooja Items' ? 'col-span-2 sm:col-span-1 ' : '';
+        btn.className = isActive
+          ? `mode-pill ${colSpan}min-h-[46px] px-4 py-2.5 rounded-xl text-sm font-semibold border transition cursor-pointer bg-brand-800 text-white border-brand-800 shadow-xs`
+          : `mode-pill ${colSpan}min-h-[46px] px-4 py-2.5 rounded-xl text-sm font-semibold border transition cursor-pointer bg-white text-slate-700 border-slate-300 hover:bg-slate-50`;
       });
     }
 
-    function renderDraftMaterials() {
-      const container = document.getElementById('selected-materials-list');
-      if (!container) return;
+    function addQuickAmount(delta) {
+      const amtInput = document.getElementById('amount');
+      const current = Number(amtInput.value) || 0;
+      amtInput.value = current + delta;
       if (currentDraftMaterials.length === 0) {
-        container.innerHTML = '<span class="text-xs text-slate-400 italic">No materials attached to this receipt.</span>';
-        return;
-      }
-      container.innerHTML = currentDraftMaterials.map((m, idx) => `
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-          <span>${escapeHTML(m.item)} - ${escapeHTML(m.qty)} ${escapeHTML(m.unit)}</span>
-          <button type="button" onclick="removeDraftMaterial(${idx})" class="text-amber-700 hover:text-red-600 font-bold cursor-pointer" title="Remove item">&times;</button>
-        </span>
-      `).join('');
-    }
-
-    function removeDraftMaterial(idx) {
-      currentDraftMaterials.splice(idx, 1);
-      renderDraftMaterials();
-      const amt = Number(document.getElementById('amount').value) || 0;
-      const curMode = document.getElementById('payment-mode').value;
-      if (currentDraftMaterials.length === 0 && amt > 0 && (curMode === 'Annadhanam' || curMode === 'Pooja Items')) {
-        setModePill('Cash');
+        const curMode = document.getElementById('payment-mode').value;
+        if (curMode === 'Annadhanam' || curMode === 'Pooja Items') {
+          setModePill('Cash');
+        }
       }
     }
 
     function handleAddMaterial() {
       const sel = document.getElementById('material-item-select');
       const qtyInput = document.getElementById('material-qty-input');
-      const itemName = sel.value;
+      const itemName = (sel.value || '').trim();
       const qty = parseFloat(qtyInput.value);
 
       if (!itemName) {
-        showToast('Please choose a material item first.', 'error');
+        showToast('Select a material item first.', 'error');
         sel.focus();
         return;
       }
       if (!qty || qty <= 0) {
-        showToast('Please enter a valid quantity greater than 0.', 'error');
+        showToast('Enter a valid quantity.', 'error');
         qtyInput.focus();
         return;
       }
 
-      const unit = sel.options[sel.selectedIndex]?.dataset?.unit || 'kg';
-      const existingIndex = currentDraftMaterials.findIndex(m => m.item.toLowerCase() === itemName.toLowerCase());
-      if (existingIndex > -1) {
-        currentDraftMaterials[existingIndex].qty = Number((currentDraftMaterials[existingIndex].qty + qty).toFixed(2));
+      const opt = sel.options[sel.selectedIndex];
+      const unit = opt?.dataset?.unit || 'kg';
+
+      const existingIdx = currentDraftMaterials.findIndex(m => m.item.toLowerCase() === itemName.toLowerCase());
+      if (existingIdx >= 0) {
+        currentDraftMaterials[existingIdx].qty = Math.round((currentDraftMaterials[existingIdx].qty + qty) * 100) / 100;
       } else {
         currentDraftMaterials.push({ item: itemName, qty, unit });
       }
 
-      // If no cash is entered and mode is Cash/Online/Cheque, auto-switch mode pill to Annadhanam
-      const currentAmt = Number(document.getElementById('amount').value) || 0;
-      const currentMode = document.getElementById('payment-mode').value;
-      if (currentAmt === 0 && ['Cash', 'Online', 'Cheque'].includes(currentMode)) {
+      const amt = Number(document.getElementById('amount').value) || 0;
+      const curMode = document.getElementById('payment-mode').value;
+      if (amt === 0 && (curMode === 'Cash' || curMode === 'Online' || curMode === 'Cheque')) {
         setModePill('Annadhanam');
       }
 
@@ -1909,169 +1876,376 @@
       renderDraftMaterials();
     }
 
-    function clearForm(keepDate = true) {
-      const currentDate = document.getElementById('receipt-date').value;
+    function removeDraftMaterial(idx) {
+      currentDraftMaterials.splice(idx, 1);
+      const amt = Number(document.getElementById('amount').value) || 0;
+      const curMode = document.getElementById('payment-mode').value;
+      if (currentDraftMaterials.length === 0 && amt > 0 && (curMode === 'Annadhanam' || curMode === 'Pooja Items')) {
+        setModePill('Cash');
+      }
+      renderDraftMaterials();
+    }
+
+    function renderDraftMaterials() {
+      const container = document.getElementById('selected-materials-list');
+      if (!container) return;
+      if (currentDraftMaterials.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = currentDraftMaterials.map((m, idx) => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold">
+          <span>${escapeHTML(m.item)} - ${escapeHTML(m.qty)} ${escapeHTML(m.unit)}</span>
+          <button type="button" onclick="removeDraftMaterial(${idx})" class="text-amber-700 hover:text-red-700 font-bold cursor-pointer">&times;</button>
+        </span>
+      `).join('');
+    }
+
+    function handleFormSubmit(e) {
+      if (e) e.preventDefault();
+
+      const donorInput = document.getElementById('donor-name');
+      const phoneInput = document.getElementById('phone-no');
+      const donorName = donorInput.value.trim();
+      const phoneNo = phoneInput.value.trim();
+
+      document.getElementById('donor-error').classList.toggle('hidden', Boolean(donorName));
+      const phoneValid = validatePhone(phoneNo);
+      document.getElementById('phone-error').classList.toggle('hidden', phoneValid);
+
+      if (!donorName) {
+        donorInput.focus();
+        return;
+      }
+      if (!phoneValid) {
+        phoneInput.focus();
+        return;
+      }
+
+      const receiptNo = document.getElementById('receipt-no').value.trim();
+      const date = document.getElementById('receipt-date').value || new Date().toISOString().split('T')[0];
+      const careOf = document.getElementById('care-of').value.trim();
+      const amount = Math.max(0, Number(document.getElementById('amount').value) || 0);
+      const selectedMode = document.getElementById('payment-mode').value || 'Cash';
+      const mats = [...currentDraftMaterials];
+      const editSerial = parseInt(document.getElementById('edit-serial-no').value, 10);
+
+      const monetaryModes = ['Cash', 'Online', 'Cheque'];
+      const materialModes = ['Annadhanam', 'Pooja Items'];
+      const rowsToInsert = [];
+
+      if (amount > 0 && mats.length > 0) {
+        rowsToInsert.push({
+          receiptNo,
+          date,
+          donorName,
+          careOf,
+          phoneNo,
+          amount,
+          mode: monetaryModes.includes(selectedMode) ? selectedMode : 'Cash',
+          materials: []
+        });
+        rowsToInsert.push({
+          receiptNo,
+          date,
+          donorName,
+          careOf,
+          phoneNo,
+          amount: 0,
+          mode: selectedMode === 'Pooja Items' ? 'Pooja Items' : 'Annadhanam',
+          materials: mats
+        });
+      } else if (mats.length > 0 && amount === 0) {
+        rowsToInsert.push({
+          receiptNo,
+          date,
+          donorName,
+          careOf,
+          phoneNo,
+          amount: 0,
+          mode: materialModes.includes(selectedMode) ? selectedMode : 'Annadhanam',
+          materials: mats
+        });
+      } else {
+        rowsToInsert.push({
+          receiptNo,
+          date,
+          donorName,
+          careOf,
+          phoneNo,
+          amount,
+          mode: monetaryModes.includes(selectedMode) ? selectedMode : 'Cash',
+          materials: []
+        });
+      }
+
+      if (editSerial && editSerial >= 1 && editSerial <= receipts.length) {
+        receipts.splice(editSerial - 1, 1, ...rowsToInsert);
+        showToast(rowsToInsert.length > 1 ? 'Updated & split into 2 rows (Cash + Annadhanam)!' : 'Receipt updated!');
+      } else {
+        receipts.push(...rowsToInsert);
+        showToast(rowsToInsert.length > 1 ? 'Saved as 2 separate rows (Monetary + Material)!' : 'Receipt added to sheet!');
+      }
+
+      receipts = receipts.map((r, i) => ({ ...r, serialNo: i + 1 }));
+      persistReceipts();
+      refreshAll();
+      maybeAutoPushToGoogleSheet();
+
+      const autoWA = document.getElementById('auto-whatsapp-toggle')?.checked;
+      const latestSaved = receipts[receipts.length - 1];
+      clearForm(false);
+
+      if (autoWA && phoneNo.length === 10 && latestSaved) {
+        shareReceiptWhatsApp(latestSaved.serialNo, true);
+      }
+    }
+
+    function clearForm(resetDate = true) {
       document.getElementById('edit-serial-no').value = '';
       document.getElementById('receipt-no').value = '';
+      if (resetDate) {
+        document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
+      }
       document.getElementById('donor-name').value = '';
       document.getElementById('care-of').value = '';
       document.getElementById('phone-no').value = '';
       document.getElementById('amount').value = '';
-      if (keepDate && currentDate) {
-        document.getElementById('receipt-date').value = currentDate;
-      } else {
-        document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
-      }
-
-      setModePill('Cash');
-      currentDraftMaterials = [];
-      renderDraftMaterials();
-
+      document.getElementById('material-item-select').value = '';
+      document.getElementById('material-qty-input').value = '';
+      document.getElementById('material-unit-badge').textContent = 'unit';
+      document.getElementById('material-req-hint').classList.add('hidden');
       document.getElementById('donor-error').classList.add('hidden');
       document.getElementById('phone-error').classList.add('hidden');
+
+      currentDraftMaterials = [];
+      renderDraftMaterials();
+      setModePill('Cash');
+
       document.getElementById('form-heading').textContent = 'New Receipt Entry';
-      document.getElementById('submit-btn').textContent = 'Add to sheet';
       document.getElementById('form-mode-indicator').className = 'w-2.5 h-2.5 rounded-full bg-brand-600';
+      document.getElementById('submit-btn').textContent = 'Add to sheet';
       document.getElementById('next-serial-badge').textContent = `#${receipts.length + 1}`;
     }
 
-    function buildWhatsAppReceiptMessage(r) {
-      const amt = Number(r.amount) || 0;
-      const matStr = formatMaterialsString(r.materials);
-      const rcptLabel = r.receiptNo ? r.receiptNo : `#${r.serialNo}`;
-      const donor = r.donorName ? ` ${r.donorName}` : '';
+    function editReceiptRow(serialNo) {
+      const target = receipts.find(r => r.serialNo === serialNo);
+      if (!target) return;
 
-      const contribParts = [];
-      if (amt > 0) contribParts.push(formatINR(amt));
-      if (matStr) contribParts.push(matStr);
-      const contribText = contribParts.length > 0 ? ` (${contribParts.join(' & ')})` : '';
+      switchTab('receipts');
+      document.getElementById('edit-serial-no').value = target.serialNo;
+      document.getElementById('receipt-no').value = target.receiptNo || '';
+      document.getElementById('receipt-date').value = target.date || '';
+      document.getElementById('donor-name').value = target.donorName || '';
+      document.getElementById('care-of').value = target.careOf || '';
+      document.getElementById('phone-no').value = target.phoneNo || '';
+      document.getElementById('amount').value = Number(target.amount) > 0 ? Number(target.amount) : '';
 
-      return [
-        `Swamiye Saranam Ayyappa! 🙏`,
-        `Dear${donor}, thank you for your generous contribution${contribText} to *Sri Ayyappa Swami Seva Sangam*.`,
-        `Your Receipt No is: *${rcptLabel}*`
-      ].join('\n');
+      currentDraftMaterials = Array.isArray(target.materials) ? JSON.parse(JSON.stringify(target.materials)) : [];
+      renderDraftMaterials();
+      setModePill(target.mode || 'Cash');
+
+      document.getElementById('form-heading').textContent = `Editing Serial #${target.serialNo}`;
+      document.getElementById('form-mode-indicator').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+      document.getElementById('submit-btn').textContent = 'Update Row';
+      document.getElementById('next-serial-badge').textContent = `#${target.serialNo}`;
+      document.getElementById('donor-name').focus();
     }
 
-    const WA_CONFIG_KEY = 'sass_wa_cloud_config_v1';
+    function promptDeleteReceipt(serialNo) {
+      const target = receipts.find(r => r.serialNo === serialNo);
+      if (!target) return;
+      pendingDeleteSerialNo = serialNo;
+      document.getElementById('delete-modal-desc').textContent =
+        `Remove Serial #${serialNo} (${target.donorName}) and recalculate running balances?`;
+      document.getElementById('delete-modal').classList.remove('hidden');
+    }
 
-    function getWhatsAppConfig() {
-      try {
-        const raw = localStorage.getItem(WA_CONFIG_KEY);
-        return raw ? JSON.parse(raw) : { phoneId: '', token: '' };
-      } catch (e) {
-        return { phoneId: '', token: '' };
+    function closeDeleteModal() {
+      pendingDeleteSerialNo = null;
+      document.getElementById('delete-modal').classList.add('hidden');
+    }
+
+    function confirmDeleteReceipt() {
+      if (!pendingDeleteSerialNo) return;
+      receipts = receipts
+        .filter(r => r.serialNo !== pendingDeleteSerialNo)
+        .map((r, idx) => ({ ...r, serialNo: idx + 1 }));
+      closeDeleteModal();
+      persistReceipts();
+      refreshAll();
+      maybeAutoPushToGoogleSheet();
+      showToast('Receipt row deleted.');
+    }
+
+    function resetToWorkbookDefaults() {
+      receipts = normalizeReceiptsData(JSON.parse(JSON.stringify(INITIAL_RECEIPTS)));
+      persistReceipts();
+      refreshAll();
+      showToast('Reset to initial 6 workbook rows.');
+    }
+
+    // =========================================================================
+    // 6. RECENT RECEIPTS REGISTER RENDERING
+    // =========================================================================
+    function setRecentLimit(limit) {
+      recentRecordsLimit = limit;
+      [5, 10, 15].forEach(n => {
+        const btn = document.getElementById(`limit-btn-${n}`);
+        if (btn) {
+          btn.className = n === limit
+            ? 'px-2.5 py-1 rounded-md font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer'
+            : 'px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
+        }
+      });
+      renderReceiptsRegister();
+    }
+
+    function setRegisterDisplayMode(mode) {
+      registerDisplayMode = mode;
+      const feedBtn = document.getElementById('view-toggle-feed');
+      const tableBtn = document.getElementById('view-toggle-table');
+      const feedBox = document.getElementById('register-feed-container');
+      const tableBox = document.getElementById('register-table-container');
+
+      if (mode === 'feed') {
+        feedBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer';
+        tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
+        feedBox.classList.remove('hidden');
+        tableBox.classList.add('hidden');
+      } else {
+        tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer';
+        feedBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
+        tableBox.classList.remove('hidden');
+        feedBox.classList.add('hidden');
       }
     }
 
-    function openWhatsAppConfigModal() {
-      const cfg = getWhatsAppConfig();
-      document.getElementById('wa-phone-id').value = cfg.phoneId || '';
-      document.getElementById('wa-access-token').value = cfg.token || '';
-      document.getElementById('whatsapp-config-modal').classList.remove('hidden');
-    }
+    function renderReceiptsRegister() {
+      const allWithBal = getReceiptsWithRunningBalance();
+      const recentSlice = allWithBal.slice(-recentRecordsLimit).reverse();
 
-    function closeWhatsAppConfigModal() {
-      document.getElementById('whatsapp-config-modal').classList.add('hidden');
-    }
+      const badge = document.getElementById('register-Showing-badge');
+      if (badge) {
+        badge.textContent = `Showing last ${recentSlice.length} of ${allWithBal.length} records`;
+      }
 
-    function saveWhatsAppConfig() {
-      const phoneId = document.getElementById('wa-phone-id').value.trim();
-      const token = document.getElementById('wa-access-token').value.trim();
-      try {
-        localStorage.setItem(WA_CONFIG_KEY, JSON.stringify({ phoneId, token }));
-        showToast(phoneId && token ? 'WhatsApp Cloud API configured!' : 'Switched to Instant Direct WhatsApp mode.');
-      } catch (e) {}
-      closeWhatsAppConfigModal();
-    }
-
-    async function dispatchCloudWhatsApp(phone10, messageText) {
-      const cfg = getWhatsAppConfig();
-      if (!cfg.phoneId || !cfg.token) return false;
-
-      try {
-        const res = await fetch(`https://graph.facebook.com/v19.0/${encodeURIComponent(cfg.phoneId)}/messages`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cfg.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: `91${phone10}`,
-            type: 'text',
-            text: { preview_url: false, body: messageText }
-          })
-        });
-        const data = await res.json();
-        if (res.ok && data.messages) {
-          showToast(`WhatsApp message sent directly to +91 ${phone10}!`);
-          return true;
+      const feedContainer = document.getElementById('register-feed-container');
+      if (feedContainer) {
+        if (recentSlice.length === 0) {
+          feedContainer.innerHTML = `<div class="p-8 text-center text-xs text-slate-400">No receipts recorded yet.</div>`;
         } else {
-          const errMsg = (data.error && data.error.message) ? data.error.message : 'Cloud API error';
-          showToast(`Cloud API failed (${errMsg}). Opening WhatsApp directly...`, 'info');
-          return false;
+          feedContainer.innerHTML = recentSlice.map(r => {
+            const matStr = formatMaterialsString(r.materials);
+            const subParts = [
+              r.receiptNo ? `Receipt #${escapeHTML(r.receiptNo)}` : null,
+              r.careOf ? `C/o ${escapeHTML(r.careOf)}` : null,
+              r.phoneNo ? escapeHTML(r.phoneNo) : null
+            ].filter(Boolean);
+
+            return `
+              <div class="p-4 sm:px-5 hover:bg-slate-50/80 transition flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3 min-w-0">
+                  <span class="mt-0.5 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-xs font-bold text-slate-600 shrink-0 tabular-nums">
+                    #${r.serialNo}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-display font-bold text-sm sm:text-base text-slatex-900 truncate">${escapeHTML(r.donorName)}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${getModeBadgeClasses(r.mode)}">${escapeHTML(r.mode)}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5 truncate">
+                      ${subParts.length > 0 ? subParts.join(' · ') : 'Direct contribution'}
+                      ${matStr ? ` · <strong class="text-slate-800 font-medium">${escapeHTML(matStr)}</strong>` : ''}
+                    </p>
+                    <div class="mt-2 flex items-center gap-3 text-xs font-semibold">
+                      <button type="button" onclick="shareReceiptWhatsApp(${r.serialNo})" class="text-emerald-700 hover:underline cursor-pointer">WhatsApp</button>
+                      <button type="button" onclick="editReceiptRow(${r.serialNo})" class="text-brand-700 hover:underline cursor-pointer">Edit</button>
+                      <button type="button" onclick="promptDeleteReceipt(${r.serialNo})" class="text-red-600 hover:underline cursor-pointer">Delete</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-right shrink-0">
+                  <p class="font-display font-bold text-sm sm:text-base text-slatex-900 tabular-nums">
+                    ${Number(r.amount) > 0 ? formatINR(r.amount) : '—'}
+                  </p>
+                  <p class="font-mono text-[11px] text-slate-400 mt-0.5 tabular-nums">${toDisplayDate(r.date)}</p>
+                  <p class="font-mono text-[11px] font-semibold text-emerald-700 mt-0.5 tabular-nums">Bal ${formatINR(r.runningBalance)}</p>
+                </div>
+              </div>
+            `;
+          }).join('');
         }
-      } catch (err) {
-        showToast('Network error with Cloud API. Opening WhatsApp directly...', 'info');
-        return false;
+      }
+
+      const tableBody = document.getElementById('register-table-body');
+      if (tableBody) {
+        tableBody.innerHTML = recentSlice.map(r => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-500 tabular-nums">${r.serialNo}</td>
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-700 tabular-nums">${escapeHTML(r.receiptNo || '—')}</td>
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-600 whitespace-nowrap tabular-nums">${toDisplayDate(r.date)}</td>
+            <td class="py-2.5 px-3 font-semibold text-slatex-900">${escapeHTML(r.donorName)}</td>
+            <td class="py-2.5 px-3 text-slate-600">${escapeHTML(r.careOf || '—')}</td>
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-600 tabular-nums">${escapeHTML(r.phoneNo || '—')}</td>
+            <td class="py-2.5 px-3 text-right font-semibold text-slatex-900 tabular-nums">${Number(r.amount) > 0 ? formatINR(r.amount) : '—'}</td>
+            <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${getModeBadgeClasses(r.mode)}">${escapeHTML(r.mode)}</span></td>
+            <td class="py-2.5 px-3 text-xs text-slate-700">${escapeHTML(formatMaterialsString(r.materials) || '—')}</td>
+            <td class="py-2.5 px-3 text-right font-mono text-xs font-semibold text-emerald-700 tabular-nums">${formatINR(r.runningBalance)}</td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-2 text-xs font-semibold">
+              <button type="button" onclick="shareReceiptWhatsApp(${r.serialNo})" class="text-emerald-700 hover:underline cursor-pointer">WA</button>
+              <button type="button" onclick="editReceiptRow(${r.serialNo})" class="text-brand-700 hover:underline cursor-pointer">Edit</button>
+              <button type="button" onclick="promptDeleteReceipt(${r.serialNo})" class="text-red-600 hover:underline cursor-pointer">Del</button>
+            </td>
+          </tr>
+        `).join('');
       }
     }
 
-    async function shareReceiptWhatsApp(serialNo, forceModal = false) {
-      const r = receipts.find(item => Number(item.serialNo) === Number(serialNo));
-      if (!r) return;
+    // =========================================================================
+    // 7. WHATSAPP DIRECT SHARING & CLOUD API INTEGRATION
+    // =========================================================================
+    const WA_CONFIG_KEY = 'sass_whatsapp_cloud_cfg_v1';
 
-      const cleanPhone = (r.phoneNo || '').replace(/\D/g, '').slice(-10);
-      const msg = buildWhatsAppReceiptMessage(r);
-      const cfg = getWhatsAppConfig();
+    function buildWhatsAppThanksText(receipt) {
+      const rcptRef = receipt.receiptNo ? `#${receipt.receiptNo}` : `S.No #${receipt.serialNo}`;
+      const matStr = formatMaterialsString(receipt.materials);
+      const giftPart = Number(receipt.amount) > 0
+        ? `of ${formatINR(receipt.amount)} (${receipt.mode})`
+        : matStr
+          ? `of ${matStr} (${receipt.mode})`
+          : `(${receipt.mode})`;
+      return `Swamiye Saranam Ayyappa!\nDear ${receipt.donorName},\nThank you for your kind contribution ${giftPart} to Sri Ayyappa Swami Seva Sangam.\nReceipt No: ${rcptRef}`;
+    }
 
-      if (!forceModal && cleanPhone && validatePhone(cleanPhone)) {
-        if (cfg.phoneId && cfg.token) {
-          const sent = await dispatchCloudWhatsApp(cleanPhone, msg);
-          if (sent) return;
-        }
-        const encodedText = encodeURIComponent(msg);
-        window.open(`https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodedText}`, '_blank', 'noopener,noreferrer');
-        showToast(`Opening WhatsApp chat for ${r.donorName} (+91 ${cleanPhone})`);
+    function shareReceiptWhatsApp(serialNo, directLaunchIfPhone = false) {
+      const target = receipts.find(r => r.serialNo === serialNo);
+      if (!target) return;
+
+      const msg = buildWhatsAppThanksText(target);
+      const phone = (target.phoneNo || '').replace(/\D/g, '').slice(-10);
+
+      if (directLaunchIfPhone && phone.length === 10) {
+        const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank', 'noopener');
         return;
       }
 
-      const phoneInput = document.getElementById('wa-modal-phone');
-      const msgInput = document.getElementById('wa-modal-message');
+      document.getElementById('wa-modal-phone').value = phone;
+      document.getElementById('wa-modal-message').value = msg;
+
+      const cfg = getWhatsAppConfig();
       const cloudBtn = document.getElementById('wa-cloud-send-btn');
-      const modal = document.getElementById('whatsapp-modal');
-
-      phoneInput.value = cleanPhone;
-      msgInput.value = msg;
       if (cloudBtn) {
-        if (cfg.phoneId && cfg.token) {
-          cloudBtn.classList.remove('hidden');
-        } else {
-          cloudBtn.classList.add('hidden');
-        }
-      }
-      modal.classList.remove('hidden');
-      phoneInput.focus();
-    }
-
-    async function sendViaCloudAPI() {
-      const rawPhone = document.getElementById('wa-modal-phone').value.replace(/\D/g, '');
-      const msg = document.getElementById('wa-modal-message').value;
-
-      if (!rawPhone || !validatePhone(rawPhone)) {
-        showToast('Please enter a valid 10-digit Indian mobile number.', 'error');
-        document.getElementById('wa-modal-phone').focus();
-        return;
+        cloudBtn.classList.toggle('hidden', !(cfg.phoneId && cfg.accessToken));
       }
 
-      const sent = await dispatchCloudWhatsApp(rawPhone, msg);
-      if (sent) closeWhatsAppModal();
+      document.getElementById('whatsapp-modal').classList.remove('hidden');
     }
 
     function closeWhatsAppModal() {
-      document.getElementById('whatsapp-modal').classList.add('hidden');
+      document.getElementById('whatsapp-modal')?.classList.add('hidden');
     }
 
     function copyWhatsAppModalText() {
@@ -2083,369 +2257,118 @@
       buffer.setSelectionRange(0, 99999);
       try {
         document.execCommand('copy');
-        showToast('Receipt message copied to clipboard!');
-      } catch (err) {
-        showToast('Press Ctrl+C to copy the selected text.', 'info');
-      }
+        showToast('WhatsApp receipt text copied!');
+      } catch (e) {}
       buffer.classList.add('sr-only');
     }
 
     function launchWhatsAppFromModal() {
-      const rawPhone = document.getElementById('wa-modal-phone').value.replace(/\D/g, '');
+      const rawPhone = document.getElementById('wa-modal-phone').value.replace(/\D/g, '').slice(-10);
       const msg = document.getElementById('wa-modal-message').value;
-
-      if (rawPhone && !validatePhone(rawPhone)) {
-        showToast('Please enter a valid 10-digit Indian mobile number or leave it blank.', 'error');
-        document.getElementById('wa-modal-phone').focus();
-        return;
-      }
-
-      const encodedText = encodeURIComponent(msg);
-      const waUrl = rawPhone
-        ? `https://api.whatsapp.com/send?phone=91${rawPhone}&text=${encodedText}`
-        : `https://api.whatsapp.com/send?text=${encodedText}`;
-
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      const waUrl = rawPhone.length === 10
+        ? `https://wa.me/91${rawPhone}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank', 'noopener');
       closeWhatsAppModal();
     }
 
-    function handleFormSubmit(e) {
-      if (e) e.preventDefault();
-
-      const pendingSelect = document.getElementById('material-item-select');
-      const pendingQty = parseFloat(document.getElementById('material-qty-input').value);
-      if (pendingSelect.value && pendingQty > 0) {
-        handleAddMaterial();
+    function getWhatsAppConfig() {
+      try {
+        const raw = localStorage.getItem(WA_CONFIG_KEY);
+        return raw ? JSON.parse(raw) : { phoneId: '', accessToken: '' };
+      } catch (e) {
+        return { phoneId: '', accessToken: '' };
       }
+    }
 
-      const donorName = document.getElementById('donor-name').value.trim();
-      const phoneNo = document.getElementById('phone-no').value.trim();
-      const receiptNo = document.getElementById('receipt-no').value.trim();
-      const date = document.getElementById('receipt-date').value || new Date().toISOString().split('T')[0];
-      const careOf = document.getElementById('care-of').value.trim();
-      const amount = Math.max(0, Number(document.getElementById('amount').value) || 0);
-      const mode = document.getElementById('payment-mode').value || 'Cash';
-      const editSerial = document.getElementById('edit-serial-no').value;
+    function openWhatsAppConfigModal() {
+      const cfg = getWhatsAppConfig();
+      document.getElementById('wa-phone-id').value = cfg.phoneId || '';
+      document.getElementById('wa-access-token').value = cfg.accessToken || '';
+      document.getElementById('whatsapp-config-modal').classList.remove('hidden');
+    }
 
-      let valid = true;
-      if (!donorName) {
-        document.getElementById('donor-error').classList.remove('hidden');
-        document.getElementById('donor-name').focus();
-        valid = false;
-      } else {
-        document.getElementById('donor-error').classList.add('hidden');
-      }
+    function closeWhatsAppConfigModal() {
+      document.getElementById('whatsapp-config-modal')?.classList.add('hidden');
+    }
 
-      if (phoneNo && !validatePhone(phoneNo)) {
-        document.getElementById('phone-error').classList.remove('hidden');
-        if (valid) document.getElementById('phone-no').focus();
-        valid = false;
-      } else {
-        document.getElementById('phone-error').classList.add('hidden');
-      }
+    function saveWhatsAppConfig() {
+      const phoneId = document.getElementById('wa-phone-id').value.trim();
+      const accessToken = document.getElementById('wa-access-token').value.trim();
+      try {
+        localStorage.setItem(WA_CONFIG_KEY, JSON.stringify({ phoneId, accessToken }));
+      } catch (e) {}
+      closeWhatsAppConfigModal();
+      showToast('WhatsApp API settings saved.');
+    }
 
-      if (!valid) {
-        pendingWhatsAppAfterSubmit = false;
+    async function sendViaCloudAPI() {
+      const cfg = getWhatsAppConfig();
+      const phone = document.getElementById('wa-modal-phone').value.replace(/\D/g, '').slice(-10);
+      const msg = document.getElementById('wa-modal-message').value;
+      if (!cfg.phoneId || !cfg.accessToken) {
+        openWhatsAppConfigModal();
         return;
       }
-
-      if (amount === 0 && currentDraftMaterials.length === 0) {
-        showToast('Please enter an Amount (₹) or attach at least one Material item.', 'error');
-        pendingWhatsAppAfterSubmit = false;
+      if (phone.length !== 10) {
+        showToast('Enter a valid 10-digit mobile number for Cloud API send.', 'error');
         return;
       }
-
-      const monetaryModes = ['Cash', 'Online', 'Cheque'];
-      const materialModes = ['Annadhanam', 'Pooja Items'];
-      const hasAmt = amount > 0;
-      const hasMats = currentDraftMaterials.length > 0;
-
-      // Build 1 or 2 row objects based on whether both Amount and Materials are present
-      const rowsToSave = [];
-      if (hasAmt && hasMats) {
-        const cashMode = monetaryModes.includes(mode) ? mode : 'Cash';
-        const matMode = mode === 'Pooja Items' ? 'Pooja Items' : 'Annadhanam';
-        rowsToSave.push({
-          receiptNo,
-          date,
-          donorName,
-          careOf,
-          phoneNo,
-          amount,
-          mode: cashMode,
-          materials: []
+      try {
+        const res = await fetch(`https://graph.facebook.com/v19.0/${cfg.phoneId}/messages`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${cfg.accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: `91${phone}`,
+            type: 'text',
+            text: { body: msg }
+          })
         });
-        rowsToSave.push({
-          receiptNo,
-          date,
-          donorName,
-          careOf,
-          phoneNo,
-          amount: 0,
-          mode: matMode,
-          materials: [...currentDraftMaterials]
-        });
-      } else if (hasMats && !hasAmt) {
-        const matMode = materialModes.includes(mode) ? mode : 'Annadhanam';
-        rowsToSave.push({
-          receiptNo,
-          date,
-          donorName,
-          careOf,
-          phoneNo,
-          amount: 0,
-          mode: matMode,
-          materials: [...currentDraftMaterials]
-        });
-      } else {
-        const cashMode = monetaryModes.includes(mode) ? mode : 'Cash';
-        rowsToSave.push({
-          receiptNo,
-          date,
-          donorName,
-          careOf,
-          phoneNo,
-          amount,
-          mode: cashMode,
-          materials: []
-        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        closeWhatsAppModal();
+        showToast(`Sent WhatsApp message to +91 ${phone}!`);
+      } catch (err) {
+        showToast(`Cloud API Error: ${err.message}`, 'error');
       }
-
-      let savedSerialNo = null;
-      if (editSerial) {
-        const idx = Number(editSerial) - 1;
-        if (receipts[idx]) {
-          receipts.splice(idx, 1, ...rowsToSave.map(r => ({ ...r, serialNo: 0 })));
-          receipts.forEach((r, i) => { r.serialNo = i + 1; });
-          savedSerialNo = idx + 1;
-          showToast(
-            rowsToSave.length === 2
-              ? `Split & updated into 2 rows (#${idx + 1} ${rowsToSave[0].mode} & #${idx + 2} ${rowsToSave[1].mode})`
-              : `Updated Receipt #${idx + 1} (${donorName} · ${rowsToSave[0].mode})`
-          );
-        }
-      } else {
-        const firstNewSerial = receipts.length + 1;
-        rowsToSave.forEach(r => {
-          receipts.push({
-            ...r,
-            serialNo: receipts.length + 1
-          });
-        });
-        savedSerialNo = firstNewSerial;
-        showToast(
-          rowsToSave.length === 2
-            ? `Added 2 rows: #${firstNewSerial} (${rowsToSave[0].mode}) & #${firstNewSerial + 1} (${rowsToSave[1].mode})`
-            : `Saved Receipt #${firstNewSerial} — ${donorName} (${rowsToSave[0].mode})`
-        );
-      }
-
-      const shouldOpenWhatsApp = pendingWhatsAppAfterSubmit ||
-        (document.getElementById('auto-whatsapp-toggle') &&
-         document.getElementById('auto-whatsapp-toggle').checked &&
-         phoneNo && validatePhone(phoneNo));
-      pendingWhatsAppAfterSubmit = false;
-
-      persistReceipts();
-      clearForm(true);
-      refreshAll();
-      autoSyncGoogleSheetIfEnabled();
-
-      if (shouldOpenWhatsApp && savedSerialNo !== null) {
-        shareReceiptWhatsApp(savedSerialNo);
-      } else {
-        document.getElementById('donor-name').focus();
-      }
-    }
-
-    function editReceiptRow(serialNo) {
-      const target = receipts.find((_, idx) => idx + 1 === Number(serialNo));
-      if (!target) return;
-
-      switchTab('receipts');
-      document.getElementById('edit-serial-no').value = String(serialNo);
-      document.getElementById('receipt-no').value = target.receiptNo || '';
-      document.getElementById('receipt-date').value = target.date || '';
-      document.getElementById('donor-name').value = target.donorName || '';
-      document.getElementById('care-of').value = target.careOf || '';
-      document.getElementById('phone-no').value = target.phoneNo || '';
-      document.getElementById('amount').value = target.amount || '';
-      setModePill(target.mode || 'Cash');
-
-      currentDraftMaterials = Array.isArray(target.materials)
-        ? JSON.parse(JSON.stringify(target.materials))
-        : [];
-      renderDraftMaterials();
-
-      document.getElementById('form-heading').textContent = `Editing Receipt #${serialNo}`;
-      document.getElementById('submit-btn').textContent = `Update Receipt #${serialNo}`;
-      document.getElementById('form-mode-indicator').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
-      document.getElementById('next-serial-badge').textContent = `Editing #${serialNo}`;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function promptDeleteReceipt(serialNo) {
-      const target = receipts.find((_, idx) => idx + 1 === Number(serialNo));
-      if (!target) return;
-      pendingDeleteSerialNo = Number(serialNo);
-      document.getElementById('delete-modal-desc').textContent =
-        `Delete S.No #${serialNo} (${target.donorName} — ${formatINR(target.amount)})? Running balances will update automatically.`;
-      document.getElementById('delete-modal').classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-      pendingDeleteSerialNo = null;
-      document.getElementById('delete-modal').classList.add('hidden');
-    }
-
-    function confirmDeleteReceipt() {
-      if (!pendingDeleteSerialNo) return;
-      const idx = pendingDeleteSerialNo - 1;
-      if (idx >= 0 && idx < receipts.length) {
-        const removed = receipts.splice(idx, 1)[0];
-        receipts.forEach((r, i) => { r.serialNo = i + 1; });
-        persistReceipts();
-        clearForm(true);
-        refreshAll();
-        autoSyncGoogleSheetIfEnabled();
-        showToast(`Deleted entry for ${removed.donorName}`, 'info');
-      }
-      closeDeleteModal();
     }
 
     // =========================================================================
-    // 7. RECEIPTS REGISTER RENDERING (FEED & LEDGER TABLE)
+    // 8. EXECUTIVE DASHBOARD FILTERS & GOOGLE SHEETS FORMULA GENERATOR
     // =========================================================================
-    function setRecentLimit(limit) {
-      recentRecordsLimit = Number(limit) || 5;
-      [5, 10, 15].forEach(n => {
-        const btn = document.getElementById(`limit-btn-${n}`);
-        if (!btn) return;
-        if (n === recentRecordsLimit) {
-          btn.className = 'px-2.5 py-1 rounded-md font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer';
-        } else {
-          btn.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
-        }
-      });
-      renderReceiptsRegister();
-    }
+    function populateDashboardFilters() {
+      const careSel = document.getElementById('dash-filter-careoff');
+      if (careSel) {
+        const prev = careSel.value || 'ALL';
+        const dynamicCareoffs = receipts.map(r => (r.careOf || '').trim()).filter(Boolean);
+        const allCareoffs = [...new Set([...CAREOFF_CATALOG, ...dynamicCareoffs])];
+        careSel.innerHTML = `<option value="ALL">All Careoffs</option><option value="__DIRECT__">Direct / Unassigned</option>` +
+          allCareoffs.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+        careSel.value = prev;
+      }
 
-    function setRegisterDisplayMode(mode) {
-      registerDisplayMode = mode;
-      const feedBtn = document.getElementById('view-toggle-feed');
-      const tableBtn = document.getElementById('view-toggle-table');
-      const feedContainer = document.getElementById('register-feed-container');
-      const tableContainer = document.getElementById('register-table-container');
+      const bookSel = document.getElementById('dash-filter-book');
+      if (bookSel) {
+        const prev = bookSel.value || 'ALL';
+        bookSel.innerHTML = `<option value="ALL">All 20 Books (001-1000)</option>` +
+          RECEIPT_BOOKS.map(b => `<option value="${b.bookNo}">${escapeHTML(b.label)}</option>`).join('') +
+          `<option value="__UNBOOKED__">Without Book # / Blank</option>`;
+        bookSel.value = prev;
+      }
 
-      if (mode === 'feed') {
-        feedBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer';
-        tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
-        feedContainer.classList.remove('hidden');
-        tableContainer.classList.add('hidden');
-      } else {
-        tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slatex-900 shadow-2xs cursor-pointer';
-        feedBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-slate-600 hover:text-slatex-900 cursor-pointer';
-        tableContainer.classList.remove('hidden');
-        feedContainer.classList.add('hidden');
+      const dateSel = document.getElementById('dash-filter-date');
+      if (dateSel) {
+        const prev = dateSel.value || 'ALL';
+        const uniqueDates = [...new Set(receipts.map(r => r.date).filter(Boolean))].sort().reverse();
+        dateSel.innerHTML = `<option value="ALL">All Dates</option>` +
+          uniqueDates.map(d => `<option value="${d}">${toDisplayDate(d)}</option>`).join('');
+        dateSel.value = prev;
       }
     }
 
-    function renderReceiptsRegister() {
-      const enriched = getReceiptsWithRunningBalance();
-      const reversed = [...enriched].reverse();
-      const recentSlice = reversed.slice(0, recentRecordsLimit);
-
-      const badge = document.getElementById('register-Showing-badge');
-      if (badge) {
-        badge.textContent = `Last ${recentSlice.length} of ${enriched.length}`;
-      }
-
-      const feedEl = document.getElementById('register-feed-container');
-      const tbodyEl = document.getElementById('register-table-body');
-
-      if (recentSlice.length === 0) {
-        const emptyHTML = `
-          <div class="p-10 text-center space-y-2">
-            <p class="text-sm font-semibold text-slate-700">No receipts logged yet</p>
-            <p class="text-xs text-slate-400">Use the form on the left to add your first receipt.</p>
-          </div>`;
-        feedEl.innerHTML = emptyHTML;
-        tbodyEl.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-xs text-slate-400">No receipts recorded</td></tr>`;
-        return;
-      }
-
-      feedEl.innerHTML = recentSlice.map(r => {
-        const matStr = formatMaterialsString(r.materials);
-        const amt = Number(r.amount) || 0;
-        const metaParts = [];
-        if (r.receiptNo) metaParts.push(`Receipt #${escapeHTML(r.receiptNo)}`);
-        if (r.careOf) metaParts.push(`C/o ${escapeHTML(r.careOf)}`);
-        if (r.phoneNo) metaParts.push(escapeHTML(r.phoneNo));
-
-        return `
-          <div class="p-4 sm:px-5 hover:bg-slate-50/90 transition flex items-start justify-between gap-4">
-            <div class="min-w-0 space-y-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700 tabular-nums">#${r.serialNo}</span>
-                <span class="font-display font-bold text-sm sm:text-base text-slatex-900 truncate">${escapeHTML(r.donorName)}</span>
-                <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getModeBadgeClasses(r.mode)}">${escapeHTML(r.mode)}</span>
-              </div>
-
-              <p class="text-xs text-slate-500">
-                ${metaParts.length > 0 ? metaParts.join(' &middot; ') : 'Direct contribution'}
-                ${matStr ? ` &middot; <span class="font-semibold text-amber-800">${escapeHTML(matStr)}</span>` : ''}
-              </p>
-
-              <div class="flex items-center gap-3 pt-1">
-                <button type="button" onclick="shareReceiptWhatsApp(${r.serialNo})" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1 cursor-pointer">
-                  <span>WhatsApp</span>
-                </button>
-                <button type="button" onclick="editReceiptRow(${r.serialNo})" class="text-xs font-semibold text-brand-700 hover:underline cursor-pointer">Edit</button>
-                <button type="button" onclick="promptDeleteReceipt(${r.serialNo})" class="text-xs font-semibold text-red-600 hover:underline cursor-pointer">Delete</button>
-              </div>
-            </div>
-
-            <div class="text-right shrink-0 space-y-0.5">
-              <p class="font-display font-bold text-base sm:text-lg ${amt > 0 ? 'text-slatex-900' : 'text-slate-400'} tabular-nums">
-                ${amt > 0 ? formatINR(amt) : '—'}
-              </p>
-              <p class="text-[11px] font-mono text-slate-400 tabular-nums">${toDisplayDate(r.date)}</p>
-              <p class="text-[11px] font-medium text-emerald-700 tabular-nums">Bal ${formatINR(r.runningBalance)}</p>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      tbodyEl.innerHTML = recentSlice.map(r => {
-        const matStr = formatMaterialsString(r.materials);
-        const amt = Number(r.amount) || 0;
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-2.5 px-3 font-mono font-semibold text-slate-700 tabular-nums">${r.serialNo}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-600 tabular-nums">${escapeHTML(r.receiptNo || '—')}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap tabular-nums">${toDisplayDate(r.date)}</td>
-            <td class="py-2.5 px-3 font-semibold text-slatex-900">${escapeHTML(r.donorName)}</td>
-            <td class="py-2.5 px-3 text-slate-600">${escapeHTML(r.careOf || '—')}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-600 tabular-nums">${escapeHTML(r.phoneNo || '—')}</td>
-            <td class="py-2.5 px-3 text-right font-semibold text-slatex-900 tabular-nums">${amt > 0 ? formatINR(amt) : '₹0'}</td>
-            <td class="py-2.5 px-3">
-              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${getModeBadgeClasses(r.mode)}">${escapeHTML(r.mode)}</span>
-            </td>
-            <td class="py-2.5 px-3 text-amber-800 font-medium">${escapeHTML(matStr || '—')}</td>
-            <td class="py-2.5 px-3 text-right font-mono font-semibold text-emerald-700 tabular-nums">${formatINR(r.runningBalance)}</td>
-            <td class="py-2.5 px-3 text-right whitespace-nowrap">
-              <button type="button" onclick="shareReceiptWhatsApp(${r.serialNo})" class="text-emerald-700 hover:underline font-semibold text-xs mr-2 cursor-pointer">WA</button>
-              <button type="button" onclick="editReceiptRow(${r.serialNo})" class="text-brand-700 hover:underline font-semibold text-xs mr-2 cursor-pointer">Edit</button>
-              <button type="button" onclick="promptDeleteReceipt(${r.serialNo})" class="text-red-600 hover:underline font-semibold text-xs cursor-pointer">Del</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    // =========================================================================
-    // 8. TOP KPI STRIP & EXECUTIVE DASHBOARD
-    // =========================================================================
     function getFilteredDashboardReceipts() {
       const careoffFilter = document.getElementById('dash-filter-careoff')?.value || 'ALL';
       const bookFilter = document.getElementById('dash-filter-book')?.value || 'ALL';
@@ -2454,8 +2377,11 @@
       return receipts.filter(r => {
         if (careoffFilter !== 'ALL') {
           const c = (r.careOf || '').trim();
-          if (careoffFilter === '__DIRECT__' && c !== '') return false;
-          if (careoffFilter !== '__DIRECT__' && c.toLowerCase() !== careoffFilter.toLowerCase()) return false;
+          if (careoffFilter === '__DIRECT__') {
+            if (c !== '') return false;
+          } else if (c.toLowerCase() !== careoffFilter.toLowerCase()) {
+            return false;
+          }
         }
         if (bookFilter !== 'ALL') {
           const bNo = getReceiptBookNumber(r.receiptNo);
@@ -2472,215 +2398,67 @@
       });
     }
 
-    function populateDashboardFilters() {
-      const careoffSel = document.getElementById('dash-filter-careoff');
-      const bookSel = document.getElementById('dash-filter-book');
-      const dateSel = document.getElementById('dash-filter-date');
-      if (!careoffSel || !dateSel) return;
-
-      const prevCareoff = careoffSel.value || 'ALL';
-      const prevBook = bookSel ? (bookSel.value || 'ALL') : 'ALL';
-      const prevDate = dateSel.value || 'ALL';
-
-      const activeCareoffs = Array.from(new Set([
-        ...receipts.map(r => (r.careOf || '').trim()).filter(Boolean),
-        ...CAREOFF_CATALOG
-      ]));
-
-      careoffSel.innerHTML = [
-        '<option value="ALL">All Careoffs</option>',
-        '<option value="__DIRECT__">Direct / Unassigned</option>',
-        ...activeCareoffs.map(c => `<option value="${escapeHTML(c)}">C/o ${escapeHTML(c)}</option>`)
-      ].join('');
-
-      if (bookSel) {
-        bookSel.innerHTML = [
-          '<option value="ALL">All 20 Books (001–1000)</option>',
-          ...RECEIPT_BOOKS.map(b => `<option value="${b.bookNo}">${escapeHTML(b.label)}</option>`),
-          '<option value="__UNBOOKED__">Without Book # / Other</option>'
-        ].join('');
-        if ([...bookSel.options].some(o => o.value === prevBook)) {
-          bookSel.value = prevBook;
-        }
-      }
-
-      const dates = Array.from(new Set(receipts.map(r => r.date).filter(Boolean))).sort().reverse();
-      dateSel.innerHTML = [
-        '<option value="ALL">All Dates</option>',
-        ...dates.map(d => `<option value="${escapeHTML(d)}">${toDisplayDate(d)}</option>`)
-      ].join('');
-
-      if ([...careoffSel.options].some(o => o.value === prevCareoff)) {
-        careoffSel.value = prevCareoff;
-      }
-      if ([...dateSel.options].some(o => o.value === prevDate)) {
-        dateSel.value = prevDate;
-      }
-    }
-
     function resetDashboardFilters() {
-      const careoffSel = document.getElementById('dash-filter-careoff');
-      const bookSel = document.getElementById('dash-filter-book');
-      const dateSel = document.getElementById('dash-filter-date');
-      if (careoffSel) careoffSel.value = 'ALL';
-      if (bookSel) bookSel.value = 'ALL';
-      if (dateSel) dateSel.value = 'ALL';
+      const c = document.getElementById('dash-filter-careoff');
+      const b = document.getElementById('dash-filter-book');
+      const d = document.getElementById('dash-filter-date');
+      if (c) c.value = 'ALL';
+      if (b) b.value = 'ALL';
+      if (d) d.value = 'ALL';
       renderDashboardView();
     }
 
-    function filterDashboardByBook(bookKey) {
-      const bookSel = document.getElementById('dash-filter-book');
-      if (!bookSel) return;
-      const targetVal = String(bookKey);
-      bookSel.value = bookSel.value === targetVal ? 'ALL' : targetVal;
+    function filterDashboardByCareoff(name) {
+      const sel = document.getElementById('dash-filter-careoff');
+      if (!sel) return;
+      const targetVal = name === '' ? '__DIRECT__' : name;
+      sel.value = sel.value === targetVal ? 'ALL' : targetVal;
       renderDashboardView();
     }
 
-    function filterDashboardByCareoff(careoffName) {
-      const careoffSel = document.getElementById('dash-filter-careoff');
-      if (!careoffSel) return;
-      const targetVal = careoffName || '__DIRECT__';
-      careoffSel.value = careoffSel.value === targetVal ? 'ALL' : targetVal;
+    function filterDashboardByBook(bookNo) {
+      const sel = document.getElementById('dash-filter-book');
+      if (!sel) return;
+      const targetVal = String(bookNo);
+      sel.value = sel.value === targetVal ? 'ALL' : targetVal;
       renderDashboardView();
     }
 
     function copyDashboardSummary() {
-      const source = getFilteredDashboardReceipts();
-      const totalAmount = source.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-      const cashAmt = source.filter(r => r.mode === 'Cash').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-      const onlineAmt = source.filter(r => r.mode === 'Online').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-      const chequeAmt = source.filter(r => r.mode === 'Cheque').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-      const reqProgress = computeRequirementsProgress();
-      const fulfilled = reqProgress.filter(i => i.status === 'FULFILLED').length;
-      const partial = reqProgress.filter(i => i.status === 'PARTIAL').length;
+      const rows = getFilteredDashboardReceipts();
+      const total = rows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const cash = rows.filter(r => r.mode === 'Cash').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const online = rows.filter(r => r.mode === 'Online').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const cheque = rows.filter(r => r.mode === 'Cheque').reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-      const summaryLines = [
-        `*Sri Ayyappa Swami Seva Sangam — 2026 Dashboard Summary*`,
-        `Total Collection: ${formatINR(totalAmount)} (${source.length} rows)`,
-        `• Cash: ${formatINR(cashAmt)}`,
-        `• Online: ${formatINR(onlineAmt)}`,
-        `• Cheque: ${formatINR(chequeAmt)}`,
-        `• Requirements Progress: ${fulfilled} Fulfilled, ${partial} Partial (of 53 items)`
+      const text = [
+        'Sri Ayyappa Swami Seva Sangam — Receipts 2026 Summary',
+        `Total Collection: ${formatINR(total)} (${rows.length} entries)`,
+        `Cash: ${formatINR(cash)} | Online: ${formatINR(online)} | Cheque: ${formatINR(cheque)}`
       ].join('\n');
 
       const buffer = document.getElementById('clipboard-buffer');
-      buffer.value = summaryLines;
+      buffer.value = text;
       buffer.classList.remove('sr-only');
       buffer.select();
       buffer.setSelectionRange(0, 99999);
       try {
         document.execCommand('copy');
-        showToast('Dashboard summary copied to clipboard!');
-      } catch (e) {
-        showToast('Unable to copy automatically.', 'info');
-      }
+        showToast('Copied Dashboard Summary!');
+      } catch (e) {}
       buffer.classList.add('sr-only');
-    }
-
-    function buildGoogleSheetsDashboardTSV() {
-      const lines = [
-        ['SRI AYYAPPA SWAMI SEVA SANGAM — 2026 EXECUTIVE DASHBOARD', '', '', '', '', '', ''],
-        ['Metric', 'Formula / Value', '', 'Mode Breakdown', 'Receipts', 'Total Amount (₹)', '% Share'],
-        ['Total Collection (₹)', '=SUM(Receipts!G2:G)', '', 'Cash', '=COUNTIF(Receipts!H2:H, "Cash")', '=SUMIF(Receipts!H2:H, "Cash", Receipts!G2:G)', '=IFERROR(F3/$B$3, 0)'],
-        ['Cash In Hand (₹)', '=SUMIF(Receipts!H2:H, "Cash", Receipts!G2:G)', '', 'Online', '=COUNTIF(Receipts!H2:H, "Online")', '=SUMIF(Receipts!H2:H, "Online", Receipts!G2:G)', '=IFERROR(F4/$B$3, 0)'],
-        ['Online + Cheque (₹)', '=SUMIF(Receipts!H2:H, "Online", Receipts!G2:G)+SUMIF(Receipts!H2:H, "Cheque", Receipts!G2:G)', '', 'Cheque', '=COUNTIF(Receipts!H2:H, "Cheque")', '=SUMIF(Receipts!H2:H, "Cheque", Receipts!G2:G)', '=IFERROR(F5/$B$3, 0)'],
-        ['Total Receipts Logged', '=COUNTA(Receipts!D2:D)', '', 'Annadhanam', '=COUNTIF(Receipts!H2:H, "Annadhanam")', '=SUMIF(Receipts!H2:H, "Annadhanam", Receipts!G2:G)', 'In-Kind'],
-        ['In-Kind Material Rows', '=COUNTA(Receipts!I2:I)', '', 'Pooja Items', '=COUNTIF(Receipts!H2:H, "Pooja Items")', '=SUMIF(Receipts!H2:H, "Pooja Items", Receipts!G2:G)', 'In-Kind'],
-        ['Average Monetary Gift (₹)', '=IFERROR(AVERAGEIF(Receipts!G2:G, ">0"), 0)', '', 'TOTAL', '=SUM(E3:E7)', '=SUM(F3:F7)', '100%'],
-        ['', '', '', '', '', '', ''],
-        ['CAREOFF SHEET PERFORMANCE MATRIX (LIVE SUMIFS)', '', '', '', '', '', ''],
-        ['Careoff Name', 'Receipts Count', 'Cash (₹)', 'Online (₹)', 'Cheque (₹)', 'Total Amount (₹)', '% Share of Total']
-      ];
-
-      const startRow = 12;
-      CAREOFF_CATALOG.forEach((c, idx) => {
-        const rowNum = startRow + idx;
-        lines.push([
-          c,
-          `=COUNTIF(Receipts!E2:E, A${rowNum})`,
-          `=SUMIFS(Receipts!G2:G, Receipts!E2:E, A${rowNum}, Receipts!H2:H, "Cash")`,
-          `=SUMIFS(Receipts!G2:G, Receipts!E2:E, A${rowNum}, Receipts!H2:H, "Online")`,
-          `=SUMIFS(Receipts!G2:G, Receipts!E2:E, A${rowNum}, Receipts!H2:H, "Cheque")`,
-          `=SUMIF(Receipts!E2:E, A${rowNum}, Receipts!G2:G)`,
-          `=IFERROR(F${rowNum}/$B$3, 0)`
-        ]);
-      });
-
-      const directRow = startRow + CAREOFF_CATALOG.length;
-      lines.push([
-        'Direct / Unassigned',
-        `=COUNTIFS(Receipts!D2:D, "<>", Receipts!E2:E, "")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!E2:E, "", Receipts!H2:H, "Cash")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!E2:E, "", Receipts!H2:H, "Online")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!E2:E, "", Receipts!H2:H, "Cheque")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!E2:E, "")`,
-        `=IFERROR(F${directRow}/$B$3, 0)`
-      ]);
-
-      const totalRow = directRow + 1;
-      lines.push([
-        'GRAND TOTAL',
-        `=SUM(B${startRow}:B${directRow})`,
-        `=SUM(C${startRow}:C${directRow})`,
-        `=SUM(D${startRow}:D${directRow})`,
-        `=SUM(E${startRow}:E${directRow})`,
-        `=SUM(F${startRow}:F${directRow})`,
-        '100%'
-      ]);
-
-      lines.push(['', '', '', '', '', '', '']);
-      lines.push(['RECEIPT BOOK WISE COLLECTION MATRIX (20 BOOKS: 001-050 TO 951-1000)', '', '', '', '', '', '']);
-      lines.push(['Book #', 'Start Rcpt #', 'End Rcpt #', 'Receipts Logged', 'Cash (₹)', 'Online + Cheque (₹)', 'Book Total (₹)']);
-
-      const bookStartRow = lines.length + 1;
-      RECEIPT_BOOKS.forEach((b, idx) => {
-        const rNum = bookStartRow + idx;
-        lines.push([
-          `Book ${b.bookNo} (${b.rangeLabel})`,
-          b.start,
-          b.end,
-          `=COUNTIFS(Receipts!B2:B, ">="&B${rNum}, Receipts!B2:B, "<="&C${rNum})`,
-          `=SUMIFS(Receipts!G2:G, Receipts!B2:B, ">="&B${rNum}, Receipts!B2:B, "<="&C${rNum}, Receipts!H2:H, "Cash")`,
-          `=SUMIFS(Receipts!G2:G, Receipts!B2:B, ">="&B${rNum}, Receipts!B2:B, "<="&C${rNum}, Receipts!H2:H, "Online")+SUMIFS(Receipts!G2:G, Receipts!B2:B, ">="&B${rNum}, Receipts!B2:B, "<="&C${rNum}, Receipts!H2:H, "Cheque")`,
-          `=SUMIFS(Receipts!G2:G, Receipts!B2:B, ">="&B${rNum}, Receipts!B2:B, "<="&C${rNum})`
-        ]);
-      });
-
-      const unbookedRowNum = bookStartRow + RECEIPT_BOOKS.length;
-      lines.push([
-        'Without Book # / Direct',
-        '-',
-        '-',
-        `=COUNTIFS(Receipts!D2:D, "<>", Receipts!B2:B, "")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!B2:B, "", Receipts!H2:H, "Cash")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!B2:B, "", Receipts!H2:H, "Online")+SUMIFS(Receipts!G2:G, Receipts!B2:B, "", Receipts!H2:H, "Cheque")`,
-        `=SUMIFS(Receipts!G2:G, Receipts!B2:B, "")`
-      ]);
-
-      lines.push([
-        'ALL 20 BOOKS TOTAL',
-        '001',
-        '1000',
-        `=SUM(D${bookStartRow}:D${unbookedRowNum})`,
-        `=SUM(E${bookStartRow}:E${unbookedRowNum})`,
-        `=SUM(F${bookStartRow}:F${unbookedRowNum})`,
-        `=SUM(G${bookStartRow}:G${unbookedRowNum})`
-      ]);
-
-      return lines.map(r => r.join('\t')).join('\n');
     }
 
     function copyBookwiseTSV() {
       const sourceRows = getFilteredDashboardReceipts();
-      const bookStats = computeBookwiseStats(sourceRows);
-      const rows = [
-        ['Book #', 'Receipt Range', 'Receipts Count', 'Unique Leaves Used', 'Careoffs', 'Cash (₹)', 'Online (₹)', 'Cheque (₹)', 'Material Items', 'Total (₹)'],
-        ...bookStats.books.map(b => [
+      const { books, unbooked } = computeBookwiseStats(sourceRows);
+      const lines = [
+        ['Book #', 'Receipt Range', 'Leaves Used', 'Careoffs', 'Cash (₹)', 'Online (₹)', 'Cheque (₹)', 'Materials', 'Book Total (₹)'],
+        ...books.map(b => [
           `Book ${b.bookNo}`,
           b.rangeLabel,
-          b.count,
-          `${b.leavesUsed.size} / 50`,
-          Array.from(b.careoffs).join(', ') || '—',
+          `${b.leavesUsed.size}/50`,
+          Array.from(b.careoffs).join(', '),
           b.cash,
           b.online,
           b.cheque,
@@ -2688,31 +2466,64 @@
           b.total
         ])
       ];
-      if (bookStats.unbooked.count > 0) {
-        rows.push([
-          'Without Book #',
-          'Unassigned / Blank',
-          bookStats.unbooked.count,
-          '—',
-          Array.from(bookStats.unbooked.careoffs).join(', ') || '—',
-          bookStats.unbooked.cash,
-          bookStats.unbooked.online,
-          bookStats.unbooked.cheque,
-          bookStats.unbooked.items,
-          bookStats.unbooked.total
-        ]);
+      if (unbooked.count > 0) {
+        lines.push(['Without Book #', 'Blank', unbooked.count, Array.from(unbooked.careoffs).join(', '), unbooked.cash, unbooked.online, unbooked.cheque, unbooked.items, unbooked.total]);
       }
 
       const buffer = document.getElementById('clipboard-buffer');
-      buffer.value = rows.map(r => r.join('\t')).join('\n');
+      buffer.value = lines.map(r => r.join('\t')).join('\n');
       buffer.classList.remove('sr-only');
       buffer.select();
       buffer.setSelectionRange(0, 99999);
       try {
         document.execCommand('copy');
-        showToast('Copied 20-Book Collection Table (TSV)!');
+        showToast('Copied 20-Book Wise Collection table (TSV)!');
       } catch (e) {}
       buffer.classList.add('sr-only');
+    }
+
+    function buildGoogleSheetsDashboardTSV() {
+      const lines = [
+        ['Sri Ayyappa Swami Seva Sangam — 2026 Executive Dashboard', '', '', '', '', '', ''],
+        ['Metric', 'Formula / Value', '', 'Payment Mode', 'Receipts', 'Total Amount (₹)', ''],
+        ['Total Collection (₹)', '=SUM(Receipts!G2:G)', '', 'Cash', '=COUNTIF(Receipts!H2:H, "Cash")', '=SUMIF(Receipts!H2:H, "Cash", Receipts!G2:G)', ''],
+        ['Total Entries', '=COUNTA(Receipts!D2:D)', '', 'Online', '=COUNTIF(Receipts!H2:H, "Online")', '=SUMIF(Receipts!H2:H, "Online", Receipts!G2:G)', ''],
+        ['In-Kind Material Rows', '=COUNTA(Receipts!I2:I)', '', 'Cheque', '=COUNTIF(Receipts!H2:H, "Cheque")', '=SUMIF(Receipts!H2:H, "Cheque", Receipts!G2:G)', ''],
+        ['', '', '', 'Annadhanam', '=COUNTIF(Receipts!H2:H, "Annadhanam")', '=SUMIF(Receipts!H2:H, "Annadhanam", Receipts!G2:G)', ''],
+        ['', '', '', 'Pooja Items', '=COUNTIF(Receipts!H2:H, "Pooja Items")', '=SUMIF(Receipts!H2:H, "Pooja Items", Receipts!G2:G)', ''],
+        ['', '', '', '', '', '', ''],
+        ['Careoff Wise Collection', 'Cash (₹)', 'Online (₹)', 'Cheque (₹)', 'Receipts', 'Total Amount (₹)', '']
+      ];
+
+      CAREOFF_CATALOG.forEach((c, idx) => {
+        const rowNum = 10 + idx;
+        lines.push([
+          c,
+          `=SUMIFS(Receipts!$G$2:$G, Receipts!$E$2:$E, A${rowNum}, Receipts!$H$2:$H, "Cash")`,
+          `=SUMIFS(Receipts!$G$2:$G, Receipts!$E$2:$E, A${rowNum}, Receipts!$H$2:$H, "Online")`,
+          `=SUMIFS(Receipts!$G$2:$G, Receipts!$E$2:$E, A${rowNum}, Receipts!$H$2:$H, "Cheque")`,
+          `=COUNTIF(Receipts!$E$2:$E, A${rowNum})`,
+          `=SUMIF(Receipts!$E$2:$E, A${rowNum}, Receipts!$G$2:$G)`,
+          ''
+        ]);
+      });
+
+      lines.push(['', '', '', '', '', '', '']);
+      lines.push(['Receipt Book #', 'Start Rcpt', 'End Rcpt', 'Receipts Used', 'Book Total (₹)', '', '']);
+      RECEIPT_BOOKS.forEach((b, idx) => {
+        const rNum = 36 + idx;
+        lines.push([
+          `Book ${b.bookNo}`,
+          b.start,
+          b.end,
+          `=COUNTIFS(Receipts!$B$2:$B, ">="&B${rNum}, Receipts!$B$2:$B, "<="&C${rNum})`,
+          `=SUMIFS(Receipts!$G$2:$G, Receipts!$B$2:$B, ">="&B${rNum}, Receipts!$B$2:$B, "<="&C${rNum})`,
+          '',
+          ''
+        ]);
+      });
+
+      return lines.map(r => r.join('\t')).join('\n');
     }
 
     function computeBookwiseStats(sourceRows) {
@@ -3583,6 +3394,7 @@
     // Expose all inline HTML event handlers cleanly on window
     Object.assign(window, {
       openSheetsConnectModal,
+      copyDetectedOrigin,
       closeSheetsConnectModal,
       disconnectGoogleSheet,
       saveAndAuthorizeGoogleSheet,
