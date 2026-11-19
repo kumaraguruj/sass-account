@@ -1797,7 +1797,8 @@
 }
 
 function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
+  var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : (e && e.parameter && e.parameter.payload ? e.parameter.payload : '{}');
+  var data = JSON.parse(raw);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   function fmtDate(iso) {
     var m = String(iso || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
@@ -1806,8 +1807,9 @@ function doPost(e) {
   function writeBook(sheetName, rows, startRow, cols) {
     var sh = ss.getSheetByName(sheetName);
     if (!sh) return;
-    var clearRows = Math.max(sh.getLastRow() - startRow + 1, rows.length, 1);
-    sh.getRange(startRow, 1, clearRows, cols).clearContent();
+    var lastR = Math.max(sh.getLastRow(), startRow);
+    var clearRows = lastR - startRow + 1;
+    if (clearRows > 0) sh.getRange(startRow, 1, clearRows, cols).clearContent();
     if (!rows.length) return;
     var values = rows.map(function(r, i) {
       if (cols === 7) return [i + 1, fmtDate(r.date), r.desc, r.category, r.ref || '', r.type === 'income' ? r.amount : '', r.type === 'expense' ? r.amount : ''];
@@ -1838,6 +1840,41 @@ function doPost(e) {
         const autoOn = state.autoSync !== false;
         if (autoOn && (state.appsScriptUrl || '').trim()) {
           pushToGoogleSheet(true);
+        }
+      }
+
+      async function pushToGoogleSheet(silent) {
+        const url = (state.appsScriptUrl || '').trim();
+        if (!url) {
+          if (!silent) {
+            activeTab = 'import';
+            renderAll();
+            showToast('Add your Apps Script Web App URL in Import / Export CSV to enable auto-save.');
+          }
+          return;
+        }
+        try {
+          const payloadStr = JSON.stringify({
+            openingBank: state.openingBank,
+            openingCash: state.openingCash,
+            entries: state.entries,
+            cheques: state.cheques || []
+          });
+          // Send as application/x-www-form-urlencoded so Google Apps Script always populates e.parameter.payload & e.postData.contents reliably without CORS preflight drops
+          const formBody = new URLSearchParams();
+          formBody.append('payload', payloadStr);
+          await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: formBody
+          });
+          state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          saveState();
+          const lrEl = document.getElementById('lastRefreshedText');
+          if (lrEl) lrEl.textContent = 'Last refreshed: ' + state.lastRefreshed;
+          showToast(silent ? 'Synced deletion/edit to Google Sheet.' : `Saved ${state.entries.length} entries & ${(state.cheques || []).length} cheques to Income & Expenses - 2026.`);
+        } catch (err) {
+          showToast('Sheet save failed — verify Apps Script is deployed as "Anyone" (New version).');
         }
       }
 
