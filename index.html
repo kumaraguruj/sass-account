@@ -1473,6 +1473,33 @@
         return isNaN(n) ? 0 : n;
       }
 
+      function fetchAppsScriptJsonp(scriptUrl) {
+        return new Promise((resolve, reject) => {
+          const cbName = '__gasSyncCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+          const sep = scriptUrl.includes('?') ? '&' : '?';
+          const script = document.createElement('script');
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error('Apps Script JSONP timed out'));
+          }, 12000);
+          function cleanup() {
+            clearTimeout(timer);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+          window[cbName] = function (data) {
+            cleanup();
+            resolve(data);
+          };
+          script.onerror = function () {
+            cleanup();
+            reject(new Error('Apps Script blocked or not deployed as "Anyone"'));
+          };
+          script.src = `${scriptUrl}${sep}callback=${cbName}&_t=${Date.now()}`;
+          document.head.appendChild(script);
+        });
+      }
+
       async function fetchSheetCsv(sheetName) {
         const url1 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
         let res = await fetch(url1, { mode: 'cors' });
@@ -1525,7 +1552,19 @@
                 }
               }
             } catch (e) {
-              scriptErr = e && e.message ? e.message : 'Network/CORS error';
+              try {
+                const jsonpData = await fetchAppsScriptJsonp(scriptUrl);
+                if (jsonpData && jsonpData.status === 'ok') {
+                  bankRows = jsonpData.bankBook || [];
+                  cashRows = jsonpData.cashBook || [];
+                  bookColRows = jsonpData.bookCollection || [];
+                  chequeRows = jsonpData.chequesIssued || [];
+                  balanceRows = jsonpData.balance || [];
+                  pulledViaScript = true;
+                }
+              } catch (jsonpErr) {
+                scriptErr = (e && e.message ? e.message : 'Failed to fetch') + ' (redeploy Apps Script with JSONP support)';
+              }
             }
           }
 
@@ -1746,7 +1785,12 @@
     chequesIssued: readRows('Cheques Issued'),
     balance: readRows('Balance')
   };
-  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+  var json = JSON.stringify(payload);
+  var cb = e && e.parameter && e.parameter.callback;
+  if (cb) {
+    return ContentService.createTextOutput(cb + '(' + json + ');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
