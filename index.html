@@ -787,7 +787,7 @@
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button id="btnCancelEntry" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Save Entry</button>
+          <button id="btnSubmitEntry" type="submit" class="px-4 py-2 rounded-lg bg-brand-800 hover:bg-brand-700 text-white text-sm font-medium">Save Entry</button>
         </div>
       </form>
     </div>
@@ -890,8 +890,8 @@
 
   <script>
     (function () {
-      const STORAGE_KEY = 'bankbook_cashbook_2026_v15_clean';
-      const OAUTH_SESSION_KEY = 'bankbook_oauth_token_v15';
+      const STORAGE_KEY = 'bankbook_cashbook_2026_v16_safe_persist';
+      const OAUTH_SESSION_KEY = 'bankbook_oauth_token_v16';
       const DEFAULT_SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
       const DEFAULT_CLIENT_ID = '674713422029-okcbm6pe56s30ep2j11u9nmqrvug6scu.apps.googleusercontent.com';
       const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
@@ -946,6 +946,7 @@
       let parsedCsvHeaders = [];
       let oauthAccessToken = '';
       let oauthTokenExpiresAt = 0;
+      let hasPulledFromSheetThisSession = false;
       let resolvedTabNames = {
         bank: 'Bank Book',
         cash: 'Cash Book',
@@ -1030,7 +1031,7 @@
           if (signInBtn) signInBtn.textContent = 'Reconnect Google';
           if (signOutBtn) signOutBtn.classList.remove('hidden');
         } else {
-          badge.textContent = 'Not Signed In (Read-Only Fallback)';
+          badge.textContent = 'Not Signed In (Local Saved)';
           badge.className = 'badge-pill bg-slate-100 text-slate-600';
           if (signInBtn) signInBtn.textContent = 'Sign in with Google';
           if (signOutBtn) signOutBtn.classList.add('hidden');
@@ -1654,6 +1655,60 @@
         return { opening, entries: out };
       }
 
+      function parseChequeRows(rows) {
+        const out = [];
+        if (!Array.isArray(rows) || !rows.length) return out;
+        let headerIdx = -1;
+        let colDate = 1, colPayee = 2, colNo = 3, colPurp = 4, colAmt = 5, colClear = 6, colStatus = 7;
+
+        for (let r = 0; r < Math.min(rows.length, 6); r++) {
+          const cells = (rows[r] || []).map(c => String(c || '').trim().toLowerCase());
+          const amtIdx = cells.findIndex(c => c.includes('amount'));
+          const noIdx = cells.findIndex(c => c.includes('cheque number') || c.includes('cheque #') || c === 'cheque no');
+          if (amtIdx !== -1 || noIdx !== -1) {
+            headerIdx = r;
+            const dIdx = cells.findIndex(c => c.includes('issued') || c === 'date');
+            const pIdx = cells.findIndex(c => c.includes('cheque name') || c.includes('payee') || c.includes('partic'));
+            const purpIdx = cells.findIndex(c => c.includes('purp') || c.includes('cat'));
+            const clrIdx = cells.findIndex(c => c.includes('clear'));
+            const stIdx = cells.findIndex(c => c.includes('status'));
+            if (dIdx !== -1) colDate = dIdx;
+            if (pIdx !== -1) colPayee = pIdx;
+            if (noIdx !== -1) colNo = noIdx;
+            if (purpIdx !== -1) colPurp = purpIdx;
+            if (amtIdx !== -1) colAmt = amtIdx;
+            if (clrIdx !== -1) colClear = clrIdx;
+            if (stIdx !== -1) colStatus = stIdx;
+            break;
+          }
+        }
+
+        const startRow = headerIdx >= 0 ? headerIdx + 1 : 1;
+        for (let i = startRow; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const rawDate = String(r[colDate] || '').trim();
+          const payee = String(r[colPayee] || '').trim();
+          const chqNo = String(r[colNo] || '').trim();
+          const purpose = String(r[colPurp] || '').trim();
+          const amt = toNum(r[colAmt]);
+          const clearDt = normalizeSheetDate(r[colClear]);
+          const rawSt = String(r[colStatus] || '').trim();
+          if (!chqNo && !payee && amt === 0) continue;
+          const status = /clear/i.test(rawSt) ? 'Cleared' : (/cancel|bounc/i.test(rawSt) ? 'Cancelled' : 'Pending');
+          out.push({
+            id: `chq_${i}`,
+            date: normalizeSheetDate(rawDate) || '2026-01-01',
+            chequeNo: chqNo,
+            payee,
+            purpose,
+            amount: amt,
+            status,
+            clearDate: clearDt
+          });
+        }
+        return out;
+      }
+
       function requestGoogleOAuthToken(interactive) {
         return new Promise((resolve, reject) => {
           const clientId = activeClientId();
@@ -1842,6 +1897,7 @@
           const parsedBank = parseBookRows(bankRows, 'Bank');
           const parsedCash = parseBookRows(cashRows, 'Cash');
           const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
+          const syncedCheques = parseChequeRows(chequeRows);
 
           let streetSum = 0, vipSum = 0;
           for (let i = 1; i < Math.min(bookColRows.length, 41); i++) {
@@ -1852,34 +1908,22 @@
           }
           const totalCol = streetSum + vipSum;
 
-          const syncedCheques = [];
-          for (let i = 1; i < chequeRows.length; i++) {
-            const r = chequeRows[i] || [];
-            const rawDate = String(r[1] || '').trim();
-            const chqNo = String(r[2] || '').trim();
-            const payee = String(r[3] || '').trim();
-            const purpose = String(r[4] || '').trim();
-            const amt = toNum(r[5]);
-            const rawSt = String(r[6] || '').trim();
-            const clearDt = normalizeSheetDate(r[7]);
-            if (!chqNo && !payee && amt === 0) continue;
-            const status = /clear/i.test(rawSt) ? 'Cleared' : (/cancel|bounc/i.test(rawSt) ? 'Cancelled' : 'Pending');
-            syncedCheques.push({
-              id: `chq_${i}`,
-              date: normalizeSheetDate(rawDate) || '2026-01-01',
-              chequeNo,
-              payee,
-              purpose,
-              amount: amt,
-              status,
-              clearDate: clearDt
-            });
+          // Anti-wipe guard: never overwrite non-empty local data with an empty response
+          if (syncedEntries.length === 0 && state.entries.length > 0 && !hasValidOAuthToken()) {
+            if (!silent) showToast('Sign in with Google OAuth in Import / Export CSV to sync live rows.');
+            return;
           }
 
-          state.openingBank = parsedBank.opening || state.openingBank;
-          state.openingCash = parsedCash.opening;
-          state.entries = syncedEntries;
-          state.cheques = syncedCheques;
+          if (parsedBank.opening > 0) state.openingBank = parsedBank.opening;
+          if (parsedCash.opening > 0 || parsedCash.entries.length > 0) state.openingCash = parsedCash.opening;
+          if (syncedEntries.length > 0 || hasValidOAuthToken()) {
+            state.entries = syncedEntries;
+          }
+          if (syncedCheques.length > 0 || hasValidOAuthToken()) {
+            state.cheques = syncedCheques;
+          }
+
+          hasPulledFromSheetThisSession = true;
           state.lastRefreshed = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
           saveState();
 
@@ -1920,8 +1964,6 @@
               oauthConnected: hasValidOAuthToken(),
               availableTabs,
               resolvedTabNames,
-              bankRowsCount: (bankRows || []).length,
-              cashRowsCount: (cashRows || []).length,
               parsedBankCount: parsedBank.entries.length,
               parsedCashCount: parsedCash.entries.length,
               chequesCount: syncedCheques.length
@@ -1947,19 +1989,19 @@
         }
       }
 
-      async function pushToGoogleSheet(silent) {
+      async function pushToGoogleSheet(silent, promptOAuthIfNeeded) {
         if (!hasValidOAuthToken()) {
-          if (!silent) {
+          if (!silent || promptOAuthIfNeeded) {
             try {
               await requestGoogleOAuthToken(true);
             } catch (e) {
               activeTab = 'import';
               renderAll();
-              showToast('Click "Sign in with Google" in Import / Export CSV to write to your Sheet.');
-              return;
+              showToast('Sign in with Google in Import / Export CSV to save to your Sheet.');
+              return false;
             }
           } else {
-            return;
+            return false;
           }
         }
 
@@ -1989,20 +2031,27 @@
         const chequeValues = cheques.map((c, i) => [
           i + 1,
           formatIsoToSheetDate(c.date),
-          c.chequeNo || '',
           c.payee || '',
+          String(c.chequeNo || ''),
           c.purpose || '',
           Number(c.amount) || 0,
-          c.status || 'Pending',
-          c.clearDate ? formatIsoToSheetDate(c.clearDate) : ''
+          c.clearDate ? formatIsoToSheetDate(c.clearDate) : '',
+          c.status || 'Pending'
         ]);
 
         try {
           const availableTabs = await resolveSheetTabNames(sid, oauthAccessToken);
           const clearRanges = [];
-          if (availableTabs.includes(resolvedTabNames.bank)) clearRanges.push(`'${resolvedTabNames.bank}'!A3:G500`);
-          if (availableTabs.includes(resolvedTabNames.cash)) clearRanges.push(`'${resolvedTabNames.cash}'!A2:E500`);
-          if (availableTabs.includes(resolvedTabNames.cheques)) clearRanges.push(`'${resolvedTabNames.cheques}'!A2:H500`);
+          // Only clear trailing rows below written rows; never wipe an entire tab if its array is empty unless synced
+          if (availableTabs.includes(resolvedTabNames.bank) && (bankValues.length > 0 || hasPulledFromSheetThisSession)) {
+            clearRanges.push(`'${resolvedTabNames.bank}'!A${3 + bankValues.length}:G500`);
+          }
+          if (availableTabs.includes(resolvedTabNames.cash) && (cashValues.length > 0 || hasPulledFromSheetThisSession)) {
+            clearRanges.push(`'${resolvedTabNames.cash}'!A${2 + cashValues.length}:E500`);
+          }
+          if (availableTabs.includes(resolvedTabNames.cheques) && (chequeValues.length > 0 || hasPulledFromSheetThisSession)) {
+            clearRanges.push(`'${resolvedTabNames.cheques}'!A${2 + chequeValues.length}:H500`);
+          }
 
           if (clearRanges.length) {
             const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sid)}/values:batchClear`, {
@@ -2052,21 +2101,23 @@
           saveState();
           const lrEl = document.getElementById('lastRefreshedText');
           if (lrEl) lrEl.textContent = 'Last refreshed: ' + state.lastRefreshed;
-          showToast(silent ? 'Google Sheet synced via API v4!' : `Saved ${bankValues.length} Bank, ${cashValues.length} Cash & ${chequeValues.length} Cheque rows.`);
+          showToast(silent ? 'Saved to Google Sheet!' : `Saved ${bankValues.length} Bank, ${cashValues.length} Cash & ${chequeValues.length} Cheque rows to Google Sheet.`);
+          return true;
         } catch (err) {
           showToast('Sheet write failed: ' + (err && err.message ? err.message : 'Check OAuth permissions'));
+          return false;
         }
       }
 
       function autoPushIfEnabled() {
         if (state.autoSync !== false && hasValidOAuthToken()) {
-          pushToGoogleSheet(true);
+          pushToGoogleSheet(true, false);
         }
       }
 
       // Event Listeners
       document.getElementById('btnSyncSheet').addEventListener('click', () => syncFromGoogleSheet(false));
-      document.getElementById('btnPushSheet').addEventListener('click', () => pushToGoogleSheet(false));
+      document.getElementById('btnPushSheet').addEventListener('click', () => pushToGoogleSheet(false, true));
 
       document.getElementById('btnSaveOAuthConfig').addEventListener('click', () => {
         const sidVal = document.getElementById('googleSheetIdInput').value.trim();
@@ -2098,6 +2149,7 @@
         }
         oauthAccessToken = '';
         oauthTokenExpiresAt = 0;
+        hasPulledFromSheetThisSession = false;
         try { sessionStorage.removeItem(OAUTH_SESSION_KEY); } catch (e) {}
         renderAll();
         showToast('Signed out of Google OAuth.');
@@ -2157,38 +2209,51 @@
       document.getElementById('btnCloseEntryModal').addEventListener('click', closeEntryModal);
       document.getElementById('btnCancelEntry').addEventListener('click', closeEntryModal);
 
-      document.getElementById('entryForm').addEventListener('submit', e => {
+      document.getElementById('entryForm').addEventListener('submit', async e => {
         e.preventDefault();
-        const id = document.getElementById('entryId').value;
-        const item = {
-          id: id || 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          date: document.getElementById('entryDate').value,
-          book: document.getElementById('entryBook').value,
-          type: document.getElementById('entryType').value,
-          amount: parseFloat(document.getElementById('entryAmount').value) || 0,
-          desc: document.getElementById('entryDesc').value.trim(),
-          category: document.getElementById('entryCat').value.trim() || 'Miscellaneous',
-          ref: document.getElementById('entryRef').value.trim()
-        };
-        if (id) {
-          const idx = state.entries.findIndex(x => x.id === id);
-          if (idx >= 0) state.entries[idx] = { ...state.entries[idx], ...item };
-          showToast('Entry updated.');
-        } else {
-          state.entries.push(item);
-          showToast('Entry added.');
+        const submitBtn = document.getElementById('btnSubmitEntry');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Saving...';
         }
-        saveState();
-        closeEntryModal();
-        renderAll();
-        autoPushIfEnabled();
+        try {
+          const id = document.getElementById('entryId').value;
+          const item = {
+            id: id || 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+            date: document.getElementById('entryDate').value,
+            book: document.getElementById('entryBook').value,
+            type: document.getElementById('entryType').value,
+            amount: parseFloat(document.getElementById('entryAmount').value) || 0,
+            desc: document.getElementById('entryDesc').value.trim(),
+            category: document.getElementById('entryCat').value.trim() || 'Miscellaneous',
+            ref: document.getElementById('entryRef').value.trim()
+          };
+          if (id) {
+            const idx = state.entries.findIndex(x => x.id === id);
+            if (idx >= 0) state.entries[idx] = { ...state.entries[idx], ...item };
+          } else {
+            state.entries.push(item);
+          }
+          saveState();
+          closeEntryModal();
+          renderAll();
+          const savedToSheet = await pushToGoogleSheet(false, true);
+          if (savedToSheet) {
+            showToast(id ? 'Entry updated & saved to Google Sheet.' : 'Entry added & saved to Google Sheet.');
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Entry';
+          }
+        }
       });
 
       document.getElementById('btnOpenTransfer').addEventListener('click', openTransferModal);
       document.getElementById('btnCloseTransferModal').addEventListener('click', closeTransferModal);
       document.getElementById('btnCancelTransfer').addEventListener('click', closeTransferModal);
 
-      document.getElementById('transferForm').addEventListener('submit', e => {
+      document.getElementById('transferForm').addEventListener('submit', async e => {
         e.preventDefault();
         const dir = document.getElementById('transferDirection').value;
         const date = document.getElementById('transferDate').value;
@@ -2205,8 +2270,10 @@
         saveState();
         closeTransferModal();
         renderAll();
-        autoPushIfEnabled();
-        showToast('Contra transfer recorded in both books.');
+        const savedToSheet = await pushToGoogleSheet(false, true);
+        if (savedToSheet) {
+          showToast('Contra transfer saved to both books & Google Sheet.');
+        }
       });
 
       document.getElementById('ledgerTableBody').addEventListener('click', e => {
@@ -2242,9 +2309,10 @@
         }
       });
 
-      document.getElementById('chequeForm').addEventListener('submit', e => {
+      document.getElementById('chequeForm').addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('chequeId').value;
+        const chequeNo = document.getElementById('chequeNo').value.trim();
         const status = document.getElementById('chequeStatus').value;
         let clearDate = document.getElementById('chequeClearDate').value;
         if (status === 'Cleared' && !clearDate) {
@@ -2253,7 +2321,7 @@
         const item = {
           id: id || 'chq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           date: document.getElementById('chequeDate').value,
-          chequeNo: document.getElementById('chequeNo').value.trim(),
+          chequeNo,
           payee: document.getElementById('chequePayee').value.trim(),
           purpose: document.getElementById('chequePurpose').value.trim() || 'Cheque Payment',
           amount: parseFloat(document.getElementById('chequeAmount').value) || 0,
@@ -2264,15 +2332,16 @@
         if (id) {
           const idx = state.cheques.findIndex(x => x.id === id);
           if (idx >= 0) state.cheques[idx] = { ...state.cheques[idx], ...item };
-          showToast('Cheque updated.');
         } else {
           state.cheques.push(item);
-          showToast('Cheque recorded.');
         }
         saveState();
         closeChequeModal();
         renderAll();
-        autoPushIfEnabled();
+        const savedToSheet = await pushToGoogleSheet(false, true);
+        if (savedToSheet) {
+          showToast(id ? 'Cheque updated & saved to Google Sheet.' : 'Cheque recorded & saved to Google Sheet.');
+        }
       });
 
       document.getElementById('chequesTableBody').addEventListener('click', e => {
@@ -2418,7 +2487,9 @@
       });
 
       renderAll();
-      syncFromGoogleSheet(true);
+      if (hasValidOAuthToken()) {
+        syncFromGoogleSheet(true);
+      }
     })();
   </script>
 </body>
