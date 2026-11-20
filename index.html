@@ -195,7 +195,7 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
     <!-- 1. EXECUTIVE DASHBOARD VIEW -->
     <section id="view-dashboard" class="app-view is-active space-y-5 sm:space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-navy-950">
           <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Combined Liquidity</p>
           <p id="kpiCombined" class="text-xl sm:text-2xl font-bold text-navy-950 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
@@ -214,7 +214,13 @@
           <p id="kpiCashSub" class="text-xs text-slate-500 mt-1 tabular-nums">Inward: ₹0 | Outward: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-slatex-500">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-teal-600">
+          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Book Collection</p>
+          <p id="kpiBookCollection" class="text-xl sm:text-2xl font-bold text-teal-800 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
+          <p id="kpiBookCollectionSub" class="text-xs text-slate-500 mt-1 tabular-nums">Street: ₹0 | VIP/QR: ₹0</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-slatex-500 sm:col-span-2 lg:col-span-1">
           <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Cheques Cleared</p>
           <p id="kpiChequesCleared" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
           <p id="kpiChequesClearedSub" class="text-xs text-slate-500 mt-1 tabular-nums">0 Cleared | Pending: ₹0</p>
@@ -233,9 +239,62 @@
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
           <h2 class="text-base sm:text-lg font-bold text-navy-950">Category &amp; Liquidity Distribution</h2>
-          <p class="text-xs text-slate-500 mb-3">Balances across Bank, Cash, and Cheques</p>
+          <p class="text-xs text-slate-500 mb-3">Balances across Bank, Cash, Book Collections &amp; Cheques</p>
           <div class="h-56 sm:h-64 w-full relative">
             <canvas id="liquidityChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Collection Summary & Responsible-Wise Breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        <!-- Collection Summary Card (5 cols) -->
+        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold">Book Collection Summary</h2>
+              <p class="text-xs text-slate-300">Street (Books 1–40) &amp; VIP/QR (Books 0–20)</p>
+            </div>
+            <span id="bookColCountBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-amber-200 shrink-0">
+              0 Books
+            </span>
+          </div>
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+                <tr>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Collection Stream</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Books</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="dashBookSummaryBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Responsible-Wise Collection Table (7 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold">Book Collection — Responsible-Wise</h2>
+              <p class="text-xs text-slate-300">Aggregated collections grouped by responsible member</p>
+            </div>
+            <input id="dashRespSearch" type="text" placeholder="Filter responsible..."
+              class="min-h-[32px] w-full sm:w-44 px-2.5 py-1 rounded-lg bg-navy-900 border border-navy-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-300" />
+          </div>
+          <div class="overflow-x-auto max-h-72 overflow-y-auto flex-1">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+                <tr>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Responsible Person</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Books Assigned</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Collected</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody id="dashResponsibleBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -909,7 +968,8 @@
           openingCash: 0,
           lastRefreshed: 'Just now',
           entries: [],
-          cheques: []
+          cheques: [],
+          bookCollections: []
         };
       }
 
@@ -930,7 +990,8 @@
       let resolvedTabNames = {
         bank: 'Bank Book',
         cash: 'Cash Book',
-        cheques: 'Cheques Issued'
+        cheques: 'Cheques Issued',
+        bookCollection: 'Book Collection'
       };
 
       try {
@@ -970,7 +1031,8 @@
           return Object.assign(createInitialSnapshot(), parsed, {
             activeView: validView,
             entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-            cheques: Array.isArray(parsed.cheques) ? parsed.cheques : []
+            cheques: Array.isArray(parsed.cheques) ? parsed.cheques : [],
+            bookCollections: Array.isArray(parsed.bookCollections) ? parsed.bookCollections : []
           });
         } catch (err) {
           return createInitialSnapshot();
@@ -1167,6 +1229,12 @@
         const clearedCheques = state.cheques.filter(c => String(c.status).toLowerCase() === 'cleared');
         const pendingCheques = state.cheques.filter(c => String(c.status).toLowerCase() !== 'cleared');
 
+        const streetCols = state.bookCollections.filter(b => b.stream !== 'VIP / QR');
+        const vipCols = state.bookCollections.filter(b => b.stream === 'VIP / QR');
+        const streetColAmt = streetCols.reduce((s, b) => s + toNum(b.amount), 0);
+        const vipColAmt = vipCols.reduce((s, b) => s + toNum(b.amount), 0);
+        const totalBookColAmt = streetColAmt + vipColAmt;
+
         return {
           bankInward,
           bankOutward,
@@ -1178,7 +1246,13 @@
           clearedCount: clearedCheques.length,
           clearedAmt: clearedCheques.reduce((s, c) => s + toNum(c.amount), 0),
           pendingCount: pendingCheques.length,
-          pendingAmt: pendingCheques.reduce((s, c) => s + toNum(c.amount), 0)
+          pendingAmt: pendingCheques.reduce((s, c) => s + toNum(c.amount), 0),
+          streetColAmt,
+          streetColBooks: streetCols.length,
+          vipColAmt,
+          vipColBooks: vipCols.length,
+          totalBookColAmt,
+          totalBookColBooks: state.bookCollections.length
         };
       }
 
@@ -1257,10 +1331,10 @@
           );
           drawCanvasFallback(
             liqCanvas,
-            ['Bank', 'Cash', 'Cleared', 'Pending'],
-            [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt],
-            ['#0f294a', '#ea580c', '#15803d', '#d97706'],
-            'Liquidity & Cheques'
+            ['Bank', 'Cash', 'Book Col', 'Chq Cleared', 'Chq Pending'],
+            [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.totalBookColAmt, t.clearedAmt, t.pendingAmt],
+            ['#0f294a', '#ea580c', '#0d9488', '#15803d', '#d97706'],
+            'Liquidity, Collections & Cheques'
           );
           return;
         }
@@ -1287,11 +1361,11 @@
         liquidityChartInstance = new window.Chart(liqCanvas.getContext('2d'), {
           type: 'bar',
           data: {
-            labels: ['Bank', 'Cash', 'Chq Cleared', 'Chq Pending'],
+            labels: ['Bank', 'Cash', 'Book Col', 'Chq Cleared', 'Chq Pending'],
             datasets: [{
               label: 'Balance / Amount',
-              data: [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt],
-              backgroundColor: ['#0f294a', '#ea580c', '#15803d', '#d97706'],
+              data: [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.totalBookColAmt, t.clearedAmt, t.pendingAmt],
+              backgroundColor: ['#0f294a', '#ea580c', '#0d9488', '#15803d', '#d97706'],
               borderRadius: 6
             }]
           },
@@ -1302,6 +1376,94 @@
             scales: { y: { beginAtZero: true } }
           }
         });
+      }
+
+      function renderBookCollectionDashboard(t) {
+        setText('kpiBookCollection', formatMoney(t.totalBookColAmt));
+        setText('kpiBookCollectionSub', `Street: ${formatMoney(t.streetColAmt)} | VIP/QR: ${formatMoney(t.vipColAmt)}`);
+
+        const activeBooksCount = state.bookCollections.filter(b => toNum(b.amount) > 0 || (b.responsible && b.responsible !== 'Unassigned')).length;
+        setText('bookColCountBadge', `${activeBooksCount} / 60 Books`);
+
+        const summaryBody = document.getElementById('dashBookSummaryBody');
+        if (summaryBody) {
+          const streetActive = state.bookCollections.filter(b => b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
+          const vipActive = state.bookCollections.filter(b => b.stream === 'VIP / QR' && toNum(b.amount) > 0).length;
+          const summaryRows = [
+            {
+              label: 'Street / Area Collections',
+              sub: 'Books 1–40',
+              books: `${streetActive} / 40`,
+              amount: t.streetColAmt
+            },
+            {
+              label: 'Special / VIP & QR Collections',
+              sub: '20 Books',
+              books: `${vipActive} / 20`,
+              amount: t.vipColAmt
+            },
+            {
+              label: 'Total Book Collection',
+              sub: 'All 60 Receipt Books',
+              books: `${streetActive + vipActive} / 60`,
+              amount: t.totalBookColAmt,
+              isTotal: true
+            }
+          ];
+          summaryBody.innerHTML = summaryRows.map(r => `
+            <tr class="${r.isTotal ? 'bg-slate-50 font-semibold border-t-2 border-slate-200' : 'hover:bg-slate-50'}">
+              <td class="py-3 px-3 sm:px-4">
+                <p class="${r.isTotal ? 'text-navy-950 font-bold' : 'font-medium text-slate-900'}">${escapeHtml(r.label)}</p>
+                <p class="text-[11px] text-slate-500">${escapeHtml(r.sub)}</p>
+              </td>
+              <td class="py-3 px-3 sm:px-4 text-center text-slate-700">${escapeHtml(r.books)}</td>
+              <td class="py-3 px-3 sm:px-4 text-right font-semibold ${r.isTotal ? 'text-teal-800' : 'text-slate-900'}">${formatMoney(r.amount)}</td>
+            </tr>
+          `).join('');
+        }
+
+        const respBody = document.getElementById('dashResponsibleBody');
+        if (respBody) {
+          const searchEl = document.getElementById('dashRespSearch');
+          const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
+
+          const respMap = new Map();
+          for (const item of state.bookCollections) {
+            const name = (item.responsible || '').trim() || 'Unassigned';
+            const amt = toNum(item.amount);
+            if (name === 'Unassigned' && amt === 0) continue;
+            if (!respMap.has(name)) {
+              respMap.set(name, { name, books: [], amount: 0 });
+            }
+            const grp = respMap.get(name);
+            if (item.bookLabel) grp.books.push(item.bookLabel);
+            grp.amount += amt;
+          }
+
+          const grouped = Array.from(respMap.values())
+            .filter(g => !q || g.name.toLowerCase().includes(q) || g.books.join(' ').toLowerCase().includes(q))
+            .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+
+          if (grouped.length === 0) {
+            respBody.innerHTML = '<tr><td colspan="4" class="py-6 px-4 text-center text-slate-400">No Book Collection records synced yet. Click Refresh (↻) after signing in with Google.</td></tr>';
+          } else {
+            const grandTotal = t.totalBookColAmt || grouped.reduce((s, g) => s + g.amount, 0);
+            respBody.innerHTML = grouped.map(g => {
+              const sharePct = grandTotal > 0 ? ((g.amount / grandTotal) * 100).toFixed(1) : '0.0';
+              const booksPreview = g.books.length <= 4
+                ? g.books.join(', ')
+                : `${g.books.slice(0, 3).join(', ')} +${g.books.length - 3} more`;
+              return `
+                <tr class="hover:bg-slate-50">
+                  <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-900">${escapeHtml(g.name)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-600">${escapeHtml(booksPreview || `${g.books.length} book(s)`)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-teal-800 whitespace-nowrap">${formatMoney(g.amount)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
       }
 
       function renderDashboard() {
@@ -1317,6 +1479,8 @@
 
         setText('kpiChequesCleared', formatMoney(t.clearedAmt));
         setText('kpiChequesClearedSub', `${t.clearedCount} Cleared | Pending: ${formatMoney(t.pendingAmt)}`);
+
+        renderBookCollectionDashboard(t);
 
         const recentEntriesBody = document.getElementById('dashRecentEntriesBody');
         if (recentEntriesBody) {
@@ -1822,6 +1986,71 @@
         return cheques;
       }
 
+      function parseBookCollectionRows(rows) {
+        const items = [];
+        if (!Array.isArray(rows) || rows.length < 2) return items;
+
+        let headerIdx = 0;
+        for (let r = 0; r < Math.min(rows.length, 5); r++) {
+          const joined = (rows[r] || []).join(' ').toLowerCase();
+          if (joined.includes('book') || joined.includes('amount') || joined.includes('responsible') || joined.includes('name')) {
+            headerIdx = r;
+            break;
+          }
+        }
+        const headerRow = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
+
+        // Detect Street block columns (left side: cols 0..5) and VIP/QR block columns (right side: cols 6..12)
+        let streetRespIdx = headerRow.findIndex((h, idx) => idx < 6 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area') || h.includes('street')));
+        if (streetRespIdx < 0) streetRespIdx = 2;
+        let streetAmtIdx = headerRow.findIndex((h, idx) => idx < 6 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
+        if (streetAmtIdx < 0) streetAmtIdx = 3;
+
+        let vipBookIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('book') || h.includes('no') || h.includes('vip')));
+        if (vipBookIdx < 0) vipBookIdx = 7;
+        let vipRespIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member')));
+        if (vipRespIdx < 0) vipRespIdx = 8;
+        let vipAmtIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
+        if (vipAmtIdx < 0) vipAmtIdx = 9;
+
+        for (let i = headerIdx + 1; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const rowText = r.join(' ').toLowerCase();
+          if (rowText.includes('total')) continue;
+
+          // Street / Area Collection (Books 1..40)
+          const stBookRaw = String(r[1] || r[0] || '').trim();
+          const stResp = String(r[streetRespIdx] || '').trim();
+          const stAmt = toNum(r[streetAmtIdx]);
+          if (i - headerIdx <= 40 && (stBookRaw || stResp || stAmt > 0)) {
+            const bNum = stBookRaw || String(i - headerIdx);
+            items.push({
+              id: `bc-street-${i}`,
+              stream: 'Street / Area',
+              bookLabel: /^\d+$/.test(bNum) ? `Book #${bNum}` : bNum,
+              responsible: stResp || 'Unassigned',
+              amount: stAmt
+            });
+          }
+
+          // Special / VIP & QR Collection (20 Books)
+          const vpBookRaw = String(r[vipBookIdx] || '').trim();
+          const vpResp = String(r[vipRespIdx] || '').trim();
+          const vpAmt = toNum(r[vipAmtIdx]);
+          if (i - headerIdx <= 20 && (vpBookRaw || vpResp || vpAmt > 0)) {
+            const vNum = vpBookRaw || `VIP-${i - headerIdx}`;
+            items.push({
+              id: `bc-vip-${i}`,
+              stream: 'VIP / QR',
+              bookLabel: /^\d+$/.test(vNum) ? `VIP #${vNum}` : vNum,
+              responsible: vpResp || 'Unassigned',
+              amount: vpAmt
+            });
+          }
+        }
+        return items;
+      }
+
       async function discoverTabNames(spreadsheetId) {
         const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?fields=sheets.properties.title`;
         const res = await fetch(metaUrl, {
@@ -1841,9 +2070,11 @@
         const bankMatch = titles.find(t => t.toLowerCase().includes('bank'));
         const cashMatch = titles.find(t => t.toLowerCase().includes('cash'));
         const chqMatch = titles.find(t => t.toLowerCase().includes('cheque'));
+        const colMatch = titles.find(t => t.toLowerCase().includes('collection') || t.toLowerCase().includes('book col'));
         if (bankMatch) resolvedTabNames.bank = bankMatch;
         if (cashMatch) resolvedTabNames.cash = cashMatch;
         if (chqMatch) resolvedTabNames.cheques = chqMatch;
+        if (colMatch) resolvedTabNames.bookCollection = colMatch;
         return titles;
       }
 
@@ -1865,7 +2096,8 @@
           const ranges = [
             `'${resolvedTabNames.bank}'!A1:H500`,
             `'${resolvedTabNames.cash}'!A1:F500`,
-            `'${resolvedTabNames.cheques}'!A1:H500`
+            `'${resolvedTabNames.cheques}'!A1:H500`,
+            `'${resolvedTabNames.bookCollection}'!A1:M100`
           ];
           const query = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
           const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?${query}`;
@@ -1880,15 +2112,18 @@
           const bankRows = (valueRanges[0] && valueRanges[0].values) || [];
           const cashRows = (valueRanges[1] && valueRanges[1].values) || [];
           const chequeRows = (valueRanges[2] && valueRanges[2].values) || [];
+          const bookColRows = (valueRanges[3] && valueRanges[3].values) || [];
 
           const parsedBank = parseBookRows(bankRows, 'Bank');
           const parsedCash = parseBookRows(cashRows, 'Cash');
           const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
           const syncedCheques = parseChequeRows(chequeRows);
+          const syncedBookCols = parseBookCollectionRows(bookColRows);
 
           const prevSignature = JSON.stringify({
             entries: state.entries,
             cheques: state.cheques,
+            bookCollections: state.bookCollections,
             ob: state.openingBank,
             oc: state.openingCash
           });
@@ -1908,6 +2143,12 @@
             }
           }
 
+          if (syncedBookCols.length > 0 || availableTabs.includes(resolvedTabNames.bookCollection)) {
+            if (!(syncedBookCols.length === 0 && state.bookCollections.length > 0 && silent)) {
+              state.bookCollections = syncedBookCols;
+            }
+          }
+
           hasPulledFromSheetThisSession = true;
           state.lastRefreshed = new Date().toLocaleString('en-IN', {
             day: '2-digit',
@@ -1920,6 +2161,7 @@
           const nextSignature = JSON.stringify({
             entries: state.entries,
             cheques: state.cheques,
+            bookCollections: state.bookCollections,
             ob: state.openingBank,
             oc: state.openingCash
           });
@@ -1929,7 +2171,7 @@
             renderAll();
           }
           if (!silent) {
-            showToast(`Synced ${state.entries.length} ledger rows & ${state.cheques.length} cheques (top-to-bottom).`);
+            showToast(`Synced ${state.entries.length} ledger rows, ${state.cheques.length} cheques & ${state.bookCollections.length} collection books.`);
           }
         } catch (err) {
           if (!silent) {
@@ -2284,6 +2526,7 @@
 
         on('btnDashViewBank', 'click', () => switchTab('bankbook', true));
         on('btnDashViewCheques', 'click', () => switchTab('cheques', true));
+        on('dashRespSearch', 'input', () => renderBookCollectionDashboard(computeTotals()));
 
         on('btnNewEntry', 'click', () => openEntryModal(state.activeView === 'cashbook' ? 'Cash' : 'Bank', null));
         on('btnAddBankEntry', 'click', () => openEntryModal('Bank', null));
@@ -2555,6 +2798,7 @@
         on('btnClearAll', 'click', () => {
           state.entries = [];
           state.cheques = [];
+          state.bookCollections = [];
           saveState();
           renderAll();
           showToast('Cleared all local entries.');
@@ -2590,7 +2834,8 @@
             resolvedTabNames,
             counts: {
               entries: state.entries.length,
-              cheques: state.cheques.length
+              cheques: state.cheques.length,
+              bookCollections: state.bookCollections.length
             }
           }, null, 2);
         });
