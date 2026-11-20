@@ -870,6 +870,7 @@
       let liquidityChartInstance = null;
       let parsedCsvRows = [];
       let chequeStatusFilter = 'ALL';
+      let chequeDataStartRow = 3;
 
       let resolvedTabNames = {
         bank: 'Bank Book',
@@ -1638,6 +1639,7 @@
             break;
           }
         }
+        chequeDataStartRow = headerIdx + 2;
 
         for (let i = headerIdx + 1; i < rows.length; i++) {
           const r = rows[i] || [];
@@ -1846,26 +1848,28 @@
             String(c.status).toLowerCase() === 'cleared' ? 'Cleared' : 'Pending'
           ]);
 
-          const clearRanges = [];
-          if (bankValues.length > 0 || hasPulledFromSheetThisSession) {
-            clearRanges.push(`'${resolvedTabNames.bank}'!A${3 + bankValues.length}:H500`);
-          }
-          if (cashValues.length > 0 || hasPulledFromSheetThisSession) {
-            clearRanges.push(`'${resolvedTabNames.cash}'!A${2 + cashValues.length}:F500`);
-          }
-          if (chequeValues.length > 0 || hasPulledFromSheetThisSession) {
-            clearRanges.push(`'${resolvedTabNames.cheques}'!A${3 + chequeValues.length}:H500`);
-          }
+          const clearRanges = [
+            `'${resolvedTabNames.bank}'!A${3 + bankValues.length}:H500`,
+            `'${resolvedTabNames.cash}'!A${2 + cashValues.length}:F500`,
+            `'${resolvedTabNames.cheques}'!A${chequeDataStartRow + chequeValues.length}:H500`
+          ];
 
-          if (clearRanges.length > 0) {
-            await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchClear`, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${oauthToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ ranges: clearRanges })
-            });
+          const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchClear`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${oauthToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ranges: clearRanges })
+          });
+          if (!clearRes.ok) {
+            if (clearRes.status === 401) {
+              oauthToken = '';
+              oauthTokenExpiry = 0;
+              persistSessionToken();
+              updateOauthBadge();
+            }
+            throw new Error(`BatchClear HTTP ${clearRes.status}`);
           }
 
           const dataUpdates = [];
@@ -1883,7 +1887,7 @@
           }
           if (chequeValues.length > 0) {
             dataUpdates.push({
-              range: `'${resolvedTabNames.cheques}'!A3:H${2 + chequeValues.length}`,
+              range: `'${resolvedTabNames.cheques}'!A${chequeDataStartRow}:H${chequeDataStartRow - 1 + chequeValues.length}`,
               values: chequeValues
             });
           }
@@ -2087,6 +2091,7 @@
             state.entries = state.entries.filter(x => x.id !== id);
             saveState();
             renderAll();
+            showToast('Deleting entry from Google Sheet...');
             pushToGoogleSheet(false, true);
           } else if (action === 'clear-cheque') {
             const item = state.cheques.find(x => x.id === id);
@@ -2104,6 +2109,7 @@
             state.cheques = state.cheques.filter(x => x.id !== id);
             saveState();
             renderAll();
+            showToast('Deleting cheque from Google Sheet...');
             pushToGoogleSheet(false, true);
           }
         });
