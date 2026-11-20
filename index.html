@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sri Ayyappa Swamy Seva Sangam — Income &amp; Expenses 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -40,11 +40,12 @@
     };
   </script>
   <style>
-    body {
+    html, body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background-color: #f4f6f9;
       color: #0b1f3a;
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
     h1, h2, .font-display {
       font-family: 'Playfair Display', Georgia, serif;
@@ -64,80 +65,115 @@
     .app-view.is-active {
       display: block;
     }
+    /* Hide scrollbar on mobile horizontal tab bar while keeping touch scroll */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Prevent iOS zoom on input focus */
+    @media (max-width: 640px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#f4f6f9] text-slate-900">
+<body class="min-h-screen flex flex-col bg-[#f4f6f9] text-slate-900 pb-safe">
   <!-- Top Navy Executive Header -->
-  <header class="bg-navy-950 text-white shadow-md border-b border-navy-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Sri Ayyappa Swamy Seva Sangam
-          </h1>
-          <p class="text-xs sm:text-sm text-slate-300 mt-0.5">
-            Income &amp; Expenses — 2026 · BankBook, CashBook &amp; Cheque Tracker
-          </p>
+  <header class="bg-navy-950 text-white shadow-md border-b border-navy-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold tracking-tight text-white leading-snug break-words">
+              Sri Ayyappa Swamy Seva Sangam
+            </h1>
+            <p class="text-[11px] sm:text-sm text-slate-300 mt-0.5 truncate">
+              Income &amp; Expenses — 2026 · BankBook, CashBook &amp; Cheque Tracker
+            </p>
+          </div>
+          <!-- Quick Sync & Scroll Top on Mobile Header -->
+          <div class="flex lg:hidden items-center gap-1.5 shrink-0">
+            <button id="btnManualSyncMobile" type="button" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet"
+              class="min-w-[40px] min-h-[40px] rounded-lg bg-navy-900 hover:bg-navy-800 active:bg-navy-800 text-white border border-navy-800 transition cursor-pointer flex items-center justify-center">
+              <span class="sync-icon inline-block text-base leading-none">&#8635;</span>
+            </button>
+            <button id="btnScrollTopMobile" type="button" title="Scroll to top" aria-label="Scroll to top"
+              class="min-w-[40px] min-h-[40px] rounded-lg bg-navy-900 hover:bg-navy-800 active:bg-navy-800 text-white border border-navy-800 transition cursor-pointer flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Primary Action Bar (Full-width responsive grid on mobile, inline flex on desktop) -->
+        <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2">
           <select id="currencySelect" aria-label="Currency"
-            class="bg-navy-900 text-white text-xs sm:text-sm font-medium border border-navy-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember-500">
+            class="min-h-[40px] bg-navy-900 text-white text-xs sm:text-sm font-medium border border-navy-800 rounded-lg px-2.5 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember-500">
             <option value="INR" selected>₹ INR</option>
             <option value="USD">$ USD</option>
             <option value="EUR">€ EUR</option>
           </select>
 
           <button id="btnContraTransfer" type="button"
-            class="bg-navy-800 hover:bg-slatex-600 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slatex-600 transition cursor-pointer">
-            Contra Transfer
+            class="min-h-[40px] bg-navy-800 hover:bg-slatex-600 active:bg-slatex-700 text-white text-xs sm:text-sm font-medium px-2.5 sm:px-3.5 py-2 rounded-lg border border-slatex-600 transition cursor-pointer truncate">
+            Contra
           </button>
 
           <button id="btnNewEntry" type="button"
-            class="bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition cursor-pointer">
+            class="min-h-[40px] bg-ember-500 hover:bg-ember-600 active:bg-ember-600 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-lg shadow-sm transition cursor-pointer truncate">
             + New Entry
           </button>
         </div>
       </div>
 
-      <!-- Top-Level Navigation Tabs -->
-      <nav aria-label="Primary Navigation" class="mt-4 pt-3 border-t border-navy-800 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <button data-nav="dashboard" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-navy-950 shadow-sm cursor-pointer">
+      <!-- Top-Level Navigation Tabs (Smooth horizontal swipe on phones/tablets) -->
+      <nav aria-label="Primary Navigation" class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-navy-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
+        <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1">
+          <button data-nav="dashboard" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-navy-950 shadow-sm cursor-pointer">
             Executive Dashboard
           </button>
-          <button data-nav="bankbook" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
+          <button data-nav="bankbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
             BankBook
           </button>
-          <button data-nav="cashbook" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
+          <button data-nav="cashbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
             CashBook
           </button>
-          <button data-nav="cheques" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
+          <button data-nav="cheques" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
             Cheque Tracker
           </button>
-          <button data-nav="import" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
+          <button data-nav="import" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer">
             Import / Export CSV
           </button>
         </div>
 
-        <div class="flex items-center gap-2 text-xs text-slate-300">
-          <span id="autoPullIndicator" class="px-2 py-0.5 rounded-full bg-navy-900 border border-navy-800 text-slate-300">
-            5s Auto-Pull: Standby
-          </span>
-          <span id="oauthStatusBadge" class="px-2 py-0.5 rounded-full bg-navy-900 border border-navy-800 text-slate-300">
-            OAuth Ready
-          </span>
-          <span id="lastRefreshedLabel" class="hidden sm:inline">Last refreshed: Just now</span>
-          <button id="btnManualSync" type="button" title="Refresh from Google Sheet (↻)" aria-label="Refresh from Google Sheet"
-            class="px-2.5 py-1.5 rounded-lg bg-navy-900 hover:bg-navy-800 text-white border border-navy-800 transition cursor-pointer flex items-center gap-1">
-            <span id="syncIcon" class="inline-block text-sm leading-none">&#8635;</span>
-          </button>
-          <button id="btnScrollTop" type="button" title="Scroll to top" aria-label="Scroll to top"
-            class="p-2 rounded-lg bg-navy-900 hover:bg-navy-800 text-white border border-navy-800 transition cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
+        <!-- Status Pills & Desktop Sync Buttons -->
+        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2 text-[11px] sm:text-xs text-slate-300">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span id="autoPullIndicator" class="px-2 py-0.5 rounded-full bg-navy-900 border border-navy-800 text-slate-300">
+              5s Auto-Pull: Standby
+            </span>
+            <span id="oauthStatusBadge" class="px-2 py-0.5 rounded-full bg-navy-900 border border-navy-800 text-slate-300">
+              OAuth Ready
+            </span>
+          </div>
+          <div class="hidden lg:flex items-center gap-2">
+            <span id="lastRefreshedLabel">Last refreshed: Just now</span>
+            <button id="btnManualSync" type="button" title="Refresh from Google Sheet (↻)" aria-label="Refresh from Google Sheet"
+              class="px-2.5 py-1.5 rounded-lg bg-navy-900 hover:bg-navy-800 text-white border border-navy-800 transition cursor-pointer flex items-center gap-1">
+              <span class="sync-icon inline-block text-sm leading-none">&#8635;</span>
+            </button>
+            <button id="btnScrollTop" type="button" title="Scroll to top" aria-label="Scroll to top"
+              class="p-2 rounded-lg bg-navy-900 hover:bg-navy-800 text-white border border-navy-800 transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </nav>
     </div>
@@ -145,85 +181,85 @@
 
   <!-- Sync Status Banner -->
   <div id="syncBanner" class="bg-white border-b border-slate-200 text-slate-800 text-xs sm:text-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3">
-      <p id="syncBannerText" class="truncate">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
+      <p id="syncBannerText" class="line-clamp-2 sm:truncate">
         Ready for <strong>Income &amp; Expenses - 2026</strong> — Two-way Google Sheets API v4 (OAuth 2.0) enabled.
       </p>
-      <button id="btnDismissBanner" type="button" class="text-xs font-medium text-navy-950 hover:underline shrink-0 cursor-pointer">
+      <button id="btnDismissBanner" type="button" class="text-xs font-medium text-navy-950 hover:underline shrink-0 py-1 px-2 cursor-pointer">
         Dismiss
       </button>
     </div>
   </div>
 
   <!-- Main Content Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
     <!-- 1. EXECUTIVE DASHBOARD VIEW -->
-    <section id="view-dashboard" class="app-view is-active space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 border-t-4 border-t-navy-950">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Combined Liquidity</p>
-          <p id="kpiCombined" class="text-2xl font-bold text-navy-950 mt-1.5 tabular-nums">₹0</p>
+    <section id="view-dashboard" class="app-view is-active space-y-5 sm:space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-navy-950">
+          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Combined Liquidity</p>
+          <p id="kpiCombined" class="text-xl sm:text-2xl font-bold text-navy-950 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
           <p id="kpiCombinedSub" class="text-xs text-slate-500 mt-1 tabular-nums">Bank: ₹0 | Cash: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 border-t-4 border-t-navy-800">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cash at Bank</p>
-          <p id="kpiBank" class="text-2xl font-bold text-slate-900 mt-1.5 tabular-nums">₹0</p>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-navy-800">
+          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Cash at Bank</p>
+          <p id="kpiBank" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
           <p id="kpiBankSub" class="text-xs text-slate-500 mt-1 tabular-nums">Inward: ₹0 | Outward: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 border-t-4 border-t-ember-500">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cash in Hand</p>
-          <p id="kpiCash" class="text-2xl font-bold text-slate-900 mt-1.5 tabular-nums">₹0</p>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-ember-500">
+          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Cash in Hand</p>
+          <p id="kpiCash" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
           <p id="kpiCashSub" class="text-xs text-slate-500 mt-1 tabular-nums">Inward: ₹0 | Outward: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 border-t-4 border-t-slatex-500">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cheques Cleared</p>
-          <p id="kpiChequesCleared" class="text-2xl font-bold text-slate-900 mt-1.5 tabular-nums">₹0</p>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-slatex-500">
+          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Cheques Cleared</p>
+          <p id="kpiChequesCleared" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
           <p id="kpiChequesClearedSub" class="text-xs text-slate-500 mt-1 tabular-nums">0 Cleared | Pending: ₹0</p>
         </div>
       </div>
 
       <!-- Charts Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 class="text-lg font-bold text-navy-950">Monthly Cash Flow (Inward vs. Outward)</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
+          <h2 class="text-base sm:text-lg font-bold text-navy-950">Monthly Cash Flow (Inward vs. Outward)</h2>
           <p class="text-xs text-slate-500 mb-3">Period-wise inward and outward ledger movement</p>
-          <div class="h-64 w-full relative">
+          <div class="h-56 sm:h-64 w-full relative">
             <canvas id="flowChartCanvas"></canvas>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 class="text-lg font-bold text-navy-950">Category &amp; Liquidity Distribution</h2>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
+          <h2 class="text-base sm:text-lg font-bold text-navy-950">Category &amp; Liquidity Distribution</h2>
           <p class="text-xs text-slate-500 mb-3">Balances across Bank, Cash, and Cheques</p>
-          <div class="h-64 w-full relative">
+          <div class="h-56 sm:h-64 w-full relative">
             <canvas id="liquidityChartCanvas"></canvas>
           </div>
         </div>
       </div>
 
       <!-- Top-to-Bottom Ledger & Cheque Overview -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-5 py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between">
+          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-lg font-bold">Ledger Entries (Top-to-Bottom)</h2>
+              <h2 class="text-base sm:text-lg font-bold">Ledger Entries (Top-to-Bottom)</h2>
               <p class="text-xs text-slate-300">BankBook &amp; CashBook activity</p>
             </div>
-            <button id="btnDashViewBank" type="button" class="text-xs font-semibold text-amber-300 hover:underline cursor-pointer">
+            <button id="btnDashViewBank" type="button" class="text-xs font-semibold text-amber-300 hover:underline shrink-0 py-1 cursor-pointer">
               Open Ledgers &rarr;
             </button>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
                 <tr>
-                  <th class="py-3 px-4">Date</th>
-                  <th class="py-3 px-4">Book</th>
-                  <th class="py-3 px-4">Particular</th>
-                  <th class="py-3 px-4 text-right">Amount</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Date</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Book</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Particular</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody id="dashRecentEntriesBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -232,23 +268,23 @@
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-5 py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between">
+          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-lg font-bold">Cheques Overview (Top-to-Bottom)</h2>
+              <h2 class="text-base sm:text-lg font-bold">Cheques Overview (Top-to-Bottom)</h2>
               <p class="text-xs text-slate-300">Issued cheques &amp; clearance status</p>
             </div>
-            <button id="btnDashViewCheques" type="button" class="text-xs font-semibold text-amber-300 hover:underline cursor-pointer">
+            <button id="btnDashViewCheques" type="button" class="text-xs font-semibold text-amber-300 hover:underline shrink-0 py-1 cursor-pointer">
               Cheque Tracker &rarr;
             </button>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
                 <tr>
-                  <th class="py-3 px-4">Cheque #</th>
-                  <th class="py-3 px-4">Cheque Name</th>
-                  <th class="py-3 px-4 text-right">Amount</th>
-                  <th class="py-3 px-4">Status</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Cheque #</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Cheque Name</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
+                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Status</th>
                 </tr>
               </thead>
               <tbody id="dashRecentChequesBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -259,45 +295,50 @@
     </section>
 
     <!-- 2. BANKBOOK VIEW -->
-    <section id="view-bankbook" class="app-view space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+    <section id="view-bankbook" class="app-view space-y-4 sm:space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">BankBook Ledger</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">BankBook Ledger</h2>
             <p class="text-xs sm:text-sm text-slate-500">Top-to-bottom bank inward &amp; outward register (Bank Book sheet)</p>
           </div>
-          <div class="flex flex-wrap items-center gap-2.5 ml-auto">
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportBankCsv" type="button"
-              class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnAddBankEntry" type="button"
-              class="px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
               + Add Entry
             </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
           <input id="bankSearch" type="text" placeholder="Search particulars, reference..."
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
           <select id="bankTypeFilter" aria-label="Bank Type Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Types (Inward &amp; Outward)</option>
             <option value="INWARD">Inward (+)</option>
             <option value="OUTWARD">Outward (-)</option>
           </select>
           <select id="bankCategoryFilter" aria-label="Bank Category Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Categories</option>
           </select>
           <select id="bankMonthFilter" aria-label="Bank Month Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Months</option>
           </select>
         </div>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+        <!-- Mobile Card List for BankBook -->
+        <div id="bankMobileList" class="md:hidden space-y-2.5 mb-3"></div>
+        <div id="bankMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs space-y-1 tabular-nums"></div>
+
+        <!-- Tablet & Desktop Table for BankBook -->
+        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
           <table class="w-full text-left border-collapse text-sm">
             <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
               <tr>
@@ -327,45 +368,50 @@
     </section>
 
     <!-- 3. CASHBOOK VIEW -->
-    <section id="view-cashbook" class="app-view space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+    <section id="view-cashbook" class="app-view space-y-4 sm:space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">CashBook Ledger</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">CashBook Ledger</h2>
             <p class="text-xs sm:text-sm text-slate-500">Top-to-bottom cash inward &amp; outward register (Cash Book sheet)</p>
           </div>
-          <div class="flex flex-wrap items-center gap-2.5 ml-auto">
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportCashCsv" type="button"
-              class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnAddCashEntry" type="button"
-              class="px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
               + Add Entry
             </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
           <input id="cashSearch" type="text" placeholder="Search particulars, reference..."
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
           <select id="cashTypeFilter" aria-label="Cash Type Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Types (Inward &amp; Outward)</option>
             <option value="INWARD">Inward (+)</option>
             <option value="OUTWARD">Outward (-)</option>
           </select>
           <select id="cashCategoryFilter" aria-label="Cash Category Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Categories</option>
           </select>
           <select id="cashMonthFilter" aria-label="Cash Month Filter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
             <option value="ALL">All Months</option>
           </select>
         </div>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+        <!-- Mobile Card List for CashBook -->
+        <div id="cashMobileList" class="md:hidden space-y-2.5 mb-3"></div>
+        <div id="cashMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs space-y-1 tabular-nums"></div>
+
+        <!-- Tablet & Desktop Table for CashBook -->
+        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
           <table class="w-full text-left border-collapse text-sm">
             <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
               <tr>
@@ -395,10 +441,10 @@
     </section>
 
     <!-- 4. CHEQUE TRACKER VIEW -->
-    <section id="view-cheques" class="app-view space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-5">
+    <section id="view-cheques" class="app-view space-y-4 sm:space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4 sm:space-y-5">
         <!-- Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
           <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-3">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Cleared Cheques</p>
             <p id="chqClearedAmt" class="text-lg font-bold text-emerald-900 mt-0.5 tabular-nums">₹0</p>
@@ -421,18 +467,18 @@
         <!-- Top-Right Action Header Bar -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-slate-100">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">Cheque Tracker Register</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">Cheque Tracker Register</h2>
             <p class="text-xs sm:text-sm text-slate-500">
               S No · Issued Date · Cheque Name · Cheque Number · Purpose · Amount · Cleared Date · Status
             </p>
           </div>
-          <div class="flex flex-wrap items-center gap-2.5 ml-auto">
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportChequesCsv" type="button"
-              class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnIssueCheque" type="button"
-              class="px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               + Issue Cheque
             </button>
           </div>
@@ -440,32 +486,37 @@
 
         <!-- Status Filter Pills & Search -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <div class="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 self-start" role="group" aria-label="Cheque Status Filter Pills">
+          <div class="grid grid-cols-3 sm:inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 w-full sm:w-auto" role="group" aria-label="Cheque Status Filter Pills">
             <button data-chq-pill="ALL" type="button"
-              class="chq-filter-pill px-3 py-1 rounded-md text-xs font-semibold bg-navy-950 text-white shadow-sm transition cursor-pointer">
+              class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-navy-950 text-white shadow-sm transition cursor-pointer">
               All
             </button>
             <button data-chq-pill="Pending" type="button"
-              class="chq-filter-pill px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+              class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
               Pending
             </button>
             <button data-chq-pill="Cleared" type="button"
-              class="chq-filter-pill px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+              class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
               Cleared
             </button>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:w-[28rem]">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 lg:w-[28rem]">
             <input id="chequeSearch" type="text" placeholder="Search cheque #, payee, purpose..."
-              class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
+              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950" />
             <select id="chequeMonthFilter" aria-label="Issue Month"
-              class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
+              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-950">
               <option value="ALL">All Issue Months</option>
             </select>
           </div>
         </div>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+        <!-- Mobile Card List for Cheques -->
+        <div id="chequesMobileList" class="md:hidden space-y-2.5"></div>
+        <div id="chequesMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs font-semibold text-navy-950 flex items-center justify-between tabular-nums"></div>
+
+        <!-- Tablet & Desktop Table for Cheques -->
+        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
           <table class="w-full text-left border-collapse text-sm">
             <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
               <tr>
@@ -494,17 +545,17 @@
     </section>
 
     <!-- 5. IMPORT / EXPORT CSV & GOOGLE SHEETS API v4 OAUTH SYNC -->
-    <section id="view-import" class="app-view space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+    <section id="view-import" class="app-view space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">Import from Google Sheets (CSV)</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">Import from Google Sheets (CSV)</h2>
             <p class="text-xs sm:text-sm text-slate-500">Upload a CSV export and map columns into BankBook or CashBook</p>
           </div>
 
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Target Ledger</label>
-            <select id="csvTargetBook" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="csvTargetBook" class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white">
               <option value="Bank">BankBook</option>
               <option value="Cash">CashBook</option>
             </select>
@@ -513,57 +564,57 @@
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Choose CSV File</label>
             <input id="csvFileInput" type="file" accept=".csv,text/csv"
-              class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-navy-950 file:text-white hover:file:bg-navy-800 cursor-pointer" />
+              class="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-navy-950 file:text-white hover:file:bg-navy-800 cursor-pointer" />
           </div>
 
           <div id="csvMappingBox" class="hidden space-y-3 pt-2 border-t border-slate-200">
             <p class="text-xs font-semibold text-navy-950">Map CSV Columns</p>
-            <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <label class="block text-slate-600 mb-1">Date Column</label>
-                <select id="mapDate" class="w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapDate" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Particular Column</label>
-                <select id="mapParticular" class="w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapParticular" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Inward Column</label>
-                <select id="mapInward" class="w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapInward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Outward Column</label>
-                <select id="mapOutward" class="w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapOutward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
               </div>
             </div>
             <button id="btnConfirmImport" type="button"
-              class="px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold cursor-pointer">
+              class="w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold cursor-pointer">
               Import Rows
             </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">Export &amp; Data Management</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">Export &amp; Data Management</h2>
             <p class="text-xs sm:text-sm text-slate-500">Download full backups or reset local state</p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             <button id="btnExportAllCsv" type="button"
-              class="px-4 py-2.5 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold text-left cursor-pointer">
               Export All as CSV
             </button>
             <button id="btnExportJson" type="button"
-              class="px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
               Backup JSON
             </button>
             <button id="btnResetSample" type="button"
-              class="px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
               Reset to Clean State
             </button>
             <button id="btnClearAll" type="button"
-              class="px-4 py-2.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold text-left cursor-pointer">
               Clear All Entries
             </button>
           </div>
@@ -571,51 +622,51 @@
       </div>
 
       <!-- Script-Free Google Sheets API v4 (OAuth 2.0) Panel -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
           <div>
-            <h2 class="text-xl font-bold text-navy-950">Script-Free Google Sheets API v4 (OAuth 2.0) Two-Way Sync</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-navy-950">Script-Free Google Sheets API v4 (OAuth 2.0) Two-Way Sync</h2>
             <p class="text-xs sm:text-sm text-slate-500">
               Reads and writes top-to-bottom directly via Google Sheets API v4 using OAuth 2.0 (auto-pulls every 5 seconds when signed in)
             </p>
           </div>
-          <span id="oauthConnectionState" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+          <span id="oauthConnectionState" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 shrink-0">
             Disconnected
           </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
               Target Spreadsheet ID
             </label>
             <input id="sheetIdInput" type="text"
-              class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-navy-950" />
+              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-navy-950" />
           </div>
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
               Google OAuth 2.0 Web Client ID
             </label>
             <input id="oauthClientIdInput" type="text"
-              class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-navy-950" />
+              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-navy-950" />
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5">
           <button id="btnSaveOauthConfig" type="button"
-            class="px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold cursor-pointer">
+            class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold cursor-pointer">
             Save IDs
           </button>
           <button id="btnGoogleSignIn" type="button"
-            class="px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold cursor-pointer">
+            class="min-h-[40px] px-4 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-xs sm:text-sm font-semibold cursor-pointer">
             Sign in with Google
           </button>
           <button id="btnPushNow" type="button"
-            class="px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold cursor-pointer">
-            Push Local to Sheet Now
+            class="min-h-[40px] px-4 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-xs sm:text-sm font-semibold cursor-pointer">
+            Push to Sheet
           </button>
           <button id="btnTestSync" type="button"
-            class="px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium cursor-pointer">
+            class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium cursor-pointer">
             Diagnostic Info
           </button>
         </div>
@@ -625,26 +676,26 @@
     </section>
   </main>
 
-  <!-- ENTRY MODAL -->
-  <div id="entryModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-6 space-y-4">
+  <!-- ENTRY MODAL (Responsive Bottom-Sheet on Mobile, Centered Card on Desktop) -->
+  <div id="entryModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="entryModalTitle" class="text-lg font-bold text-navy-950">Add Ledger Entry</h3>
-        <button id="btnCloseEntryModal" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none cursor-pointer">&times;</button>
+        <button id="btnCloseEntryModal" type="button" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <form id="entryForm" class="space-y-3.5">
         <input type="hidden" id="entryId" />
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Ledger Book</label>
-            <select id="entryBook" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="entryBook" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
               <option value="Bank">BankBook</option>
               <option value="Cash">CashBook</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Transaction Type</label>
-            <select id="entryType" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="entryType" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
               <option value="INWARD">Inward (+)</option>
               <option value="OUTWARD">Outward (-)</option>
             </select>
@@ -654,25 +705,25 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
-            <input id="entryDate" type="date" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="entryDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="entryAmount" type="number" step="0.01" min="0.01" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="entryAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Particular</label>
           <input id="entryParticular" type="text" required placeholder="e.g., Annadhanam Seva / Bank Receipt"
-            class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
             <input id="entryCategory" type="text" list="categoryOptions" placeholder="e.g., Seva, Expenses, Contra"
-              class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+              class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
             <datalist id="categoryOptions">
               <option value="Seva & Offerings"></option>
               <option value="Annadhanam"></option>
@@ -684,15 +735,15 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Reference</label>
             <input id="entryRef" type="text" placeholder="Voucher / UTR / Ref #"
-              class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+              class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
 
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelEntryModal" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+        <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button id="btnCancelEntryModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
             Cancel
           </button>
-          <button type="submit" class="px-5 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold cursor-pointer">
             Save Entry
           </button>
         </div>
@@ -701,39 +752,39 @@
   </div>
 
   <!-- CONTRA TRANSFER MODAL -->
-  <div id="contraModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-md p-6 space-y-4">
+  <div id="contraModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-md p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 class="text-lg font-bold text-navy-950">Record Contra Transfer</h3>
-        <button id="btnCloseContraModal" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none cursor-pointer">&times;</button>
+        <button id="btnCloseContraModal" type="button" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <form id="contraForm" class="space-y-3.5">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Transfer Direction</label>
-          <select id="contraDirection" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+          <select id="contraDirection" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
             <option value="BANK_TO_CASH">Bank to Cash (Withdrawal)</option>
             <option value="CASH_TO_BANK">Cash to Bank (Deposit)</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
-            <input id="contraDate" type="date" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="contraDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="contraAmount" type="number" step="0.01" min="0.01" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="contraAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Reference / Note</label>
-          <input id="contraRef" type="text" placeholder="Cheque / Slip / Contra note" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+          <input id="contraRef" type="text" placeholder="Cheque / Slip / Contra note" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
         </div>
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelContraModal" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+        <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button id="btnCancelContraModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
             Cancel
           </button>
-          <button type="submit" class="px-5 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-navy-950 hover:bg-navy-800 text-white text-sm font-semibold cursor-pointer">
             Record Transfer
           </button>
         </div>
@@ -742,56 +793,56 @@
   </div>
 
   <!-- CHEQUE MODAL -->
-  <div id="chequeModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-6 space-y-4">
+  <div id="chequeModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="chequeModalTitle" class="text-lg font-bold text-navy-950">Issue Cheque</h3>
-        <button id="btnCloseChequeModal" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none cursor-pointer">&times;</button>
+        <button id="btnCloseChequeModal" type="button" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <form id="chequeForm" class="space-y-3.5">
         <input type="hidden" id="chequeId" />
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Issued Date</label>
-            <input id="chequeDate" type="date" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Cheque Number</label>
-            <input id="chequeNo" type="text" required placeholder="e.g., 949847" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeNo" type="text" required placeholder="e.g., 949847" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Cheque Name (Payee)</label>
-            <input id="chequePayee" type="text" required placeholder="Payee name" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequePayee" type="text" required placeholder="Payee name" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="chequeAmount" type="number" step="0.01" min="0.01" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Purpose</label>
-          <input id="chequePurpose" type="text" placeholder="e.g., Pandal, Flowers, Lighting" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+          <input id="chequePurpose" type="text" placeholder="e.g., Pandal, Flowers, Lighting" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-            <select id="chequeStatus" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="chequeStatus" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
               <option value="Pending">Pending</option>
               <option value="Cleared">Cleared</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Cleared Date</label>
-            <input id="chequeClearedDate" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeClearedDate" type="date" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelChequeModal" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+        <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button id="btnCancelChequeModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
             Cancel
           </button>
-          <button type="submit" class="px-5 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold cursor-pointer">
             Save Cheque
           </button>
         </div>
@@ -800,7 +851,7 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+  <div id="toastContainer" class="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 z-50 space-y-2 pointer-events-none"></div>
 
   <script>
     (function () {
@@ -822,6 +873,8 @@
 
       const BANK_LEDGER_CONFIG = {
         tbodyId: 'bankTableBody',
+        mobileListId: 'bankMobileList',
+        mobileSummaryId: 'bankMobileSummary',
         searchId: 'bankSearch',
         typeId: 'bankTypeFilter',
         catId: 'bankCategoryFilter',
@@ -834,6 +887,8 @@
 
       const CASH_LEDGER_CONFIG = {
         tbodyId: 'cashTableBody',
+        mobileListId: 'cashMobileList',
+        mobileSummaryId: 'cashMobileSummary',
         searchId: 'cashSearch',
         typeId: 'cashTypeFilter',
         catId: 'cashCategoryFilter',
@@ -939,7 +994,7 @@
         const container = document.getElementById('toastContainer');
         if (!container) return;
         const el = document.createElement('div');
-        el.className = 'bg-navy-950 text-white text-xs sm:text-sm px-4 py-3 rounded-lg shadow-lg border border-navy-800 pointer-events-auto transition-opacity';
+        el.className = 'bg-navy-950 text-white text-xs sm:text-sm px-4 py-3 rounded-lg shadow-lg border border-navy-800 pointer-events-auto transition-opacity text-center sm:text-left';
         el.textContent = message;
         container.appendChild(el);
         setTimeout(() => {
@@ -1022,7 +1077,7 @@
           }
           if (statusEl) {
             statusEl.textContent = 'OAuth Connected (Read & Write)';
-            statusEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800';
+            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 shrink-0';
           }
           if (autoEl) {
             autoEl.textContent = '5s Auto-Pull: Active';
@@ -1035,7 +1090,7 @@
           }
           if (statusEl) {
             statusEl.textContent = 'Disconnected';
-            statusEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 shrink-0';
           }
           if (autoEl) {
             autoEl.textContent = '5s Auto-Pull: Standby';
@@ -1129,24 +1184,24 @@
 
       function drawCanvasFallback(canvas, labels, values, colors, titleText) {
         const ctx = canvas.getContext('2d');
-        const width = canvas.parentElement ? canvas.parentElement.clientWidth : 400;
-        const height = canvas.parentElement ? canvas.parentElement.clientHeight : 240;
+        const width = canvas.parentElement ? canvas.parentElement.clientWidth : 340;
+        const height = canvas.parentElement ? canvas.parentElement.clientHeight : 220;
         canvas.width = Math.max(240, width);
         canvas.height = Math.max(180, height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const maxVal = Math.max(1, ...values.map(v => Math.abs(v)));
-        const padX = 40;
+        const padX = 28;
         const padTop = 24;
         const padBottom = 34;
         const chartH = canvas.height - padTop - padBottom;
-        const barW = Math.min(60, Math.max(22, (canvas.width - padX * 2) / (labels.length * 1.8)));
+        const barW = Math.min(54, Math.max(18, (canvas.width - padX * 2) / (labels.length * 1.8)));
         const gap = ((canvas.width - padX * 2) - barW * labels.length) / Math.max(1, labels.length + 1);
 
         ctx.strokeStyle = '#cbd5e1';
         ctx.beginPath();
         ctx.moveTo(padX, padTop + chartH);
-        ctx.lineTo(canvas.width - 14, padTop + chartH);
+        ctx.lineTo(canvas.width - 12, padTop + chartH);
         ctx.stroke();
 
         labels.forEach((lbl, idx) => {
@@ -1159,7 +1214,7 @@
           ctx.fillRect(x, y, barW, h);
 
           ctx.fillStyle = '#334155';
-          ctx.font = '11px Inter, sans-serif';
+          ctx.font = '10px Inter, sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(lbl, x + barW / 2, padTop + chartH + 16);
         });
@@ -1202,7 +1257,7 @@
           );
           drawCanvasFallback(
             liqCanvas,
-            ['Bank', 'Cash', 'Chq Cleared', 'Chq Pending'],
+            ['Bank', 'Cash', 'Cleared', 'Pending'],
             [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt],
             ['#0f294a', '#ea580c', '#15803d', '#d97706'],
             'Liquidity & Cheques'
@@ -1232,7 +1287,7 @@
         liquidityChartInstance = new window.Chart(liqCanvas.getContext('2d'), {
           type: 'bar',
           data: {
-            labels: ['Cash at Bank', 'Cash in Hand', 'Cheques Cleared', 'Cheques Pending'],
+            labels: ['Bank', 'Cash', 'Chq Cleared', 'Chq Pending'],
             datasets: [{
               label: 'Balance / Amount',
               data: [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt],
@@ -1267,16 +1322,16 @@
         if (recentEntriesBody) {
           const topEntries = state.entries.slice(0, 8);
           if (topEntries.length === 0) {
-            recentEntriesBody.innerHTML = '<tr><td colspan="4" class="py-6 px-4 text-center text-slate-400">No ledger entries yet. Click "+ New Entry" or sync from Google Sheets.</td></tr>';
+            recentEntriesBody.innerHTML = '<tr><td colspan="4" class="py-6 px-4 text-center text-slate-400">No ledger entries yet. Tap "+ New Entry" or sync from Google Sheets.</td></tr>';
           } else {
             recentEntriesBody.innerHTML = topEntries.map(e => {
               const isIn = e.type === 'INWARD';
               return `
                 <tr class="hover:bg-slate-50">
-                  <td class="py-2.5 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(e.date))}</td>
-                  <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-navy-950">${escapeHtml(e.book || 'Bank')}</span></td>
-                  <td class="py-2.5 px-4 font-medium text-slate-900">${escapeHtml(e.particular)}</td>
-                  <td class="py-2.5 px-4 text-right font-semibold ${isIn ? 'text-emerald-700' : 'text-rose-700'}">${isIn ? '+' : '-'}${formatMoney(toNum(e.amount))}</td>
+                  <td class="py-2.5 px-3 sm:px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(e.date))}</td>
+                  <td class="py-2.5 px-3 sm:px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-navy-950">${escapeHtml(e.book || 'Bank')}</span></td>
+                  <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-900">${escapeHtml(e.particular)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${isIn ? 'text-emerald-700' : 'text-rose-700'}">${isIn ? '+' : '-'}${formatMoney(toNum(e.amount))}</td>
                 </tr>
               `;
             }).join('');
@@ -1293,10 +1348,10 @@
               const isCleared = String(c.status).toLowerCase() === 'cleared';
               return `
                 <tr class="hover:bg-slate-50">
-                  <td class="py-2.5 px-4 font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</td>
-                  <td class="py-2.5 px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
-                  <td class="py-2.5 px-4 text-right font-semibold text-slate-900">${formatMoney(toNum(c.amount))}</td>
-                  <td class="py-2.5 px-4">
+                  <td class="py-2.5 px-3 sm:px-4 font-mono text-slate-800 whitespace-nowrap">${escapeHtml(c.chequeNumber)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-slate-900 whitespace-nowrap">${formatMoney(toNum(c.amount))}</td>
+                  <td class="py-2.5 px-3 sm:px-4">
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                       ${escapeHtml(c.status || 'Pending')}
                     </span>
@@ -1355,26 +1410,31 @@
         });
 
         const tbody = document.getElementById(config.tbodyId);
-        if (!tbody) return;
+        const mobileList = document.getElementById(config.mobileListId);
+        const mobileSummary = document.getElementById(config.mobileSummaryId);
 
         let sumIn = 0;
         let sumOut = 0;
         let running = isCash ? toNum(state.openingCash) : toNum(state.openingBank);
 
-        if (filtered.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="py-8 px-4 text-center text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Click "+ Add Entry" to record one.</td></tr>`;
-        } else {
-          tbody.innerHTML = filtered.map(e => {
-            const amt = toNum(e.amount);
-            const isIn = e.type === 'INWARD';
-            if (isIn) {
-              sumIn += amt;
-              running += amt;
-            } else {
-              sumOut += amt;
-              running -= amt;
-            }
-            return `
+        const enriched = filtered.map(e => {
+          const amt = toNum(e.amount);
+          const isIn = e.type === 'INWARD';
+          if (isIn) {
+            sumIn += amt;
+            running += amt;
+          } else {
+            sumOut += amt;
+            running -= amt;
+          }
+          return { entry: e, amt, isIn, runningBal: running };
+        });
+
+        if (tbody) {
+          if (enriched.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="py-8 px-4 text-center text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Click "+ Add Entry" to record one.</td></tr>`;
+          } else {
+            tbody.innerHTML = enriched.map(({ entry: e, amt, isIn, runningBal }) => `
               <tr class="hover:bg-slate-50">
                 <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(e.date))}</td>
                 <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(e.particular)}</td>
@@ -1382,7 +1442,7 @@
                 <td class="py-3 px-4 text-slate-500">${escapeHtml(e.reference || '-')}</td>
                 <td class="py-3 px-4 text-right font-semibold text-emerald-700">${isIn ? formatMoney(amt) : '-'}</td>
                 <td class="py-3 px-4 text-right font-semibold text-rose-700">${!isIn ? formatMoney(amt) : '-'}</td>
-                <td class="py-3 px-4 text-right font-semibold text-navy-950">${formatMoney(running)}</td>
+                <td class="py-3 px-4 text-right font-semibold text-navy-950">${formatMoney(runningBal)}</td>
                 <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
                   <button type="button" data-action="edit-entry" data-id="${escapeHtml(e.id)}"
                     class="text-xs font-semibold text-navy-800 hover:underline cursor-pointer">Edit</button>
@@ -1390,8 +1450,52 @@
                     class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
                 </td>
               </tr>
-            `;
-          }).join('');
+            `).join('');
+          }
+        }
+
+        if (mobileList) {
+          if (enriched.length === 0) {
+            mobileList.innerHTML = `<div class="rounded-lg border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Tap "+ Add Entry" to record one.</div>`;
+          } else {
+            mobileList.innerHTML = enriched.map(({ entry: e, amt, isIn, runningBal }) => `
+              <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2 tabular-nums">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 break-words">${escapeHtml(e.particular)}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      ${escapeHtml(normalizeDateStr(e.date))} · ${escapeHtml(e.category || 'General')}${e.reference ? ` · Ref: ${escapeHtml(e.reference)}` : ''}
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-sm font-bold ${isIn ? 'text-emerald-700' : 'text-rose-700'}">
+                      ${isIn ? '+' : '-'}${formatMoney(amt)}
+                    </p>
+                    <p class="text-[11px] text-slate-500">Bal: ${formatMoney(runningBal)}</p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                  <button type="button" data-action="edit-entry" data-id="${escapeHtml(e.id)}"
+                    class="min-h-[32px] px-2.5 py-1 rounded bg-slate-100 text-xs font-semibold text-navy-800 cursor-pointer">Edit</button>
+                  <button type="button" data-action="delete-entry" data-id="${escapeHtml(e.id)}"
+                    class="min-h-[32px] px-2.5 py-1 rounded bg-rose-50 text-xs font-semibold text-rose-600 cursor-pointer">Delete</button>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+
+        if (mobileSummary) {
+          mobileSummary.innerHTML = `
+            <div class="flex items-center justify-between text-slate-600">
+              <span>Entries: <strong>${enriched.length}</strong></span>
+              <span>Balance: <strong class="text-navy-950">${formatMoney(running)}</strong></span>
+            </div>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-200">
+              <span class="text-emerald-700">Inward: <strong>${formatMoney(sumIn)}</strong></span>
+              <span class="text-rose-700">Outward: <strong>${formatMoney(sumOut)}</strong></span>
+            </div>
+          `;
         }
 
         setText(config.totalLabelId, `Filtered Totals (${filtered.length} entries)`);
@@ -1404,7 +1508,8 @@
         const searchEl = document.getElementById('chequeSearch');
         const monthSel = document.getElementById('chequeMonthFilter');
         const tbody = document.getElementById('chequesTableBody');
-        if (!tbody) return;
+        const mobileList = document.getElementById('chequesMobileList');
+        const mobileSummary = document.getElementById('chequesMobileSummary');
 
         if (monthSel) {
           const prevMonth = monthSel.value;
@@ -1434,8 +1539,8 @@
         document.querySelectorAll('.chq-filter-pill').forEach(btn => {
           const isSelected = btn.getAttribute('data-chq-pill') === chequeStatusFilter;
           btn.className = isSelected
-            ? 'chq-filter-pill px-3 py-1 rounded-md text-xs font-semibold bg-navy-950 text-white shadow-sm transition cursor-pointer'
-            : 'chq-filter-pill px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer';
+            ? 'chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-navy-950 text-white shadow-sm transition cursor-pointer'
+            : 'chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer';
         });
 
         const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
@@ -1453,35 +1558,81 @@
         });
 
         let sumFiltered = 0;
-        if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="py-8 px-4 text-center text-slate-400">No cheques match the selected filter. Click "+ Issue Cheque" to add one.</td></tr>';
-        } else {
-          tbody.innerHTML = filtered.map((c, idx) => {
-            const amt = toNum(c.amount);
-            sumFiltered += amt;
-            const isCleared = String(c.status).toLowerCase() === 'cleared';
-            return `
-              <tr class="hover:bg-slate-50">
-                <td class="py-3 px-4 text-slate-500">${idx + 1}</td>
-                <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(c.issuedDate))}</td>
-                <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
-                <td class="py-3 px-4 font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(c.purpose || '-')}</td>
-                <td class="py-3 px-4 text-right font-semibold text-slate-900">${formatMoney(amt)}</td>
-                <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(c.clearedDate) || '-')}</td>
-                <td class="py-3 px-4">
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                    ${isCleared ? 'Cleared' : 'Pending'}
-                  </span>
-                </td>
-                <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
-                  ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">Mark Cleared</button>` : ''}
-                  <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-navy-800 hover:underline cursor-pointer">Edit</button>
-                  <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
-                </td>
-              </tr>
-            `;
-          }).join('');
+        for (const c of filtered) sumFiltered += toNum(c.amount);
+
+        if (tbody) {
+          if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="py-8 px-4 text-center text-slate-400">No cheques match the selected filter. Click "+ Issue Cheque" to add one.</td></tr>';
+          } else {
+            tbody.innerHTML = filtered.map((c, idx) => {
+              const amt = toNum(c.amount);
+              const isCleared = String(c.status).toLowerCase() === 'cleared';
+              return `
+                <tr class="hover:bg-slate-50">
+                  <td class="py-3 px-4 text-slate-500">${idx + 1}</td>
+                  <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(c.issuedDate))}</td>
+                  <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
+                  <td class="py-3 px-4 font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</td>
+                  <td class="py-3 px-4 text-slate-600">${escapeHtml(c.purpose || '-')}</td>
+                  <td class="py-3 px-4 text-right font-semibold text-slate-900">${formatMoney(amt)}</td>
+                  <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(c.clearedDate) || '-')}</td>
+                  <td class="py-3 px-4">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                      ${isCleared ? 'Cleared' : 'Pending'}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
+                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">Mark Cleared</button>` : ''}
+                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-navy-800 hover:underline cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+
+        if (mobileList) {
+          if (filtered.length === 0) {
+            mobileList.innerHTML = '<div class="rounded-lg border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No cheques match the selected filter. Tap "+ Issue Cheque" to add one.</div>';
+          } else {
+            mobileList.innerHTML = filtered.map((c, idx) => {
+              const amt = toNum(c.amount);
+              const isCleared = String(c.status).toLowerCase() === 'cleared';
+              return `
+                <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2 tabular-nums">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-semibold text-navy-950 bg-slate-100 px-2 py-0.5 rounded">#${escapeHtml(c.chequeNumber)}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                          ${isCleared ? 'Cleared' : 'Pending'}
+                        </span>
+                      </div>
+                      <p class="text-sm font-semibold text-slate-900 mt-1 break-words">${idx + 1}. ${escapeHtml(c.payee)}</p>
+                      <p class="text-xs text-slate-500 mt-0.5">
+                        Issued: ${escapeHtml(normalizeDateStr(c.issuedDate))}${c.purpose ? ` · ${escapeHtml(c.purpose)}` : ''}
+                      </p>
+                      ${isCleared && c.clearedDate ? `<p class="text-[11px] text-emerald-700 mt-0.5">Cleared: ${escapeHtml(normalizeDateStr(c.clearedDate))}</p>` : ''}
+                    </div>
+                    <p class="text-sm font-bold text-slate-900 shrink-0">${formatMoney(amt)}</p>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[32px] px-2.5 py-1 rounded bg-emerald-50 text-xs font-semibold text-emerald-700 cursor-pointer">Mark Cleared</button>` : ''}
+                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[32px] px-2.5 py-1 rounded bg-slate-100 text-xs font-semibold text-navy-800 cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[32px] px-2.5 py-1 rounded bg-rose-50 text-xs font-semibold text-rose-600 cursor-pointer">Delete</button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+
+        if (mobileSummary) {
+          mobileSummary.innerHTML = `
+            <span>Filtered (${filtered.length} cheque${filtered.length === 1 ? '' : 's'})</span>
+            <span>${formatMoney(sumFiltered)}</span>
+          `;
         }
 
         setText('chequeTotalLabel', `Filtered Cheque Total (${filtered.length} cheque${filtered.length === 1 ? '' : 's'})`);
@@ -1531,8 +1682,11 @@
         document.querySelectorAll('.nav-tab').forEach(btn => {
           const isCurrent = btn.getAttribute('data-nav') === targetKey;
           btn.className = isCurrent
-            ? 'nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-navy-950 shadow-sm cursor-pointer'
-            : 'nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer';
+            ? 'nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-navy-950 shadow-sm cursor-pointer'
+            : 'nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-900 cursor-pointer';
+          if (isCurrent && btn.scrollIntoView) {
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
         });
       }
 
@@ -1704,8 +1858,7 @@
 
         const spreadsheetId = getSpreadsheetId();
         isSyncInProgress = true;
-        const icon = document.getElementById('syncIcon');
-        if (icon) icon.classList.add('animate-spin');
+        document.querySelectorAll('.sync-icon').forEach(el => el.classList.add('animate-spin'));
 
         try {
           const availableTabs = await discoverTabNames(spreadsheetId);
@@ -1784,7 +1937,7 @@
           }
         } finally {
           isSyncInProgress = false;
-          if (icon) icon.classList.remove('animate-spin');
+          document.querySelectorAll('.sync-icon').forEach(el => el.classList.remove('animate-spin'));
         }
       }
 
@@ -2121,7 +2274,9 @@
         });
 
         on('btnManualSync', 'click', () => syncFromGoogleSheet(false));
+        on('btnManualSyncMobile', 'click', () => syncFromGoogleSheet(false));
         on('btnScrollTop', 'click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        on('btnScrollTopMobile', 'click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         on('btnDismissBanner', 'click', () => {
           const b = document.getElementById('syncBanner');
           if (b) b.classList.add('hidden');
@@ -2438,6 +2593,12 @@
               cheques: state.cheques.length
             }
           }, null, 2);
+        });
+
+        window.addEventListener('resize', () => {
+          if (state.activeView === 'dashboard') {
+            renderCharts(computeTotals());
+          }
         });
       }
 
