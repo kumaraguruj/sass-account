@@ -220,7 +220,7 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-teal-600">
           <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Book Collection</p>
           <p id="kpiBookCollection" class="text-xl sm:text-2xl font-bold text-teal-800 mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiBookCollectionSub" class="text-xs text-slate-500 mt-1 tabular-nums">Street: ₹0 | VIP/QR: ₹0</p>
+          <p id="kpiBookCollectionSub" class="text-xs text-slate-500 mt-1 tabular-nums">Street: ₹0 | Special: ₹0</p>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-slatex-500 sm:col-span-2 lg:col-span-1">
@@ -255,7 +255,7 @@
           <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex items-center justify-between gap-2">
             <div>
               <h2 class="text-base sm:text-lg font-bold">Book Collection Summary</h2>
-              <p class="text-xs text-slate-300">Street (Books 1–40) &amp; VIP/QR (20 Books)</p>
+              <p class="text-xs text-slate-300">Street Collection (40) &amp; Special Book Collection (20)</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span id="bookColCountBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-amber-200">
@@ -285,14 +285,14 @@
           <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-navy-800 bg-navy-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h2 class="text-base sm:text-lg font-bold">Book Collection — Grouped by Book Type</h2>
-              <p class="text-xs text-slate-300">Street / Area (Books 1–40) &amp; VIP / QR (20 Books) by responsible member</p>
+              <p class="text-xs text-slate-300">Street Collection &amp; Special Book Collection by responsible member</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <select id="dashBookTypeFilter" aria-label="Filter by Book Type"
                 class="min-h-[32px] px-2.5 py-1 rounded-lg bg-navy-900 border border-navy-800 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-300">
                 <option value="ALL">All Book Types</option>
-                <option value="Street / Area">Street / Area</option>
-                <option value="VIP / QR">VIP / QR</option>
+                <option value="Street Collection">Street Collection</option>
+                <option value="Special Book Collection">Special Book Collection</option>
               </select>
               <input id="dashRespSearch" type="text" placeholder="Filter responsible..."
                 class="min-h-[32px] w-full sm:w-40 px-2.5 py-1 rounded-lg bg-navy-900 border border-navy-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-300" />
@@ -1006,7 +1006,8 @@
         bank: 'Bank Book',
         cash: 'Cash Book',
         cheques: 'Cheques Issued',
-        bookCollection: 'Book Collection'
+        streetCollection: 'Street Collection',
+        specialBookCollection: 'Special Book Collection'
       };
 
       try {
@@ -1044,7 +1045,13 @@
           const parsed = JSON.parse(raw);
           const validView = VIEW_IDS[parsed.activeView] ? parsed.activeView : 'dashboard';
           const cleanBookCollections = Array.isArray(parsed.bookCollections)
-            ? parsed.bookCollections.filter(b => !isBookCollectionHeaderEntry(b && b.responsible, b && b.bookLabel))
+            ? parsed.bookCollections
+                .filter(b => !isBookCollectionHeaderEntry(b && b.responsible, b && b.bookLabel))
+                .map(b => Object.assign({}, b, {
+                  stream: (b && (b.stream === 'VIP / QR' || b.stream === 'Special Book Collection'))
+                    ? 'Special Book Collection'
+                    : 'Street Collection'
+                }))
             : [];
           return Object.assign(createInitialSnapshot(), parsed, {
             activeView: validView,
@@ -1266,11 +1273,11 @@
         const pendingCheques = state.cheques.filter(c => String(c.status).toLowerCase() !== 'cleared');
 
         const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
-        const streetCols = validCols.filter(b => b.stream !== 'VIP / QR');
-        const vipCols = validCols.filter(b => b.stream === 'VIP / QR');
+        const streetCols = validCols.filter(b => b.stream !== 'Special Book Collection' && b.stream !== 'VIP / QR');
+        const specialCols = validCols.filter(b => b.stream === 'Special Book Collection' || b.stream === 'VIP / QR');
         const streetColAmt = streetCols.reduce((s, b) => s + toNum(b.amount), 0);
-        const vipColAmt = vipCols.reduce((s, b) => s + toNum(b.amount), 0);
-        const totalBookColAmt = streetColAmt + vipColAmt;
+        const specialColAmt = specialCols.reduce((s, b) => s + toNum(b.amount), 0);
+        const totalBookColAmt = streetColAmt + specialColAmt;
 
         return {
           bankInward,
@@ -1286,8 +1293,8 @@
           pendingAmt: pendingCheques.reduce((s, c) => s + toNum(c.amount), 0),
           streetColAmt,
           streetColBooks: streetCols.length,
-          vipColAmt,
-          vipColBooks: vipCols.length,
+          specialColAmt,
+          specialColBooks: specialCols.length,
           totalBookColAmt,
           totalBookColBooks: validCols.length
         };
@@ -1417,7 +1424,7 @@
 
       function renderBookCollectionDashboard(t) {
         setText('kpiBookCollection', formatMoney(t.totalBookColAmt));
-        setText('kpiBookCollectionSub', `Street: ${formatMoney(t.streetColAmt)} | VIP/QR: ${formatMoney(t.vipColAmt)}`);
+        setText('kpiBookCollectionSub', `Street: ${formatMoney(t.streetColAmt)} | Special: ${formatMoney(t.specialColAmt)}`);
 
         const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
         const activeBooksCount = validCols.filter(b => toNum(b.amount) > 0 || (b.responsible && b.responsible !== 'Unassigned')).length;
@@ -1425,25 +1432,25 @@
 
         const summaryBody = document.getElementById('dashBookSummaryBody');
         if (summaryBody) {
-          const streetActive = validCols.filter(b => b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
-          const vipActive = validCols.filter(b => b.stream === 'VIP / QR' && toNum(b.amount) > 0).length;
+          const streetActive = validCols.filter(b => b.stream !== 'Special Book Collection' && b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
+          const specialActive = validCols.filter(b => (b.stream === 'Special Book Collection' || b.stream === 'VIP / QR') && toNum(b.amount) > 0).length;
           const summaryRows = [
             {
-              label: 'Street / Area Collections',
+              label: 'Street Collection',
               sub: 'Books 1–40',
               books: `${streetActive} / 40`,
               amount: t.streetColAmt
             },
             {
-              label: 'Special / VIP & QR Collections',
+              label: 'Special Book Collection',
               sub: '20 Books',
-              books: `${vipActive} / 20`,
-              amount: t.vipColAmt
+              books: `${specialActive} / 20`,
+              amount: t.specialColAmt
             },
             {
               label: 'Total Book Collection',
               sub: 'All 60 Receipt Books',
-              books: `${streetActive + vipActive} / 60`,
+              books: `${streetActive + specialActive} / 60`,
               amount: t.totalBookColAmt,
               isTotal: true
             }
@@ -1467,11 +1474,13 @@
           const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
           const selectedStream = (typeFilterEl && typeFilterEl.value) || 'ALL';
 
-          const streamOrder = ['Street / Area', 'VIP / QR'];
+          const streamOrder = ['Street Collection', 'Special Book Collection'];
           const streamGroups = new Map();
 
           for (const item of validCols) {
-            const stream = item.stream === 'VIP / QR' ? 'VIP / QR' : 'Street / Area';
+            const stream = (item.stream === 'Special Book Collection' || item.stream === 'VIP / QR')
+              ? 'Special Book Collection'
+              : 'Street Collection';
             if (selectedStream !== 'ALL' && stream !== selectedStream) continue;
 
             const name = (item.responsible || '').trim() || 'Unassigned';
@@ -1507,8 +1516,8 @@
             for (const streamName of orderedStreams) {
               const sg = streamGroups.get(streamName);
               const streamShare = grandTotal > 0 ? ((sg.totalAmt / grandTotal) * 100).toFixed(1) : '0.0';
-              const isVip = streamName === 'VIP / QR';
-              const badgeCls = isVip
+              const isSpecial = streamName === 'Special Book Collection';
+              const badgeCls = isSpecial
                 ? 'bg-amber-100 text-amber-900 border-amber-200'
                 : 'bg-sky-100 text-navy-900 border-sky-200';
 
@@ -2069,12 +2078,12 @@
         return cheques;
       }
 
-      function parseBookCollectionRows(rows) {
+      function parseSingleBookCollectionSheet(rows, streamName, prefix, maxBooks) {
         const items = [];
         if (!Array.isArray(rows) || rows.length < 2) return items;
 
         let headerIdx = -1;
-        for (let r = 0; r < Math.min(rows.length, 12); r++) {
+        for (let r = 0; r < Math.min(rows.length, 10); r++) {
           const joined = (rows[r] || []).join(' ').toLowerCase();
           if (
             (joined.includes('book') || joined.includes('sl') || joined.includes('s.no') || joined.includes('s no') || joined.includes('no')) &&
@@ -2087,111 +2096,37 @@
         if (headerIdx < 0) headerIdx = 0;
         const headerRow = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
 
-        const hasRightSideHeader = headerRow.some((h, idx) => idx >= 5 && (h.includes('book') || h.includes('vip') || h.includes('qr') || h.includes('amount') || h.includes('resp') || h.includes('name')));
-
-        if (hasRightSideHeader) {
-          let streetBookIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('book') || h.includes('no')));
-          if (streetBookIdx < 0) streetBookIdx = 1;
-          let streetRespIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area') || h.includes('street')));
-          if (streetRespIdx < 0) streetRespIdx = 2;
-          let streetAmtIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
-          if (streetAmtIdx < 0) streetAmtIdx = 3;
-
-          let vipBookIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('book') || h.includes('no') || h.includes('vip') || h.includes('qr')));
-          if (vipBookIdx < 0) vipBookIdx = 7;
-          let vipRespIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member')));
-          if (vipRespIdx < 0) vipRespIdx = 8;
-          let vipAmtIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
-          if (vipAmtIdx < 0) vipAmtIdx = 9;
-
-          let streetCount = 0;
-          let vipCount = 0;
-          for (let i = headerIdx + 1; i < rows.length; i++) {
-            const r = rows[i] || [];
-            const rowText = r.join(' ').toLowerCase();
-            if (rowText.includes('grand total') || rowText.startsWith('total')) continue;
-
-            const stBookRaw = String(r[streetBookIdx] ?? r[0] ?? '').trim();
-            const stResp = String(r[streetRespIdx] ?? '').trim();
-            const stAmt = toNum(r[streetAmtIdx]);
-            if (
-              streetCount < 40 &&
-              !stBookRaw.toLowerCase().includes('total') &&
-              !isBookCollectionHeaderEntry(stResp, stBookRaw) &&
-              (stBookRaw || stResp || stAmt > 0)
-            ) {
-              streetCount++;
-              const bNum = stBookRaw || String(streetCount);
-              items.push({
-                id: `bc-street-${i}`,
-                stream: 'Street / Area',
-                bookLabel: /^\d+$/.test(bNum) ? `Book #${bNum}` : bNum,
-                responsible: stResp || 'Unassigned',
-                amount: stAmt
-              });
-            }
-
-            const vpBookRaw = String(r[vipBookIdx] ?? '').trim();
-            const vpResp = String(r[vipRespIdx] ?? '').trim();
-            const vpAmt = toNum(r[vipAmtIdx]);
-            if (
-              vipCount < 20 &&
-              !vpBookRaw.toLowerCase().includes('total') &&
-              !isBookCollectionHeaderEntry(vpResp, vpBookRaw) &&
-              (vpBookRaw || vpResp || vpAmt > 0)
-            ) {
-              vipCount++;
-              const vNum = vpBookRaw || `VIP-${vipCount}`;
-              items.push({
-                id: `bc-vip-${i}`,
-                stream: 'VIP / QR',
-                bookLabel: /^\d+$/.test(vNum) ? `VIP #${vNum}` : vNum,
-                responsible: vpResp || 'Unassigned',
-                amount: vpAmt
-              });
-            }
-          }
-          return items;
-        }
-
         let bookIdx = headerRow.findIndex(h => h.includes('book') || h.includes('no'));
         if (bookIdx < 0) bookIdx = 1;
-        let streamIdx = headerRow.findIndex(h => h.includes('type') || h.includes('stream') || h.includes('category') || h.includes('head'));
-        let respIdx = headerRow.findIndex(h => h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area'));
+        let respIdx = headerRow.findIndex(h => h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area') || h.includes('street'));
         if (respIdx < 0) respIdx = 2;
         let amtIdx = headerRow.findIndex(h => h.includes('amount') || h.includes('total') || h.includes('collect'));
         if (amtIdx < 0) amtIdx = 3;
 
-        let currentSectionStream = 'Street / Area';
-        let rowCounter = 0;
+        let count = 0;
         for (let i = headerIdx + 1; i < rows.length; i++) {
           const r = rows[i] || [];
           const joined = r.join(' ').trim();
           const lower = joined.toLowerCase();
-          if (!joined || lower.includes('total')) continue;
-
-          if (lower.includes('vip') || lower.includes('qr') || lower.includes('special')) {
-            currentSectionStream = 'VIP / QR';
-            if (toNum(r[amtIdx]) === 0 && !String(r[respIdx] || '').trim()) continue;
-          }
+          if (!joined || lower.includes('grand total') || lower.startsWith('total')) continue;
 
           const rawBook = String(r[bookIdx] ?? r[0] ?? '').trim();
           const resp = String(r[respIdx] ?? '').trim();
           const amt = toNum(r[amtIdx]);
-          if (isBookCollectionHeaderEntry(resp, rawBook)) continue;
-          if (!rawBook && !resp && amt === 0) continue;
 
-          rowCounter++;
-          const explicitStream = streamIdx >= 0 ? String(r[streamIdx] || '').toLowerCase() : '';
-          const isVip = explicitStream.includes('vip') || explicitStream.includes('qr') || lower.includes('vip') || lower.includes('qr') || currentSectionStream === 'VIP / QR' || rowCounter > 40;
-          const stream = isVip ? 'VIP / QR' : 'Street / Area';
+          if (rawBook.toLowerCase().includes('total') || isBookCollectionHeaderEntry(resp, rawBook)) continue;
+          if (!rawBook && !resp && amt === 0) continue;
+          if (maxBooks && count >= maxBooks) break;
+
+          count++;
+          const defaultPrefix = streamName === 'Special Book Collection' ? 'Special' : 'Book';
           const label = rawBook
-            ? (/^\d+$/.test(rawBook) ? `${isVip ? 'VIP' : 'Book'} #${rawBook}` : rawBook)
-            : `${isVip ? 'VIP' : 'Book'} #${rowCounter}`;
+            ? (/^\d+$/.test(rawBook) ? `${defaultPrefix} #${rawBook}` : rawBook)
+            : `${defaultPrefix} #${count}`;
 
           items.push({
-            id: `bc-row-${i}`,
-            stream,
+            id: `${prefix}-${i}`,
+            stream: streamName,
             bookLabel: label,
             responsible: resp || 'Unassigned',
             amount: amt
@@ -2239,12 +2174,15 @@
         const bankMatch = titles.find(t => t.toLowerCase().includes('bank'));
         const cashMatch = titles.find(t => t.toLowerCase().includes('cash'));
         const chqMatch = titles.find(t => t.toLowerCase().includes('cheque'));
-        const colMatch = titles.find(t => t.toLowerCase().includes('book') && t.toLowerCase().includes('col'))
-          || titles.find(t => t.toLowerCase().includes('collection'));
+        const streetMatch = titles.find(t => t.trim().toLowerCase() === 'street collection')
+          || titles.find(t => t.toLowerCase().includes('street') && t.toLowerCase().includes('col'));
+        const specialMatch = titles.find(t => t.trim().toLowerCase() === 'special book collection')
+          || titles.find(t => t.toLowerCase().includes('special') && t.toLowerCase().includes('col'));
         if (bankMatch) resolvedTabNames.bank = bankMatch;
         if (cashMatch) resolvedTabNames.cash = cashMatch;
         if (chqMatch) resolvedTabNames.cheques = chqMatch;
-        if (colMatch) resolvedTabNames.bookCollection = colMatch;
+        if (streetMatch) resolvedTabNames.streetCollection = streetMatch;
+        if (specialMatch) resolvedTabNames.specialBookCollection = specialMatch;
         return titles;
       }
 
@@ -2270,7 +2208,7 @@
         updateSyncIndicators('Sync: Pulling...');
 
         try {
-          let bankRows = [], cashRows = [], chequeRows = [], bookColRows = [];
+          let bankRows = [], cashRows = [], chequeRows = [], streetColRows = [], specialColRows = [];
           let usedOAuth = false;
           let availableTabs = [];
 
@@ -2280,7 +2218,8 @@
               `'${resolvedTabNames.bank}'!A1:H500`,
               `'${resolvedTabNames.cash}'!A1:F500`,
               `'${resolvedTabNames.cheques}'!A1:H500`,
-              `'${resolvedTabNames.bookCollection}'!A1:N150`
+              `'${resolvedTabNames.streetCollection}'!A1:H150`,
+              `'${resolvedTabNames.specialBookCollection}'!A1:H150`
             ];
             const query = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&') + '&valueRenderOption=FORMATTED_VALUE';
             const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?${query}`;
@@ -2295,30 +2234,36 @@
             bankRows = (valueRanges[0] && valueRanges[0].values) || [];
             cashRows = (valueRanges[1] && valueRanges[1].values) || [];
             chequeRows = (valueRanges[2] && valueRanges[2].values) || [];
-            bookColRows = (valueRanges[3] && valueRanges[3].values) || [];
+            streetColRows = (valueRanges[3] && valueRanges[3].values) || [];
+            specialColRows = (valueRanges[4] && valueRanges[4].values) || [];
             usedOAuth = true;
           } else {
-            const [bRes, cRes, qRes, bcRes] = await Promise.all([
+            const [bRes, cRes, qRes, stRes, spRes] = await Promise.all([
               fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.bank, 'Bank Book', 'BankBook']),
               fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.cash, 'Cash Book', 'CashBook']),
               fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.cheques, 'Cheques Issued', 'Cheques']),
-              fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.bookCollection, 'Book Collection', 'Book Collections'])
+              fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.streetCollection, 'Street Collection']),
+              fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.specialBookCollection, 'Special Book Collection'])
             ]);
             bankRows = bRes.rows;
             cashRows = cRes.rows;
             chequeRows = qRes.rows;
-            bookColRows = bcRes.rows;
+            streetColRows = stRes.rows;
+            specialColRows = spRes.rows;
             if (bRes.rows.length) resolvedTabNames.bank = bRes.tabName;
             if (cRes.rows.length) resolvedTabNames.cash = cRes.tabName;
             if (qRes.rows.length) resolvedTabNames.cheques = qRes.tabName;
-            if (bcRes.rows.length) resolvedTabNames.bookCollection = bcRes.tabName;
+            if (stRes.rows.length) resolvedTabNames.streetCollection = stRes.tabName;
+            if (spRes.rows.length) resolvedTabNames.specialBookCollection = spRes.tabName;
           }
 
           const parsedBank = parseBookRows(bankRows, 'Bank');
           const parsedCash = parseBookRows(cashRows, 'Cash');
           const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
           const syncedCheques = parseChequeRows(chequeRows);
-          const syncedBookCols = parseBookCollectionRows(bookColRows);
+          const parsedStreetCols = parseSingleBookCollectionSheet(streetColRows, 'Street Collection', 'bc-street', 40);
+          const parsedSpecialCols = parseSingleBookCollectionSheet(specialColRows, 'Special Book Collection', 'bc-special', 20);
+          const syncedBookCols = parsedStreetCols.concat(parsedSpecialCols);
 
           const prevSignature = JSON.stringify({
             entries: state.entries,
@@ -2343,7 +2288,8 @@
             }
           }
 
-          if (syncedBookCols.length > 0 || (usedOAuth && availableTabs.includes(resolvedTabNames.bookCollection))) {
+          const hasBookCollectionTabs = availableTabs.includes(resolvedTabNames.streetCollection) || availableTabs.includes(resolvedTabNames.specialBookCollection);
+          if (syncedBookCols.length > 0 || (usedOAuth && hasBookCollectionTabs)) {
             if (!(syncedBookCols.length === 0 && state.bookCollections.length > 0 && silent)) {
               state.bookCollections = syncedBookCols;
             }
