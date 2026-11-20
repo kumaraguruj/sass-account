@@ -20,11 +20,12 @@
           },
           colors: {
             navy: {
-              850: '#10243e',
-              900: '#0c1c30',
-              950: '#071220'
+              850: '#162f52',
+              900: '#0f243e',
+              950: '#091729'
             },
             slatex: {
+              500: '#486581',
               600: '#334e68',
               700: '#243b53'
             },
@@ -74,13 +75,13 @@
 
         <div class="flex flex-wrap items-center gap-2.5">
           <select id="currencySelect" aria-label="Currency"
-            class="bg-navy-850 text-white text-xs sm:text-sm font-medium border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember-500">
+            class="bg-navy-850 text-white text-xs sm:text-sm font-medium border border-slatex-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember-500">
             <option value="INR" selected>₹ INR</option>
             <option value="USD">$ USD</option>
           </select>
 
           <button id="btnContraTransfer" type="button"
-            class="bg-slatex-700 hover:bg-slatex-600 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slate-600 transition cursor-pointer">
+            class="bg-slatex-700 hover:bg-slatex-600 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slatex-600 transition cursor-pointer">
             Contra Transfer
           </button>
 
@@ -92,7 +93,7 @@
       </div>
 
       <!-- Navigation Bar -->
-      <nav aria-label="Primary Navigation" class="mt-4 pt-3 border-t border-slate-700/70 flex flex-wrap items-center justify-between gap-2">
+      <nav aria-label="Primary Navigation" class="mt-4 pt-3 border-t border-slatex-600/60 flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button data-nav="dashboard" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-navy-900 shadow-sm cursor-pointer">
             Executive Dashboard
@@ -106,27 +107,25 @@
           <button data-nav="cheques" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-850 cursor-pointer">
             Cheques &amp; Clearance
           </button>
-          <button data-nav="receipts" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-850 cursor-pointer">
-            Receipts
-          </button>
           <button data-nav="import" type="button" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-navy-850 cursor-pointer">
             Import / Export CSV
           </button>
         </div>
 
         <div class="flex items-center gap-2 text-xs text-slate-300">
-          <span id="oauthStatusBadge" class="px-2 py-0.5 rounded-full bg-navy-850 border border-slate-700 text-slate-300">
+          <span id="autoPullIndicator" class="px-2 py-0.5 rounded-full bg-navy-850 border border-slatex-600/60 text-slate-300">
+            5s Auto-Pull: Standby
+          </span>
+          <span id="oauthStatusBadge" class="px-2 py-0.5 rounded-full bg-navy-850 border border-slatex-600/60 text-slate-300">
             OAuth Ready
           </span>
           <span id="lastRefreshedLabel" class="hidden sm:inline">Last refreshed: Just now</span>
-          <button id="btnManualSync" type="button" title="Sync now from Google Sheet"
-            class="p-2 rounded-lg bg-navy-850 hover:bg-slatex-700 text-white border border-slate-700 transition cursor-pointer">
-            <svg id="syncIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+          <button id="btnManualSync" type="button" title="Refresh from Google Sheet (↻)" aria-label="Refresh from Google Sheet"
+            class="px-2.5 py-1.5 rounded-lg bg-navy-850 hover:bg-slatex-700 text-white border border-slatex-600/70 transition cursor-pointer flex items-center gap-1">
+            <span id="syncIcon" class="inline-block text-sm leading-none">&#8635;</span>
           </button>
-          <button id="btnScrollTop" type="button" title="Scroll to top"
-            class="p-2 rounded-lg bg-navy-850 hover:bg-slatex-700 text-white border border-slate-700 transition cursor-pointer">
+          <button id="btnScrollTop" type="button" title="Scroll to top" aria-label="Scroll to top"
+            class="p-2 rounded-lg bg-navy-850 hover:bg-slatex-700 text-white border border-slatex-600/70 transition cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
             </svg>
@@ -137,7 +136,7 @@
   </header>
 
   <!-- Sync Status Banner -->
-  <div id="syncBanner" class="bg-blue-50/90 border-b border-blue-200/80 text-slate-800 text-xs sm:text-sm">
+  <div id="syncBanner" class="bg-slate-100/95 border-b border-slate-200 text-slate-800 text-xs sm:text-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3">
       <p id="syncBannerText" class="truncate">
         Ready for <strong>Income &amp; Expenses - 2026</strong> — Two-way Google Sheets API v4 (OAuth 2.0) enabled.
@@ -172,10 +171,10 @@
           <p id="kpiCashSub" class="text-xs text-slate-500 mt-1 tabular-nums">Inward: ₹0 | Outward: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200/90 shadow-sm p-5 border-t-4 border-t-emerald-600">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Book Collection</p>
-          <p id="kpiCollection" class="text-2xl font-bold text-slate-900 mt-1.5 tabular-nums">₹0</p>
-          <p id="kpiCollectionSub" class="text-xs text-slate-500 mt-1 tabular-nums">Street: ₹0 | VIP/QR: ₹0</p>
+        <div class="bg-white rounded-xl border border-slate-200/90 shadow-sm p-5 border-t-4 border-t-slatex-500">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cheques Cleared</p>
+          <p id="kpiChequesCleared" class="text-2xl font-bold text-slate-900 mt-1.5 tabular-nums">₹0</p>
+          <p id="kpiChequesClearedSub" class="text-xs text-slate-500 mt-1 tabular-nums">0 Cleared | Pending: ₹0</p>
         </div>
       </div>
 
@@ -200,11 +199,9 @@
 
       <!-- Monthly Cash Book Summary Table -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-200 bg-navy-900 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h2 class="text-lg font-bold">Monthly Cash Book Summary (Cash Flow)</h2>
-            <p class="text-xs text-slate-300">Period-wise CashBook &amp; ledger cash flow movement</p>
-          </div>
+        <div class="px-5 py-4 border-b border-slate-200 bg-navy-900 text-white">
+          <h2 class="text-lg font-bold">Monthly Cash Book Summary (Cash Flow)</h2>
+          <p class="text-xs text-slate-300">Period-wise CashBook movement and cumulative balance</p>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-sm">
@@ -227,7 +224,7 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-slate-200 bg-navy-900 text-white">
             <h2 class="text-lg font-bold">Tally vs Bank Reconciliation</h2>
-            <p class="text-xs text-slate-300">Variance check across book and bank totals</p>
+            <p class="text-xs text-slate-300">Variance check across BankBook and CashBook totals</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
@@ -235,7 +232,7 @@
                 <tr>
                   <th class="py-3 px-4">Reconciliation Item</th>
                   <th class="py-3 px-4 text-right">Bank Book</th>
-                  <th class="py-3 px-4 text-right">Tally / Ledger</th>
+                  <th class="py-3 px-4 text-right">Cash / Tally</th>
                   <th class="py-3 px-4 text-right">Variance</th>
                 </tr>
               </thead>
@@ -247,7 +244,7 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-slate-200 bg-navy-900 text-white">
             <h2 class="text-lg font-bold">Book Collection &amp; Cheques Issued Audit</h2>
-            <p class="text-xs text-slate-300">Receipt books and cheque clearance summary</p>
+            <p class="text-xs text-slate-300">Book collection summary and cheque clearance audit</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
@@ -341,7 +338,7 @@
           <div>
             <h2 class="text-xl font-bold text-navy-900">Cheques Issued &amp; Clearance Register</h2>
             <p class="text-xs sm:text-sm text-slate-500">
-              Aligned with Cheques Issued (Col B: Issued Date · Col C: Cheque Name · Col D: Cheque Number · Col E: Purpose · Col F: Amount · Col G: Cleared Date · Col H: Status)
+              Columns: S No · Issued Date · Cheque Name · Cheque Number · Purpose · Amount · Cleared Date · Status
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
@@ -375,20 +372,21 @@
           <table class="w-full text-left border-collapse text-sm">
             <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
               <tr>
+                <th class="py-3 px-4">S No</th>
                 <th class="py-3 px-4">Issued Date</th>
+                <th class="py-3 px-4">Cheque Name</th>
                 <th class="py-3 px-4">Cheque Number</th>
-                <th class="py-3 px-4">Cheque Name (Payee)</th>
                 <th class="py-3 px-4">Purpose</th>
                 <th class="py-3 px-4 text-right">Amount</th>
-                <th class="py-3 px-4">Status</th>
                 <th class="py-3 px-4">Cleared Date</th>
+                <th class="py-3 px-4">Status</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="chequesTableBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
             <tfoot class="bg-slate-50 border-t-2 border-slate-200 font-semibold text-sm tabular-nums">
               <tr>
-                <td id="chequeTotalLabel" colspan="4" class="py-3 px-4 text-slate-700">Filtered Cheque Total (0 cheques)</td>
+                <td id="chequeTotalLabel" colspan="5" class="py-3 px-4 text-slate-700">Filtered Cheque Total (0 cheques)</td>
                 <td id="chequeTotalAmount" class="py-3 px-4 text-right text-navy-900">₹0</td>
                 <td colspan="3" class="py-3 px-4"></td>
               </tr>
@@ -398,66 +396,7 @@
       </div>
     </section>
 
-    <!-- 4. RECEIPTS VIEW -->
-    <section id="view-receipts" class="hidden space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div>
-            <h2 class="text-xl font-bold text-navy-900">Receipts Register (2026)</h2>
-            <p class="text-xs sm:text-sm text-slate-500">
-              Col A: Receipt # · Col B: Date · Col C: Donor · Col D: Collected By · Col E: Phone · Col F: Mode · Col G: Amount · Col H: Purpose · Col I: Remarks
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2.5">
-            <button id="btnRepairReceiptsCols" type="button"
-              class="px-3.5 py-2 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs sm:text-sm font-medium transition cursor-pointer">
-              Sync &amp; Fix Sheet Columns
-            </button>
-            <button id="btnAddReceipt" type="button"
-              class="px-4 py-2 rounded-lg bg-navy-900 hover:bg-navy-850 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
-              + Add Receipt
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-          <input id="receiptSearch" type="text" placeholder="Search receipt #, donor, collector..."
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
-          <select id="receiptModeFilter"
-            class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy-900">
-            <option value="ALL">All Modes</option>
-            <option value="Cash">Cash</option>
-            <option value="Online">Online</option>
-            <option value="Cheque">Cheque</option>
-          </select>
-          <div class="flex items-center justify-end px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold text-navy-900 tabular-nums">
-            Total Receipts: <span id="receiptTotalDisplay" class="ml-1.5">₹0</span>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto border border-slate-200 rounded-lg">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
-              <tr>
-                <th class="py-3 px-4">Receipt #</th>
-                <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Donor</th>
-                <th class="py-3 px-4">Collected By</th>
-                <th class="py-3 px-4">Phone</th>
-                <th class="py-3 px-4">Mode</th>
-                <th class="py-3 px-4 text-right">Amount</th>
-                <th class="py-3 px-4">Purpose</th>
-                <th class="py-3 px-4">Remarks</th>
-                <th class="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="receiptsTableBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. IMPORT / EXPORT CSV & GOOGLE SHEETS API v4 OAUTH SYNC -->
+    <!-- 4. IMPORT / EXPORT CSV & GOOGLE SHEETS API v4 OAUTH SYNC -->
     <section id="view-import" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Import CSV -->
@@ -542,7 +481,7 @@
           <div>
             <h2 class="text-xl font-bold text-navy-900">Script-Free Google Sheets API v4 (OAuth 2.0) Two-Way Sync</h2>
             <p class="text-xs sm:text-sm text-slate-500">
-              Reads and writes directly via Google Sheets API v4 using OAuth 2.0 (polls every 5 seconds when signed in)
+              Reads and writes directly via Google Sheets API v4 using OAuth 2.0 (auto-pulls every 5 seconds when signed in)
             </p>
           </div>
           <span id="oauthConnectionState" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
@@ -649,7 +588,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Reference</label>
-            <input id="entryRef" type="text" placeholder="Voucher / UTR / Receipt #"
+            <input id="entryRef" type="text" placeholder="Voucher / UTR / Ref #"
               class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
           </div>
         </div>
@@ -765,75 +704,6 @@
     </div>
   </div>
 
-  <!-- RECEIPT MODAL -->
-  <div id="receiptModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 id="receiptModalTitle" class="text-lg font-bold text-navy-900">Add Receipt</h3>
-        <button id="btnCloseReceiptModal" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none cursor-pointer">&times;</button>
-      </div>
-      <form id="receiptForm" class="space-y-3.5">
-        <input type="hidden" id="receiptId" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Receipt #</label>
-            <input id="receiptNo" type="text" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
-            <input id="receiptDate" type="date" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Donor</label>
-            <input id="receiptDonor" type="text" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Collected By</label>
-            <input id="receiptCollector" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Phone</label>
-            <input id="receiptPhone" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Mode</label>
-            <select id="receiptMode" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
-              <option value="Cash">Cash</option>
-              <option value="Online">Online</option>
-              <option value="Cheque">Cheque</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="receiptAmount" type="number" step="0.01" min="0" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Purpose</label>
-            <input id="receiptPurpose" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Remarks</label>
-            <input id="receiptRemarks" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
-          </div>
-        </div>
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelReceiptModal" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
-            Cancel
-          </button>
-          <button type="submit" class="px-5 py-2 rounded-lg bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold cursor-pointer">
-            Save Receipt
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- Toast Notification -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
@@ -841,7 +711,8 @@
     (function () {
       'use strict';
 
-      const STORAGE_KEY = 'sass_bankbook_cashbook_2026_v1';
+      const STORAGE_KEY = 'sass_bankbook_cashbook_2026_v2';
+      const SESSION_TOKEN_KEY = 'sass_oauth_token_2026_v1';
       const DEFAULT_SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
       const DEFAULT_CLIENT_ID = '674713422029-okcbm6pe56s30ep2j11u9nmqrvug6scu.apps.googleusercontent.com';
       const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
@@ -855,10 +726,11 @@
           oauthClientId: DEFAULT_CLIENT_ID,
           openingBank: 0,
           openingCash: 0,
+          streetCollection: 0,
+          vipCollection: 0,
           lastRefreshed: 'Just now',
           entries: [],
-          cheques: [],
-          receipts: []
+          cheques: []
         };
       }
 
@@ -878,8 +750,38 @@
         bank: 'Bank Book',
         cash: 'Cash Book',
         cheques: 'Cheques Issued',
-        receipts: 'Receipts'
+        balance: 'Balance',
+        collection: 'Book Collection'
       };
+
+      // Restore session OAuth token if still valid
+      try {
+        const savedToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
+        if (savedToken) {
+          const parsedTok = JSON.parse(savedToken);
+          if (parsedTok && parsedTok.access_token && Date.now() < (Number(parsedTok.expires_at) || 0) - 10000) {
+            oauthToken = parsedTok.access_token;
+            oauthTokenExpiry = Number(parsedTok.expires_at);
+          }
+        }
+      } catch (err) {
+        // Ignore sessionStorage restrictions
+      }
+
+      function persistSessionToken() {
+        try {
+          if (oauthToken && oauthTokenExpiry) {
+            sessionStorage.setItem(SESSION_TOKEN_KEY, JSON.stringify({
+              access_token: oauthToken,
+              expires_at: oauthTokenExpiry
+            }));
+          } else {
+            sessionStorage.removeItem(SESSION_TOKEN_KEY);
+          }
+        } catch (err) {
+          // Ignore sessionStorage restrictions
+        }
+      }
 
       function loadState() {
         try {
@@ -888,8 +790,7 @@
           const parsed = JSON.parse(raw);
           return Object.assign(createInitialSnapshot(), parsed, {
             entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-            cheques: Array.isArray(parsed.cheques) ? parsed.cheques : [],
-            receipts: Array.isArray(parsed.receipts) ? parsed.receipts : []
+            cheques: Array.isArray(parsed.cheques) ? parsed.cheques : []
           });
         } catch (err) {
           return createInitialSnapshot();
@@ -908,7 +809,7 @@
         const container = document.getElementById('toastContainer');
         if (!container) return;
         const el = document.createElement('div');
-        el.className = 'bg-navy-900 text-white text-xs sm:text-sm px-4 py-3 rounded-lg shadow-lg border border-slate-700 pointer-events-auto transition-opacity';
+        el.className = 'bg-navy-900 text-white text-xs sm:text-sm px-4 py-3 rounded-lg shadow-lg border border-slatex-600 pointer-events-auto transition-opacity';
         el.textContent = message;
         container.appendChild(el);
         setTimeout(() => {
@@ -958,8 +859,16 @@
         return m ? `${m[1]}-${m[2]}` : '';
       }
 
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
       function isAnyModalOpen() {
-        return ['entryModal', 'contraModal', 'chequeModal', 'receiptModal'].some(id => {
+        return ['entryModal', 'contraModal', 'chequeModal'].some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
         });
@@ -972,6 +881,7 @@
       function updateOauthBadge() {
         const badge = document.getElementById('oauthStatusBadge');
         const statusEl = document.getElementById('oauthConnectionState');
+        const autoEl = document.getElementById('autoPullIndicator');
         if (hasValidOAuthToken()) {
           if (badge) {
             badge.textContent = 'OAuth Connected';
@@ -981,14 +891,22 @@
             statusEl.textContent = 'OAuth Connected (Read & Write)';
             statusEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800';
           }
+          if (autoEl) {
+            autoEl.textContent = '5s Auto-Pull: Active';
+            autoEl.className = 'px-2 py-0.5 rounded-full bg-sky-900/80 border border-sky-400/50 text-sky-200';
+          }
         } else {
           if (badge) {
             badge.textContent = 'OAuth Ready';
-            badge.className = 'px-2 py-0.5 rounded-full bg-navy-850 border border-slate-700 text-slate-300';
+            badge.className = 'px-2 py-0.5 rounded-full bg-navy-850 border border-slatex-600/60 text-slate-300';
           }
           if (statusEl) {
             statusEl.textContent = 'Disconnected';
             statusEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+          }
+          if (autoEl) {
+            autoEl.textContent = '5s Auto-Pull: Standby';
+            autoEl.className = 'px-2 py-0.5 rounded-full bg-navy-850 border border-slatex-600/60 text-slate-300';
           }
         }
       }
@@ -1010,6 +928,7 @@
             if (resp && resp.access_token) {
               oauthToken = resp.access_token;
               oauthTokenExpiry = Date.now() + ((Number(resp.expires_in) || 3600) * 1000);
+              persistSessionToken();
               updateOauthBadge();
               showToast('Connected to Google Sheets via OAuth 2.0.');
               if (typeof pendingAuthCallback === 'function') {
@@ -1055,14 +974,6 @@
         const cashAtBank = (toNum(state.openingBank) || 0) + bankInward - bankOutward;
         const cashInHand = (toNum(state.openingCash) || 0) + cashInward - cashOutward;
         const combinedLiquidity = cashAtBank + cashInHand;
-        const totalReceipts = state.receipts.reduce((sum, r) => sum + toNum(r.amount), 0);
-
-        let streetCollection = 0, vipCollection = 0;
-        for (const r of state.receipts) {
-          const mode = String(r.mode || '').toLowerCase();
-          if (mode === 'cash') streetCollection += toNum(r.amount);
-          else vipCollection += toNum(r.amount);
-        }
 
         const clearedCheques = state.cheques.filter(c => String(c.status).toLowerCase() === 'cleared');
         const pendingCheques = state.cheques.filter(c => String(c.status).toLowerCase() !== 'cleared');
@@ -1075,9 +986,9 @@
           cashAtBank,
           cashInHand,
           combinedLiquidity,
-          totalReceipts,
-          streetCollection,
-          vipCollection,
+          streetCollection: toNum(state.streetCollection),
+          vipCollection: toNum(state.vipCollection),
+          totalCollection: toNum(state.streetCollection) + toNum(state.vipCollection),
           clearedCount: clearedCheques.length,
           clearedAmt: clearedCheques.reduce((s, c) => s + toNum(c.amount), 0),
           pendingCount: pendingCheques.length,
@@ -1096,8 +1007,8 @@
         document.getElementById('kpiCash').textContent = formatMoney(t.cashInHand);
         document.getElementById('kpiCashSub').textContent = `Inward: ${formatMoney(t.cashInward)} | Outward: ${formatMoney(t.cashOutward)}`;
 
-        document.getElementById('kpiCollection').textContent = formatMoney(t.totalReceipts);
-        document.getElementById('kpiCollectionSub').textContent = `Cash: ${formatMoney(t.streetCollection)} | Online/Cheque: ${formatMoney(t.vipCollection)}`;
+        document.getElementById('kpiChequesCleared').textContent = formatMoney(t.clearedAmt);
+        document.getElementById('kpiChequesClearedSub').textContent = `${t.clearedCount} Cleared | Pending: ${formatMoney(t.pendingAmt)}`;
 
         // Monthly Cash Book Summary
         const monthMap = new Map();
@@ -1126,7 +1037,7 @@
             totOut += outward;
             return `
               <tr class="hover:bg-slate-50/80">
-                <td class="py-2.5 px-4 font-medium text-slate-800">${mKey}</td>
+                <td class="py-2.5 px-4 font-medium text-slate-800">${escapeHtml(mKey)}</td>
                 <td class="py-2.5 px-4 text-right text-emerald-700">${formatMoney(inward)}</td>
                 <td class="py-2.5 px-4 text-right text-rose-700">${formatMoney(outward)}</td>
                 <td class="py-2.5 px-4 text-right font-semibold ${net >= 0 ? 'text-slate-900' : 'text-rose-700'}">${formatMoney(net)}</td>
@@ -1151,8 +1062,7 @@
         const reconRows = [
           { label: 'Total Expenses (Outward)', bank: t.bankOutward, tally: t.cashOutward },
           { label: 'Total Income (Inward)', bank: t.bankInward, tally: t.cashInward },
-          { label: 'Receipts Register Total', bank: 0, tally: t.totalReceipts },
-          { label: 'Net Liquidity Position', bank: t.cashAtBank, tally: t.cashInHand, bold: true }
+          { label: 'Net Balance Position', bank: t.cashAtBank, tally: t.cashInHand, bold: true }
         ];
         reconBody.innerHTML = reconRows.map(r => {
           const variance = r.bank - r.tally;
@@ -1169,10 +1079,10 @@
         // Audit Table
         const auditBody = document.getElementById('auditSummaryBody');
         const auditItems = [
-          { head: 'Cash Receipts', count: `${state.receipts.filter(r => r.mode === 'Cash').length} entries`, amount: t.streetCollection, status: 'Recorded' },
-          { head: 'Online / Cheque Receipts', count: `${state.receipts.filter(r => r.mode !== 'Cash').length} entries`, amount: t.vipCollection, status: 'Recorded' },
-          { head: 'Cheques Issued — Cleared', count: `${t.clearedCount} Cleared`, amount: t.clearedAmt, status: 'Cleared' },
-          { head: 'Cheques Issued — Pending', count: `${t.pendingCount} Pending`, amount: t.pendingAmt, status: t.pendingCount ? 'Pending' : 'Nil' }
+          { head: 'Street / Area Collections', count: 'Books 1–40', amount: t.streetCollection, status: t.streetCollection > 0 ? 'Recorded' : 'Awaiting' },
+          { head: 'Special / VIP & QR Collections', count: 'Books 0–20', amount: t.vipCollection, status: t.vipCollection > 0 ? 'Recorded' : 'Awaiting' },
+          { head: 'Cheques Issued — Cleared', count: `${t.clearedCount} Cleared`, amount: t.clearedAmt, status: t.clearedCount > 0 ? 'Cleared' : 'Nil' },
+          { head: 'Cheques Issued — Pending', count: `${t.pendingCount} Pending`, amount: t.pendingAmt, status: t.pendingCount > 0 ? 'Pending' : 'Nil' }
         ];
         auditBody.innerHTML = auditItems.map(a => `
           <tr>
@@ -1235,8 +1145,8 @@
         if (!flowCanvas || !liqCanvas) return;
 
         if (typeof window.Chart === 'undefined') {
-          drawCanvasFallback(flowCanvas, ['Bank In', 'Bank Out', 'Cash In', 'Cash Out'], [t.bankInward, t.bankOutward, t.cashInward, t.cashOutward], ['#0c1c30', '#c2410c', '#0f766e', '#e11d48'], 'Ledger Flow');
-          drawCanvasFallback(liqCanvas, ['Bank', 'Cash', 'Chq Cleared', 'Chq Pending'], [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt], ['#10243e', '#ea580c', '#16a34a', '#d97706'], 'Liquidity & Cheques');
+          drawCanvasFallback(flowCanvas, ['Bank In', 'Bank Out', 'Cash In', 'Cash Out'], [t.bankInward, t.bankOutward, t.cashInward, t.cashOutward], ['#0f243e', '#c2410c', '#334e68', '#e11d48'], 'Ledger Flow');
+          drawCanvasFallback(liqCanvas, ['Bank', 'Cash', 'Chq Cleared', 'Chq Pending'], [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt], ['#162f52', '#ea580c', '#16a34a', '#d97706'], 'Liquidity & Cheques');
           return;
         }
 
@@ -1248,7 +1158,7 @@
             datasets: [{
               label: 'Amount',
               data: [t.bankInward, t.bankOutward, t.cashInward, t.cashOutward],
-              backgroundColor: ['#0c1c30', '#c2410c', '#0f766e', '#e11d48'],
+              backgroundColor: ['#0f243e', '#c2410c', '#334e68', '#e11d48'],
               borderRadius: 6
             }]
           },
@@ -1268,7 +1178,7 @@
             datasets: [{
               label: 'Amount',
               data: [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.clearedAmt, t.pendingAmt],
-              backgroundColor: ['#10243e', '#ea580c', '#16a34a', '#d97706'],
+              backgroundColor: ['#162f52', '#ea580c', '#16a34a', '#d97706'],
               borderRadius: 6
             }]
           },
@@ -1295,14 +1205,6 @@
 
         if (categories.includes(prevCat)) catSel.value = prevCat;
         if (months.includes(prevMonth)) monthSel.value = prevMonth;
-      }
-
-      function escapeHtml(str) {
-        return String(str || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
       }
 
       function renderLedger() {
@@ -1390,25 +1292,26 @@
         let totalAmt = 0;
 
         if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="py-8 px-4 text-center text-slate-400">No cheques recorded yet. Click "+ Issue Cheque" to add one.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="py-8 px-4 text-center text-slate-400">No cheques recorded yet. Click "+ Issue Cheque" to add one.</td></tr>';
         } else {
-          tbody.innerHTML = filtered.map(c => {
+          tbody.innerHTML = filtered.map((c, idx) => {
             const amt = toNum(c.amount);
             totalAmt += amt;
             const isCleared = String(c.status).toLowerCase() === 'cleared';
             return `
               <tr class="hover:bg-slate-50/80">
+                <td class="py-3 px-4 text-slate-500">${idx + 1}</td>
                 <td class="py-3 px-4 whitespace-nowrap text-slate-700">${escapeHtml(normalizeDateStr(c.issuedDate))}</td>
-                <td class="py-3 px-4 font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</td>
                 <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
+                <td class="py-3 px-4 font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</td>
                 <td class="py-3 px-4 text-slate-600">${escapeHtml(c.purpose || '—')}</td>
                 <td class="py-3 px-4 text-right font-semibold text-slate-900">${formatMoney(amt)}</td>
+                <td class="py-3 px-4 whitespace-nowrap text-slate-600">${isCleared ? escapeHtml(normalizeDateStr(c.clearedDate) || 'Cleared') : 'Pending'}</td>
                 <td class="py-3 px-4">
                   <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                     ${escapeHtml(c.status || 'Pending')}
                   </span>
                 </td>
-                <td class="py-3 px-4 whitespace-nowrap text-slate-600">${isCleared ? escapeHtml(normalizeDateStr(c.clearedDate) || 'Cleared') : 'Pending'}</td>
                 <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
                   ${!isCleared ? `<button type="button" onclick="window.__markChequeCleared('${c.id}')" class="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">Mark Cleared</button>` : ''}
                   <button type="button" onclick="window.__editCheque('${c.id}')" class="text-xs font-medium text-navy-900 hover:underline cursor-pointer">Edit</button>
@@ -1423,51 +1326,6 @@
         document.getElementById('chequeTotalAmount').textContent = formatMoney(totalAmt);
       }
 
-      function renderReceipts() {
-        const q = (document.getElementById('receiptSearch').value || '').trim().toLowerCase();
-        const modeFilter = document.getElementById('receiptModeFilter').value;
-
-        const filtered = state.receipts.filter(r => {
-          if (modeFilter !== 'ALL' && String(r.mode) !== modeFilter) return false;
-          if (q) {
-            const hay = `${r.receiptNo} ${r.date} ${r.donor} ${r.collector} ${r.phone} ${r.purpose} ${r.remarks}`.toLowerCase();
-            if (!hay.includes(q)) return false;
-          }
-          return true;
-        });
-
-        const tbody = document.getElementById('receiptsTableBody');
-        let total = 0;
-
-        if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="10" class="py-8 px-4 text-center text-slate-400">No receipts found. Click "+ Add Receipt" or sync from Google Sheets.</td></tr>';
-        } else {
-          tbody.innerHTML = filtered.map(r => {
-            const amt = toNum(r.amount);
-            total += amt;
-            return `
-              <tr class="hover:bg-slate-50/80">
-                <td class="py-3 px-4 font-mono text-slate-800">${escapeHtml(r.receiptNo)}</td>
-                <td class="py-3 px-4 whitespace-nowrap text-slate-700">${escapeHtml(normalizeDateStr(r.date))}</td>
-                <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(r.donor)}</td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(r.collector || '—')}</td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(r.phone || '—')}</td>
-                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(r.mode || 'Cash')}</span></td>
-                <td class="py-3 px-4 text-right font-semibold text-emerald-700">${formatMoney(amt)}</td>
-                <td class="py-3 px-4 text-slate-700">${escapeHtml(r.purpose || '—')}</td>
-                <td class="py-3 px-4 text-slate-500">${escapeHtml(r.remarks || '—')}</td>
-                <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
-                  <button type="button" onclick="window.__editReceipt('${r.id}')" class="text-xs font-medium text-navy-900 hover:underline cursor-pointer">Edit</button>
-                  <button type="button" onclick="window.__deleteReceipt('${r.id}')" class="text-xs font-medium text-rose-600 hover:underline cursor-pointer">Delete</button>
-                </td>
-              </tr>
-            `;
-          }).join('');
-        }
-
-        document.getElementById('receiptTotalDisplay').textContent = formatMoney(total);
-      }
-
       function renderAll() {
         document.getElementById('currencySelect').value = state.currency;
         document.getElementById('sheetIdInput').value = state.sheetId || DEFAULT_SHEET_ID;
@@ -1480,7 +1338,6 @@
           bankbook: document.getElementById('view-ledger'),
           cashbook: document.getElementById('view-ledger'),
           cheques: document.getElementById('view-cheques'),
-          receipts: document.getElementById('view-receipts'),
           import: document.getElementById('view-import')
         };
 
@@ -1503,13 +1360,11 @@
           renderLedger();
         } else if (state.activeView === 'cheques') {
           renderCheques();
-        } else if (state.activeView === 'receipts') {
-          renderReceipts();
         }
       }
 
       function setActiveView(viewName) {
-        state.activeView = viewName;
+        state.activeView = viewName === 'receipts' ? 'dashboard' : viewName;
         if (viewName === 'bankbook') state.ledgerMode = 'Bank';
         if (viewName === 'cashbook') state.ledgerMode = 'Cash';
         saveState();
@@ -1594,41 +1449,6 @@
         pushToGoogleSheet(false, true);
       };
 
-      function openReceiptModal(editId) {
-        const form = document.getElementById('receiptForm');
-        form.reset();
-        document.getElementById('receiptId').value = '';
-        document.getElementById('receiptDate').value = new Date().toISOString().slice(0, 10);
-        document.getElementById('receiptMode').value = 'Cash';
-        document.getElementById('receiptModalTitle').textContent = 'Add Receipt';
-
-        if (editId) {
-          const r = state.receipts.find(item => item.id === editId);
-          if (r) {
-            document.getElementById('receiptModalTitle').textContent = 'Edit Receipt';
-            document.getElementById('receiptId').value = r.id;
-            document.getElementById('receiptNo').value = r.receiptNo || '';
-            document.getElementById('receiptDate').value = normalizeDateStr(r.date);
-            document.getElementById('receiptDonor').value = r.donor || '';
-            document.getElementById('receiptCollector').value = r.collector || '';
-            document.getElementById('receiptPhone').value = r.phone || '';
-            document.getElementById('receiptMode').value = r.mode || 'Cash';
-            document.getElementById('receiptAmount').value = toNum(r.amount);
-            document.getElementById('receiptPurpose').value = r.purpose || '';
-            document.getElementById('receiptRemarks').value = r.remarks || '';
-          }
-        }
-        document.getElementById('receiptModal').classList.remove('hidden');
-      }
-
-      window.__editReceipt = (id) => openReceiptModal(id);
-      window.__deleteReceipt = (id) => {
-        state.receipts = state.receipts.filter(r => r.id !== id);
-        saveState();
-        renderAll();
-        pushToGoogleSheet(false, true);
-      };
-
       // Google Sheets API v4 Helpers
       function getSpreadsheetId() {
         return (document.getElementById('sheetIdInput')?.value || state.sheetId || DEFAULT_SHEET_ID).trim();
@@ -1653,6 +1473,7 @@
         if (res.status === 401) {
           oauthToken = '';
           oauthTokenExpiry = 0;
+          persistSessionToken();
           updateOauthBadge();
           throw new Error('Google OAuth session expired. Please sign in again.');
         }
@@ -1788,74 +1609,6 @@
         return list;
       }
 
-      function parseReceiptRows(rows) {
-        const list = [];
-        if (!Array.isArray(rows) || rows.length < 2) return list;
-
-        let headerIdx = 0;
-        let noCol = 0, dateCol = 1, donorCol = 2, collectorCol = 3, phoneCol = 4, modeCol = 5, amtCol = 6, purposeCol = 7, remarksCol = 8;
-
-        for (let r = 0; r < Math.min(rows.length, 6); r++) {
-          const row = rows[r] || [];
-          const lower = row.map(c => String(c || '').trim().toLowerCase());
-          if (lower.some(c => c.includes('donor') || c.includes('receipt') || c.includes('mode'))) {
-            headerIdx = r;
-            lower.forEach((cell, idx) => {
-              if (cell.includes('receipt')) noCol = idx;
-              else if (cell === 'date') dateCol = idx;
-              else if (cell.includes('donor')) donorCol = idx;
-              else if (cell.includes('collected')) collectorCol = idx;
-              else if (cell.includes('phone')) phoneCol = idx;
-              else if (cell.includes('mode')) modeCol = idx;
-              else if (cell.includes('amount')) amtCol = idx;
-              else if (cell.includes('purpose')) purposeCol = idx;
-              else if (cell.includes('remark')) remarksCol = idx;
-            });
-            break;
-          }
-        }
-
-        for (let i = headerIdx + 1; i < rows.length; i++) {
-          const row = rows[i] || [];
-          const receiptNo = String(row[noCol] || '').trim();
-          const donor = String(row[donorCol] || '').trim();
-          let rawMode = String(row[modeCol] || '').trim();
-          let rawAmt = row[amtCol];
-
-          // Auto-heal swapped Mode and Amount columns
-          const modeLooksNumeric = rawMode !== '' && !Number.isNaN(Number(String(rawMode).replace(/[₹$,\s]/g, '')));
-          const amtLooksLikeMode = typeof rawAmt === 'string' && /^(cash|online|cheque|upi|neft)$/i.test(rawAmt.trim());
-          if (modeLooksNumeric && amtLooksLikeMode) {
-            const tmp = rawMode;
-            rawMode = String(rawAmt).trim();
-            rawAmt = tmp;
-          } else if (modeLooksNumeric && toNum(rawAmt) === 0) {
-            rawAmt = rawMode;
-            rawMode = 'Cash';
-          }
-
-          const amount = toNum(rawAmt);
-          if (!receiptNo && !donor && amount === 0) continue;
-
-          const normalizedMode = /^online$/i.test(rawMode) ? 'Online' : /^cheque$/i.test(rawMode) ? 'Cheque' : 'Cash';
-
-          list.push({
-            id: `rcpt-${i}-${receiptNo || donor}`,
-            receiptNo,
-            date: normalizeDateStr(row[dateCol]),
-            donor,
-            collector: String(row[collectorCol] || '').trim(),
-            phone: String(row[phoneCol] || '').trim(),
-            mode: normalizedMode,
-            amount,
-            purpose: String(row[purposeCol] || '').trim(),
-            remarks: String(row[remarksCol] || '').trim()
-          });
-        }
-
-        return list;
-      }
-
       async function syncFromGoogleSheet(silent) {
         if (isSyncInProgress) return;
         if (!hasValidOAuthToken()) {
@@ -1877,14 +1630,16 @@
             bank: resolveTabName(availableTabs, ['Bank Book', 'BankBook'], 'Bank Book'),
             cash: resolveTabName(availableTabs, ['Cash Book', 'CashBook'], 'Cash Book'),
             cheques: resolveTabName(availableTabs, ['Cheques Issued', 'Cheques'], 'Cheques Issued'),
-            receipts: resolveTabName(availableTabs, ['Receipts', 'Receipts 2026'], 'Receipts')
+            balance: resolveTabName(availableTabs, ['Balance'], 'Balance'),
+            collection: resolveTabName(availableTabs, ['Book Collection'], 'Book Collection')
           };
 
           const ranges = [
             `${resolvedTabNames.bank}!A1:H500`,
             `${resolvedTabNames.cash}!A1:H500`,
             `${resolvedTabNames.cheques}!A1:H500`,
-            `${resolvedTabNames.receipts}!A1:I500`
+            `${resolvedTabNames.balance}!A1:E30`,
+            `${resolvedTabNames.collection}!A1:K45`
           ].map(r => encodeURIComponent(r)).join('&ranges=');
 
           const batchData = await sheetsApiRequest(`/values:batchGet?ranges=${ranges}`, 'GET');
@@ -1893,25 +1648,31 @@
           const bankRows = (valueRanges[0] && valueRanges[0].values) || [];
           const cashRows = (valueRanges[1] && valueRanges[1].values) || [];
           const chequeRows = (valueRanges[2] && valueRanges[2].values) || [];
-          const receiptRows = (valueRanges[3] && valueRanges[3].values) || [];
+          const collectionRows = (valueRanges[4] && valueRanges[4].values) || [];
 
           const parsedBank = parseBookRows(bankRows, 'Bank');
           const parsedCash = parseBookRows(cashRows, 'Cash');
           const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
           const syncedCheques = parseChequeRows(chequeRows);
-          const syncedReceipts = parseReceiptRows(receiptRows);
+
+          let streetSum = 0, vipSum = 0;
+          for (let i = 1; i < Math.min(collectionRows.length, 41); i++) {
+            streetSum += toNum((collectionRows[i] || [])[3]);
+          }
+          for (let i = 1; i < Math.min(collectionRows.length, 21); i++) {
+            vipSum += toNum((collectionRows[i] || [])[9]);
+          }
+          if (streetSum > 0 || vipSum > 0 || hasPulledFromSheetThisSession) {
+            state.streetCollection = streetSum;
+            state.vipCollection = vipSum;
+          }
 
           // Anti-wipe guard on pull
-          if (syncedEntries.length > 0 || availableTabs.includes(resolvedTabNames.bank) || availableTabs.includes(resolvedTabNames.cash)) {
-            if (syncedEntries.length > 0 || state.entries.length === 0) {
-              state.entries = syncedEntries;
-            }
+          if (syncedEntries.length > 0 || state.entries.length === 0) {
+            state.entries = syncedEntries;
           }
           if (syncedCheques.length > 0 || state.cheques.length === 0) {
             state.cheques = syncedCheques;
-          }
-          if (syncedReceipts.length > 0 || state.receipts.length === 0) {
-            state.receipts = syncedReceipts;
           }
 
           hasPulledFromSheetThisSession = true;
@@ -1920,10 +1681,10 @@
           renderAll();
 
           document.getElementById('syncBannerText').innerHTML =
-            `Synced with <strong>Income &amp; Expenses - 2026</strong> — ${parsedBank.entries.length} Bank, ${parsedCash.entries.length} Cash, ${syncedCheques.length} Cheques &amp; ${syncedReceipts.length} Receipts.`;
+            `Synced with <strong>Income &amp; Expenses - 2026</strong> — ${parsedBank.entries.length} Bank, ${parsedCash.entries.length} Cash &amp; ${syncedCheques.length} Cheques.`;
 
           if (!silent) {
-            showToast(`Synced ${syncedEntries.length} ledger rows, ${syncedCheques.length} cheques & ${syncedReceipts.length} receipts.`);
+            showToast(`Synced ${syncedEntries.length} ledger rows & ${syncedCheques.length} cheques.`);
           }
         } catch (err) {
           if (!silent) {
@@ -1954,7 +1715,6 @@
           const bankTab = resolveTabName(availableTabs, ['Bank Book', 'BankBook'], 'Bank Book');
           const cashTab = resolveTabName(availableTabs, ['Cash Book', 'CashBook'], 'Cash Book');
           const chequesTab = resolveTabName(availableTabs, ['Cheques Issued', 'Cheques'], 'Cheques Issued');
-          const receiptsTab = resolveTabName(availableTabs, ['Receipts', 'Receipts 2026'], 'Receipts');
 
           const bankEntries = state.entries.filter(e => e.book !== 'Cash');
           const cashEntries = state.entries.filter(e => e.book === 'Cash');
@@ -1988,18 +1748,6 @@
             c.status || 'Pending'
           ]);
 
-          const receiptValues = state.receipts.map(r => [
-            r.receiptNo || '',
-            normalizeDateStr(r.date),
-            r.donor || '',
-            r.collector || '',
-            r.phone || '',
-            r.mode || 'Cash',
-            toNum(r.amount),
-            r.purpose || '',
-            r.remarks || ''
-          ]);
-
           const dataUpdates = [];
           const clearRanges = [];
 
@@ -2014,10 +1762,6 @@
           if (chequeValues.length > 0 || hasPulledFromSheetThisSession) {
             dataUpdates.push({ range: `${chequesTab}!A2:H${Math.max(2, chequeValues.length + 1)}`, values: chequeValues });
             clearRanges.push(`${chequesTab}!A${chequeValues.length + 2}:H500`);
-          }
-          if (receiptValues.length > 0 || hasPulledFromSheetThisSession) {
-            dataUpdates.push({ range: `${receiptsTab}!A2:I${Math.max(2, receiptValues.length + 1)}`, values: receiptValues });
-            clearRanges.push(`${receiptsTab}!A${receiptValues.length + 2}:I500`);
           }
 
           if (dataUpdates.length > 0) {
@@ -2285,51 +2029,6 @@
           downloadFile('cheques_issued_2026.csv', lines.join('\n'), 'text/csv;charset=utf-8;');
         });
 
-        // Receipts Modal & Repair
-        document.getElementById('btnAddReceipt').addEventListener('click', () => openReceiptModal(null));
-        document.getElementById('btnCloseReceiptModal').addEventListener('click', () => document.getElementById('receiptModal').classList.add('hidden'));
-        document.getElementById('btnCancelReceiptModal').addEventListener('click', () => document.getElementById('receiptModal').classList.add('hidden'));
-
-        document.getElementById('receiptForm').addEventListener('submit', (e) => {
-          e.preventDefault();
-          const idVal = document.getElementById('receiptId').value.trim();
-          const payload = {
-            receiptNo: document.getElementById('receiptNo').value.trim(),
-            date: normalizeDateStr(document.getElementById('receiptDate').value),
-            donor: document.getElementById('receiptDonor').value.trim(),
-            collector: document.getElementById('receiptCollector').value.trim(),
-            phone: document.getElementById('receiptPhone').value.trim(),
-            mode: document.getElementById('receiptMode').value,
-            amount: toNum(document.getElementById('receiptAmount').value),
-            purpose: document.getElementById('receiptPurpose').value.trim(),
-            remarks: document.getElementById('receiptRemarks').value.trim()
-          };
-          if (!payload.donor) return;
-
-          if (idVal) {
-            const idx = state.receipts.findIndex(r => r.id === idVal);
-            if (idx >= 0) state.receipts[idx] = Object.assign({}, state.receipts[idx], payload);
-          } else {
-            state.receipts.unshift(Object.assign({ id: `rcpt-${Date.now()}` }, payload));
-          }
-
-          document.getElementById('receiptModal').classList.add('hidden');
-          saveState();
-          renderAll();
-          pushToGoogleSheet(false, true);
-        });
-
-        ['receiptSearch', 'receiptModeFilter'].forEach(id => {
-          document.getElementById(id).addEventListener('input', renderReceipts);
-          document.getElementById(id).addEventListener('change', renderReceipts);
-        });
-
-        document.getElementById('btnRepairReceiptsCols').addEventListener('click', () => {
-          saveState();
-          renderAll();
-          pushToGoogleSheet(false, true);
-        });
-
         // CSV Import & Export
         document.getElementById('csvFileInput').addEventListener('change', (e) => {
           const file = e.target.files && e.target.files[0];
@@ -2409,7 +2108,6 @@
         document.getElementById('btnClearAll').addEventListener('click', () => {
           state.entries = [];
           state.cheques = [];
-          state.receipts = [];
           saveState();
           renderAll();
           showToast('Cleared all local entries.');
@@ -2444,8 +2142,7 @@
             resolvedTabNames,
             counts: {
               entries: state.entries.length,
-              cheques: state.cheques.length,
-              receipts: state.receipts.length
+              cheques: state.cheques.length
             }
           }, null, 2);
         });
@@ -2455,6 +2152,9 @@
         bindEvents();
         renderAll();
         startAutoPullTimer();
+        if (hasValidOAuthToken()) {
+          syncFromGoogleSheet(true);
+        }
       });
     })();
   </script>
