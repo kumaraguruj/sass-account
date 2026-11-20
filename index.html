@@ -1990,64 +1990,124 @@
         const items = [];
         if (!Array.isArray(rows) || rows.length < 2) return items;
 
-        let headerIdx = 0;
-        for (let r = 0; r < Math.min(rows.length, 5); r++) {
+        let headerIdx = -1;
+        for (let r = 0; r < Math.min(rows.length, 10); r++) {
           const joined = (rows[r] || []).join(' ').toLowerCase();
-          if (joined.includes('book') || joined.includes('amount') || joined.includes('responsible') || joined.includes('name')) {
+          if (
+            (joined.includes('book') || joined.includes('sl') || joined.includes('s.no') || joined.includes('no')) &&
+            (joined.includes('amount') || joined.includes('total') || joined.includes('collect') || joined.includes('resp') || joined.includes('name'))
+          ) {
             headerIdx = r;
             break;
           }
         }
+        if (headerIdx < 0) headerIdx = 0;
         const headerRow = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
 
-        // Detect Street block columns (left side: cols 0..5) and VIP/QR block columns (right side: cols 6..12)
-        let streetRespIdx = headerRow.findIndex((h, idx) => idx < 6 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area') || h.includes('street')));
-        if (streetRespIdx < 0) streetRespIdx = 2;
-        let streetAmtIdx = headerRow.findIndex((h, idx) => idx < 6 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
-        if (streetAmtIdx < 0) streetAmtIdx = 3;
+        // Check if the sheet uses a side-by-side layout (Street in cols A..E, VIP/QR in cols G..L)
+        const hasRightSideHeader = headerRow.some((h, idx) => idx >= 5 && (h.includes('book') || h.includes('vip') || h.includes('qr') || h.includes('amount') || h.includes('resp') || h.includes('name')));
 
-        let vipBookIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('book') || h.includes('no') || h.includes('vip')));
-        if (vipBookIdx < 0) vipBookIdx = 7;
-        let vipRespIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member')));
-        if (vipRespIdx < 0) vipRespIdx = 8;
-        let vipAmtIdx = headerRow.findIndex((h, idx) => idx >= 6 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
-        if (vipAmtIdx < 0) vipAmtIdx = 9;
+        if (hasRightSideHeader) {
+          let streetBookIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('book') || h.includes('no')));
+          if (streetBookIdx < 0) streetBookIdx = 1;
+          let streetRespIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area') || h.includes('street')));
+          if (streetRespIdx < 0) streetRespIdx = 2;
+          let streetAmtIdx = headerRow.findIndex((h, idx) => idx < 5 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
+          if (streetAmtIdx < 0) streetAmtIdx = 3;
 
+          let vipBookIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('book') || h.includes('no') || h.includes('vip') || h.includes('qr')));
+          if (vipBookIdx < 0) vipBookIdx = 7;
+          let vipRespIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member')));
+          if (vipRespIdx < 0) vipRespIdx = 8;
+          let vipAmtIdx = headerRow.findIndex((h, idx) => idx >= 5 && (h.includes('amount') || h.includes('total') || h.includes('collect')));
+          if (vipAmtIdx < 0) vipAmtIdx = 9;
+
+          let streetCount = 0;
+          let vipCount = 0;
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const r = rows[i] || [];
+            const rowText = r.join(' ').toLowerCase();
+            if (rowText.includes('grand total') || rowText.startsWith('total')) continue;
+
+            // Left block: Street / Area Collection (up to 40 books)
+            const stBookRaw = String(r[streetBookIdx] ?? r[0] ?? '').trim();
+            const stResp = String(r[streetRespIdx] ?? '').trim();
+            const stAmt = toNum(r[streetAmtIdx]);
+            if (streetCount < 40 && !stBookRaw.toLowerCase().includes('total') && (stBookRaw || stResp || stAmt > 0)) {
+              streetCount++;
+              const bNum = stBookRaw || String(streetCount);
+              items.push({
+                id: `bc-street-${i}`,
+                stream: 'Street / Area',
+                bookLabel: /^\d+$/.test(bNum) ? `Book #${bNum}` : bNum,
+                responsible: stResp || 'Unassigned',
+                amount: stAmt
+              });
+            }
+
+            // Right block: Special / VIP & QR Collection (up to 20 books)
+            const vpBookRaw = String(r[vipBookIdx] ?? '').trim();
+            const vpResp = String(r[vipRespIdx] ?? '').trim();
+            const vpAmt = toNum(r[vipAmtIdx]);
+            if (vipCount < 20 && !vpBookRaw.toLowerCase().includes('total') && (vpBookRaw || vpResp || vpAmt > 0)) {
+              vipCount++;
+              const vNum = vpBookRaw || `VIP-${vipCount}`;
+              items.push({
+                id: `bc-vip-${i}`,
+                stream: 'VIP / QR',
+                bookLabel: /^\d+$/.test(vNum) ? `VIP #${vNum}` : vNum,
+                responsible: vpResp || 'Unassigned',
+                amount: vpAmt
+              });
+            }
+          }
+          return items;
+        }
+
+        // Single-table / vertical layout fallback (Books 1..40 Street, followed by VIP/QR 20 Books)
+        let bookIdx = headerRow.findIndex(h => h.includes('book') || h.includes('no'));
+        if (bookIdx < 0) bookIdx = 1;
+        let streamIdx = headerRow.findIndex(h => h.includes('type') || h.includes('stream') || h.includes('category') || h.includes('head'));
+        let respIdx = headerRow.findIndex(h => h.includes('resp') || h.includes('name') || h.includes('person') || h.includes('member') || h.includes('area'));
+        if (respIdx < 0) respIdx = 2;
+        let amtIdx = headerRow.findIndex(h => h.includes('amount') || h.includes('total') || h.includes('collect'));
+        if (amtIdx < 0) amtIdx = 3;
+
+        let currentSectionStream = 'Street / Area';
+        let rowCounter = 0;
         for (let i = headerIdx + 1; i < rows.length; i++) {
           const r = rows[i] || [];
-          const rowText = r.join(' ').toLowerCase();
-          if (rowText.includes('total')) continue;
+          const joined = r.join(' ').trim();
+          const lower = joined.toLowerCase();
+          if (!joined || lower.includes('total')) continue;
 
-          // Street / Area Collection (Books 1..40)
-          const stBookRaw = String(r[1] || r[0] || '').trim();
-          const stResp = String(r[streetRespIdx] || '').trim();
-          const stAmt = toNum(r[streetAmtIdx]);
-          if (i - headerIdx <= 40 && (stBookRaw || stResp || stAmt > 0)) {
-            const bNum = stBookRaw || String(i - headerIdx);
-            items.push({
-              id: `bc-street-${i}`,
-              stream: 'Street / Area',
-              bookLabel: /^\d+$/.test(bNum) ? `Book #${bNum}` : bNum,
-              responsible: stResp || 'Unassigned',
-              amount: stAmt
-            });
+          if (lower.includes('vip') || lower.includes('qr') || lower.includes('special')) {
+            currentSectionStream = 'VIP / QR';
+            if (toNum(r[amtIdx]) === 0 && !String(r[respIdx] || '').trim()) continue;
           }
 
-          // Special / VIP & QR Collection (20 Books)
-          const vpBookRaw = String(r[vipBookIdx] || '').trim();
-          const vpResp = String(r[vipRespIdx] || '').trim();
-          const vpAmt = toNum(r[vipAmtIdx]);
-          if (i - headerIdx <= 20 && (vpBookRaw || vpResp || vpAmt > 0)) {
-            const vNum = vpBookRaw || `VIP-${i - headerIdx}`;
-            items.push({
-              id: `bc-vip-${i}`,
-              stream: 'VIP / QR',
-              bookLabel: /^\d+$/.test(vNum) ? `VIP #${vNum}` : vNum,
-              responsible: vpResp || 'Unassigned',
-              amount: vpAmt
-            });
-          }
+          const rawBook = String(r[bookIdx] ?? r[0] ?? '').trim();
+          const resp = String(r[respIdx] ?? '').trim();
+          const amt = toNum(r[amtIdx]);
+          if (!rawBook && !resp && amt === 0) continue;
+
+          rowCounter++;
+          const explicitStream = streamIdx >= 0 ? String(r[streamIdx] || '').toLowerCase() : '';
+          const isVip = explicitStream.includes('vip') || explicitStream.includes('qr') || lower.includes('vip') || lower.includes('qr') || currentSectionStream === 'VIP / QR' || rowCounter > 40;
+          const stream = isVip ? 'VIP / QR' : 'Street / Area';
+          const label = rawBook
+            ? (/^\d+$/.test(rawBook) ? `${isVip ? 'VIP' : 'Book'} #${rawBook}` : rawBook)
+            : `${isVip ? 'VIP' : 'Book'} #${rowCounter}`;
+
+          items.push({
+            id: `bc-row-${i}`,
+            stream,
+            bookLabel: label,
+            responsible: resp || 'Unassigned',
+            amount: amt
+          });
         }
+
         return items;
       }
 
@@ -2070,7 +2130,8 @@
         const bankMatch = titles.find(t => t.toLowerCase().includes('bank'));
         const cashMatch = titles.find(t => t.toLowerCase().includes('cash'));
         const chqMatch = titles.find(t => t.toLowerCase().includes('cheque'));
-        const colMatch = titles.find(t => t.toLowerCase().includes('collection') || t.toLowerCase().includes('book col'));
+        const colMatch = titles.find(t => t.toLowerCase().includes('book') && t.toLowerCase().includes('col'))
+          || titles.find(t => t.toLowerCase().includes('collection'));
         if (bankMatch) resolvedTabNames.bank = bankMatch;
         if (cashMatch) resolvedTabNames.cash = cashMatch;
         if (chqMatch) resolvedTabNames.cheques = chqMatch;
@@ -2097,9 +2158,9 @@
             `'${resolvedTabNames.bank}'!A1:H500`,
             `'${resolvedTabNames.cash}'!A1:F500`,
             `'${resolvedTabNames.cheques}'!A1:H500`,
-            `'${resolvedTabNames.bookCollection}'!A1:M100`
+            `'${resolvedTabNames.bookCollection}'!A1:N150`
           ];
-          const query = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
+          const query = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&') + '&valueRenderOption=FORMATTED_VALUE';
           const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?${query}`;
 
           const res = await fetch(batchUrl, {
