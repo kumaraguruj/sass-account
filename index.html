@@ -922,7 +922,7 @@
     (function () {
       'use strict';
 
-      const STORAGE_KEY = 'sass_bankbook_cashbook_2026_v5';
+      const STORAGE_KEY = 'sass_bankbook_cashbook_2026_v6';
       const SESSION_TOKEN_KEY = 'sass_oauth_token_2026_v1';
       const DEFAULT_SHEET_ID = '1kqwLsheL2bbLcn6992MHA99zqvoxv8JrdEbioJLScZw';
       const DEFAULT_CLIENT_ID = '674713422029-okcbm6pe56s30ep2j11u9nmqrvug6scu.apps.googleusercontent.com';
@@ -963,6 +963,14 @@
         outwardId: 'cashTotalOutward',
         netId: 'cashNetTotal'
       };
+
+      function isBookCollectionHeaderEntry(responsible, bookLabel) {
+        const r = String(responsible || '').trim().toLowerCase();
+        const b = String(bookLabel || '').trim().toLowerCase();
+        if (/^(responsible|name|member|person|area|street|vip|qr)$/.test(r)) return true;
+        if (/^(book\s*number|book\s*no\.?|book|s\.?\s*no\.?|sl\.?\s*no\.?)$/.test(b)) return true;
+        return false;
+      }
 
       function createInitialSnapshot() {
         return {
@@ -1031,15 +1039,18 @@
 
       function loadState() {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('sass_bankbook_cashbook_2026_v5');
           if (!raw) return createInitialSnapshot();
           const parsed = JSON.parse(raw);
           const validView = VIEW_IDS[parsed.activeView] ? parsed.activeView : 'dashboard';
+          const cleanBookCollections = Array.isArray(parsed.bookCollections)
+            ? parsed.bookCollections.filter(b => !isBookCollectionHeaderEntry(b && b.responsible, b && b.bookLabel))
+            : [];
           return Object.assign(createInitialSnapshot(), parsed, {
             activeView: validView,
             entries: Array.isArray(parsed.entries) ? parsed.entries : [],
             cheques: Array.isArray(parsed.cheques) ? parsed.cheques : [],
-            bookCollections: Array.isArray(parsed.bookCollections) ? parsed.bookCollections : []
+            bookCollections: cleanBookCollections
           });
         } catch (err) {
           return createInitialSnapshot();
@@ -1254,8 +1265,9 @@
         const clearedCheques = state.cheques.filter(c => String(c.status).toLowerCase() === 'cleared');
         const pendingCheques = state.cheques.filter(c => String(c.status).toLowerCase() !== 'cleared');
 
-        const streetCols = state.bookCollections.filter(b => b.stream !== 'VIP / QR');
-        const vipCols = state.bookCollections.filter(b => b.stream === 'VIP / QR');
+        const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
+        const streetCols = validCols.filter(b => b.stream !== 'VIP / QR');
+        const vipCols = validCols.filter(b => b.stream === 'VIP / QR');
         const streetColAmt = streetCols.reduce((s, b) => s + toNum(b.amount), 0);
         const vipColAmt = vipCols.reduce((s, b) => s + toNum(b.amount), 0);
         const totalBookColAmt = streetColAmt + vipColAmt;
@@ -1277,7 +1289,7 @@
           vipColAmt,
           vipColBooks: vipCols.length,
           totalBookColAmt,
-          totalBookColBooks: state.bookCollections.length
+          totalBookColBooks: validCols.length
         };
       }
 
@@ -1407,13 +1419,14 @@
         setText('kpiBookCollection', formatMoney(t.totalBookColAmt));
         setText('kpiBookCollectionSub', `Street: ${formatMoney(t.streetColAmt)} | VIP/QR: ${formatMoney(t.vipColAmt)}`);
 
-        const activeBooksCount = state.bookCollections.filter(b => toNum(b.amount) > 0 || (b.responsible && b.responsible !== 'Unassigned')).length;
+        const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
+        const activeBooksCount = validCols.filter(b => toNum(b.amount) > 0 || (b.responsible && b.responsible !== 'Unassigned')).length;
         setText('bookColCountBadge', `${activeBooksCount} / 60 Books`);
 
         const summaryBody = document.getElementById('dashBookSummaryBody');
         if (summaryBody) {
-          const streetActive = state.bookCollections.filter(b => b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
-          const vipActive = state.bookCollections.filter(b => b.stream === 'VIP / QR' && toNum(b.amount) > 0).length;
+          const streetActive = validCols.filter(b => b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
+          const vipActive = validCols.filter(b => b.stream === 'VIP / QR' && toNum(b.amount) > 0).length;
           const summaryRows = [
             {
               label: 'Street / Area Collections',
@@ -1457,7 +1470,7 @@
           const streamOrder = ['Street / Area', 'VIP / QR'];
           const streamGroups = new Map();
 
-          for (const item of state.bookCollections) {
+          for (const item of validCols) {
             const stream = item.stream === 'VIP / QR' ? 'VIP / QR' : 'Street / Area';
             if (selectedStream !== 'ALL' && stream !== selectedStream) continue;
 
@@ -2101,7 +2114,12 @@
             const stBookRaw = String(r[streetBookIdx] ?? r[0] ?? '').trim();
             const stResp = String(r[streetRespIdx] ?? '').trim();
             const stAmt = toNum(r[streetAmtIdx]);
-            if (streetCount < 40 && !stBookRaw.toLowerCase().includes('total') && (stBookRaw || stResp || stAmt > 0)) {
+            if (
+              streetCount < 40 &&
+              !stBookRaw.toLowerCase().includes('total') &&
+              !isBookCollectionHeaderEntry(stResp, stBookRaw) &&
+              (stBookRaw || stResp || stAmt > 0)
+            ) {
               streetCount++;
               const bNum = stBookRaw || String(streetCount);
               items.push({
@@ -2116,7 +2134,12 @@
             const vpBookRaw = String(r[vipBookIdx] ?? '').trim();
             const vpResp = String(r[vipRespIdx] ?? '').trim();
             const vpAmt = toNum(r[vipAmtIdx]);
-            if (vipCount < 20 && !vpBookRaw.toLowerCase().includes('total') && (vpBookRaw || vpResp || vpAmt > 0)) {
+            if (
+              vipCount < 20 &&
+              !vpBookRaw.toLowerCase().includes('total') &&
+              !isBookCollectionHeaderEntry(vpResp, vpBookRaw) &&
+              (vpBookRaw || vpResp || vpAmt > 0)
+            ) {
               vipCount++;
               const vNum = vpBookRaw || `VIP-${vipCount}`;
               items.push({
@@ -2155,6 +2178,7 @@
           const rawBook = String(r[bookIdx] ?? r[0] ?? '').trim();
           const resp = String(r[respIdx] ?? '').trim();
           const amt = toNum(r[amtIdx]);
+          if (isBookCollectionHeaderEntry(resp, rawBook)) continue;
           if (!rawBook && !resp && amt === 0) continue;
 
           rowCounter++;
@@ -2224,23 +2248,15 @@
         return titles;
       }
 
-      // Unified Logical Sync:
-      // 1. If local changes are pending and OAuth is connected, push local changes FIRST so nothing is ever overwritten.
-      // 2. Pull all 4 tabs (Bank Book, Cash Book, Cheques Issued, Book Collection) via OAuth API v4 when signed in,
-      //    or automatically fall back to public GViz CSV reads when signed out.
       async function syncAllFromGoogleSheet(silent = false) {
         if (isSyncInProgress) return;
-
-        // Avoid race condition right after a local write
         if (silent && Date.now() - lastWriteTimestamp < 3500) return;
 
-        // If user has unsaved local mutations and OAuth is ready, flush push first
         if (state.hasDirtyLocalChanges && hasValidOAuthToken()) {
           await pushToGoogleSheet(silent, false);
           return;
         }
 
-        // If user has unsaved local mutations while signed out, do NOT clobber their local edits on background poll
         if (state.hasDirtyLocalChanges && !hasValidOAuthToken()) {
           if (!silent) {
             requestOAuthToken(() => pushToGoogleSheet(false, false));
@@ -2282,7 +2298,6 @@
             bookColRows = (valueRanges[3] && valueRanges[3].values) || [];
             usedOAuth = true;
           } else {
-            // Public GViz fallback across all tabs so data loads logically even before OAuth sign-in
             const [bRes, cRes, qRes, bcRes] = await Promise.all([
               fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.bank, 'Bank Book', 'BankBook']),
               fetchPublicTabCsv(spreadsheetId, [resolvedTabNames.cash, 'Cash Book', 'CashBook']),
@@ -2316,7 +2331,6 @@
           if (parsedBank.opening > 0) state.openingBank = parsedBank.opening;
           if (parsedCash.opening > 0 || parsedCash.entries.length > 0) state.openingCash = parsedCash.opening;
 
-          // Only apply tab updates if data was retrieved or OAuth confirmed the tab exists
           if (syncedEntries.length > 0 || (usedOAuth && (availableTabs.includes(resolvedTabNames.bank) || availableTabs.includes(resolvedTabNames.cash)))) {
             if (!(syncedEntries.length === 0 && state.entries.length > 0 && silent)) {
               state.entries = syncedEntries;
