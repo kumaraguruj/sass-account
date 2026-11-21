@@ -253,13 +253,13 @@
         <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5">
           <div class="flex items-start justify-between gap-2 mb-3">
             <div>
-              <h2 class="text-base sm:text-lg font-bold text-slate-900">Monthly Cash Flow</h2>
-              <p class="text-xs text-slate-500">Period-wise receipts vs. payments across ledgers</p>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Expense Breakdown by Category</h2>
+              <p class="text-xs text-slate-500">Top payment categories across BankBook &amp; CashBook</p>
             </div>
-            <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-700">Live</span>
+            <span id="catChartTotalBadge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 tabular-nums">₹0</span>
           </div>
           <div class="h-56 sm:h-64 w-full relative">
-            <canvas id="flowChartCanvas"></canvas>
+            <canvas id="categoryChartCanvas"></canvas>
           </div>
         </div>
 
@@ -274,6 +274,35 @@
           <div class="h-56 sm:h-64 w-full relative">
             <canvas id="liquidityChartCanvas"></canvas>
           </div>
+        </div>
+      </div>
+
+      <!-- Monthly Cash Flow Table (Converted from Chart) -->
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-stone-200/80 bg-gradient-to-r from-stone-50/90 to-teal-50/40 flex items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Monthly Cash Flow</h2>
+            <p class="text-xs text-slate-500">Period-wise receipts vs. payments across BankBook &amp; CashBook</p>
+          </div>
+          <span id="dashMonthlyPeriodCount" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200/70 shrink-0 tabular-nums">
+            0 Periods
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="py-3 px-3 sm:px-4 font-semibold">Period</th>
+                <th class="py-3 px-3 sm:px-4 text-center font-semibold">Entries</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-semibold">Receipt (+)</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-semibold">Payment (-)</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-semibold">Net Flow</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-semibold">Cumulative Net</th>
+              </tr>
+            </thead>
+            <tbody id="dashMonthlyFlowBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
+            <tfoot id="dashMonthlyFlowFoot" class="bg-slate-50/90 border-t border-slate-200 font-semibold text-xs sm:text-sm tabular-nums"></tfoot>
+          </table>
         </div>
       </div>
 
@@ -1244,7 +1273,7 @@
       let isSyncInProgress = false;
       let lastWriteTimestamp = 0;
       let autoPullTimerId = null;
-      let flowChartInstance = null;
+      let categoryChartInstance = null;
       let liquidityChartInstance = null;
       let parsedCsvRows = [];
       let chequeStatusFilter = 'ALL';
@@ -1384,8 +1413,16 @@
         if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
         const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
         if (dmy) {
-          const dd = dmy[1].padStart(2, '0');
-          const mm = dmy[2].padStart(2, '0');
+          let p1 = parseInt(dmy[1], 10);
+          let p2 = parseInt(dmy[2], 10);
+          // Handle MM/DD/YYYY dates cleanly so days > 12 are not treated as months
+          if (p2 > 12 && p1 <= 12) {
+            const tmp = p1;
+            p1 = p2;
+            p2 = tmp;
+          }
+          const dd = String(p1).padStart(2, '0');
+          const mm = String(p2).padStart(2, '0');
           return `${dmy[3]}-${mm}-${dd}`;
         }
         const parsed = new Date(s);
@@ -1705,35 +1742,43 @@
       }
 
       function renderCharts(t) {
-        const flowCanvas = document.getElementById('flowChartCanvas');
+        const catCanvas = document.getElementById('categoryChartCanvas');
         const liqCanvas = document.getElementById('liquidityChartCanvas');
-        if (!flowCanvas || !liqCanvas) return;
+        if (!catCanvas || !liqCanvas) return;
 
-        const monthMap = new Map();
+        // Aggregate outward payments by category across BankBook & CashBook
+        const catMap = new Map();
+        let totalExpenses = 0;
         for (const e of state.entries) {
-          const mKey = getMonthKey(e.date) || 'General';
-          if (!monthMap.has(mKey)) monthMap.set(mKey, { inward: 0, outward: 0 });
-          const m = monthMap.get(mKey);
-          if (e.type === 'INWARD') m.inward += toNum(e.amount);
-          else m.outward += toNum(e.amount);
+          if (e.type !== 'OUTWARD') continue;
+          const amt = toNum(e.amount);
+          if (amt <= 0) continue;
+          const catName = (e.category || '').trim() || 'General';
+          catMap.set(catName, (catMap.get(catName) || 0) + amt);
+          totalExpenses += amt;
         }
-        const monthKeys = Array.from(monthMap.keys()).sort();
-        const flowLabels = monthKeys.length > 0 ? monthKeys : ['Bank In', 'Bank Out', 'Cash In', 'Cash Out'];
-        const inwardSeries = monthKeys.length > 0
-          ? monthKeys.map(k => monthMap.get(k).inward)
-          : [t.bankInward, 0, t.cashInward, 0];
-        const outwardSeries = monthKeys.length > 0
-          ? monthKeys.map(k => monthMap.get(k).outward)
-          : [0, t.bankOutward, 0, t.cashOutward];
+        setText('catChartTotalBadge', formatMoney(totalExpenses));
+
+        const sortedCats = Array.from(catMap.entries()).sort((a, b) => b[1] - a[1]);
+        const topCats = sortedCats.slice(0, 6);
+        const otherSum = sortedCats.slice(6).reduce((s, item) => s + item[1], 0);
+        if (otherSum > 0) topCats.push(['Other Categories', otherSum]);
+
+        const catLabels = topCats.length > 0 ? topCats.map(c => c[0]) : ['No Expenses Yet'];
+        const catValues = topCats.length > 0 ? topCats.map(c => c[1]) : [1];
+        const catPalette = topCats.length > 0
+          ? ['#0f766e', '#d97706', '#0284c7', '#e11d48', '#059669', '#7c3aed', '#64748b']
+          : ['#e2e8f0'];
+
         const modernPalette = ['#0f766e', '#059669', '#d97706', '#0284c7', '#f59e0b'];
 
         if (typeof window.Chart === 'undefined') {
           drawCanvasFallback(
-            flowCanvas,
-            flowLabels,
-            inwardSeries.map((v, i) => v + (outwardSeries[i] || 0)),
-            modernPalette,
-            'Cash Flow Summary'
+            catCanvas,
+            catLabels,
+            topCats.length > 0 ? catValues : [0],
+            catPalette,
+            'Expense Breakdown by Category'
           );
           drawCanvasFallback(
             liqCanvas,
@@ -1745,23 +1790,42 @@
           return;
         }
 
-        if (flowChartInstance) flowChartInstance.destroy();
-        flowChartInstance = new window.Chart(flowCanvas.getContext('2d'), {
-          type: 'bar',
+        if (categoryChartInstance) categoryChartInstance.destroy();
+        categoryChartInstance = new window.Chart(catCanvas.getContext('2d'), {
+          type: 'doughnut',
           data: {
-            labels: flowLabels,
-            datasets: [
-              { label: 'Receipt (+)', data: inwardSeries, backgroundColor: '#0d9488', borderRadius: 8, maxBarThickness: 36 },
-              { label: 'Payment (-)', data: outwardSeries, backgroundColor: '#e11d48', borderRadius: 8, maxBarThickness: 36 }
-            ]
+            labels: catLabels,
+            datasets: [{
+              data: catValues,
+              backgroundColor: catPalette,
+              borderColor: '#ffffff',
+              borderWidth: 2,
+              hoverOffset: 6
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } },
-            scales: {
-              x: { grid: { display: false } },
-              y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+            cutout: '62%',
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  usePointStyle: true,
+                  boxWidth: 8,
+                  font: { size: 11 }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    if (topCats.length === 0) return ' No expense entries recorded yet';
+                    const val = Number(ctx.raw) || 0;
+                    const pct = totalExpenses > 0 ? ((val / totalExpenses) * 100).toFixed(1) : '0.0';
+                    return ` ${ctx.label}: ${formatMoney(val)} (${pct}%)`;
+                  }
+                }
+              }
             }
           }
         });
@@ -1789,6 +1853,74 @@
             }
           }
         });
+      }
+
+      function renderMonthlyFlowTable() {
+        const tbody = document.getElementById('dashMonthlyFlowBody');
+        const tfoot = document.getElementById('dashMonthlyFlowFoot');
+        if (!tbody || !tfoot) return;
+
+        const monthMap = new Map();
+        for (const e of state.entries) {
+          const mKey = getMonthKey(e.date) || 'Undated';
+          if (!monthMap.has(mKey)) {
+            monthMap.set(mKey, { inward: 0, outward: 0, count: 0 });
+          }
+          const rec = monthMap.get(mKey);
+          rec.count += 1;
+          if (e.type === 'INWARD') rec.inward += toNum(e.amount);
+          else rec.outward += toNum(e.amount);
+        }
+
+        const keys = Array.from(monthMap.keys()).sort();
+        setText('dashMonthlyPeriodCount', `${keys.length} Period${keys.length === 1 ? '' : 's'}`);
+
+        if (keys.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-6 px-4 text-center text-slate-400">No ledger entries yet. Add entries or sync from Google Sheets to view period-wise cash flow.</td></tr>';
+          tfoot.innerHTML = '';
+          return;
+        }
+
+        let totalIn = 0;
+        let totalOut = 0;
+        let totalCount = 0;
+        let cumulativeNet = 0;
+
+        tbody.innerHTML = keys.map(k => {
+          const m = monthMap.get(k);
+          const net = m.inward - m.outward;
+          cumulativeNet += net;
+          totalIn += m.inward;
+          totalOut += m.outward;
+          totalCount += m.count;
+
+          return `
+            <tr class="hover:bg-teal-50/40 transition-colors">
+              <td class="py-2.5 px-3 sm:px-4 font-semibold text-slate-900 whitespace-nowrap">${escapeHtml(k)}</td>
+              <td class="py-2.5 px-3 sm:px-4 text-center text-slate-600">${m.count}</td>
+              <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(m.inward)}</td>
+              <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-rose-600 whitespace-nowrap">${formatMoney(m.outward)}</td>
+              <td class="py-2.5 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${net >= 0 ? 'text-teal-800' : 'text-rose-700'}">
+                ${net >= 0 ? '+' : ''}${formatMoney(net)}
+              </td>
+              <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatMoney(cumulativeNet)}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const totalNet = totalIn - totalOut;
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-3 sm:px-4 text-slate-800">Total Cash Flow</td>
+            <td class="py-3 px-3 sm:px-4 text-center text-slate-700">${totalCount}</td>
+            <td class="py-3 px-3 sm:px-4 text-right text-emerald-700 whitespace-nowrap">${formatMoney(totalIn)}</td>
+            <td class="py-3 px-3 sm:px-4 text-right text-rose-600 whitespace-nowrap">${formatMoney(totalOut)}</td>
+            <td class="py-3 px-3 sm:px-4 text-right whitespace-nowrap ${totalNet >= 0 ? 'text-teal-800' : 'text-rose-700'}">
+              ${totalNet >= 0 ? '+' : ''}${formatMoney(totalNet)}
+            </td>
+            <td class="py-3 px-3 sm:px-4 text-right text-slate-900 whitespace-nowrap">${formatMoney(cumulativeNet)}</td>
+          </tr>
+        `;
       }
 
       // =========================================================================
@@ -2142,6 +2274,7 @@
         setText('kpiPendingInstruments', formatMoney(t.pendingAmt));
         setText('kpiPendingInstrumentsSub', `${t.pendingCount} Pending | Cleared: ${formatMoney(t.clearedAmt)}`);
 
+        renderMonthlyFlowTable();
         renderBookCollectionDashboard(t);
 
         const recentEntriesBody = document.getElementById('dashRecentEntriesBody');
