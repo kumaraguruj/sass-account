@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <!-- Chart.js & Google Identity Services -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -18,34 +18,11 @@
         extend: {
           fontFamily: {
             sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            serif: ['Playfair Display', 'Georgia', 'serif']
+            display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif']
           },
-          colors: {
-            navy: {
-              700: '#243b53',
-              800: '#1e3a5f',
-              850: '#162c48',
-              900: '#0f294a',
-              950: '#0f172a'
-            },
-            slatex: {
-              500: '#475569',
-              600: '#334155',
-              700: '#1e293b'
-            },
-            skyx: {
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1'
-            },
-            tealx: {
-              600: '#0d9488',
-              700: '#0f766e'
-            },
-            crimson: {
-              600: '#dc2626',
-              700: '#b91c1c'
-            }
+          boxShadow: {
+            soft: '0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 46, 46, 0.08)',
+            card: '0 1px 3px rgba(15, 23, 42, 0.05), 0 12px 32px -16px rgba(15, 61, 58, 0.14)'
           }
         }
       }
@@ -54,13 +31,17 @@
   <style>
     html, body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: #f1f5f9;
+      background-color: #f8f7f4;
+      background-image: radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.07) 0px, transparent 50%),
+                        radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.06) 0px, transparent 45%);
+      background-attachment: fixed;
       color: #0f172a;
       overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
     }
-    h1, h2, .font-display {
-      font-family: 'Playfair Display', Georgia, serif;
+    h1, h2, h3, .font-display {
+      font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+      letter-spacing: -0.02em;
     }
     .sticky-head th {
       position: sticky;
@@ -76,6 +57,11 @@
     }
     .app-view.is-active {
       display: block;
+      animation: fadeSlideIn 0.2s ease-out;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -91,29 +77,29 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#f1f5f9] text-slate-900">
-  <!-- Top Navy Executive Header (Clean Text-Only, No Logo) -->
-  <header class="bg-[#0f172a] text-white shadow-md border-b border-[#1e3a5f] sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+<body class="min-h-screen flex flex-col text-slate-900 antialiased">
+  <!-- Top Deep Forest Teal Header (Clean Text-Only, No Logo) -->
+  <header class="bg-gradient-to-r from-[#0c2d2c] via-[#113f3c] to-[#1c2e35] text-white shadow-lg border-b border-white/10 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-4">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <!-- Organization Title & Mobile Quick Controls -->
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
-            <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold tracking-tight text-white leading-snug break-words">
+            <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white leading-snug break-words">
               Sri Ayyappa Swamy Seva Sangam
             </h1>
-            <p class="text-[11px] sm:text-xs text-slate-300 mt-0.5 truncate">
+            <p class="text-[11px] sm:text-xs text-teal-200/85 mt-0.5 truncate">
               Komaleeswaranpet, Chennai - 600 002 · Income &amp; Expenses - 2026 · Chronological Order
             </p>
           </div>
           <!-- Mobile Sync & Banner Toggle Controls -->
           <div class="flex lg:hidden items-center gap-1.5 shrink-0">
             <button id="btnManualSyncMobile" type="button" title="Sync Now" aria-label="Sync Now"
-              class="min-w-[40px] min-h-[40px] rounded-lg bg-[#162c48] hover:bg-[#1e3a5f] active:bg-[#1e3a5f] text-white border border-[#334155] transition cursor-pointer flex items-center justify-center">
+              class="min-w-[40px] min-h-[40px] rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 backdrop-blur-sm transition cursor-pointer flex items-center justify-center">
               <span class="sync-icon inline-block text-base leading-none">&#8635;</span>
             </button>
             <button id="btnToggleBannerMobile" type="button" title="Toggle status banner" aria-label="Toggle status banner"
-              class="min-w-[40px] min-h-[40px] rounded-lg bg-[#162c48] hover:bg-[#1e3a5f] active:bg-[#1e3a5f] text-white border border-[#334155] transition cursor-pointer flex items-center justify-center">
+              class="min-w-[40px] min-h-[40px] rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 backdrop-blur-sm transition cursor-pointer flex items-center justify-center">
               <svg class="banner-chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
               </svg>
@@ -124,62 +110,62 @@
         <!-- Primary Action Bar -->
         <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2">
           <select id="currencySelect" aria-label="Currency"
-            class="min-h-[40px] bg-[#162c48] text-white text-xs sm:text-sm font-medium border border-[#334155] rounded-lg px-2.5 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
-            <option value="INR" selected>₹ INR</option>
-            <option value="USD">$ USD</option>
-            <option value="EUR">€ EUR</option>
+            class="min-h-[40px] bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-medium border border-white/15 rounded-xl px-2.5 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
+            <option value="INR" class="text-slate-900" selected>₹ INR</option>
+            <option value="USD" class="text-slate-900">$ USD</option>
+            <option value="EUR" class="text-slate-900">€ EUR</option>
           </select>
 
           <button id="btnContraTransfer" type="button"
-            class="min-h-[40px] bg-[#1e3a5f] hover:bg-[#334155] active:bg-[#162c48] text-white text-xs sm:text-sm font-medium px-2.5 sm:px-3.5 py-2 rounded-lg border border-[#334155] transition cursor-pointer truncate">
+            class="min-h-[40px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs sm:text-sm font-medium px-3 sm:px-3.5 py-2 rounded-xl border border-white/15 backdrop-blur-sm transition cursor-pointer truncate">
             Contra Transfer
           </button>
 
           <button id="btnNewEntry" type="button"
-            class="min-h-[40px] bg-[#0284c7] hover:bg-[#0369a1] active:bg-[#1e3a5f] text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-lg shadow-sm transition cursor-pointer truncate">
+            class="min-h-[40px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:from-amber-600 active:to-orange-600 text-slate-950 text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 rounded-xl shadow-md shadow-amber-950/25 transition cursor-pointer truncate">
             + New Entry
           </button>
         </div>
       </div>
 
       <!-- Exact 5 Top-Level Navigation Tabs -->
-      <nav aria-label="Primary Navigation" class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-[#1e3a5f] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
+      <nav aria-label="Primary Navigation" class="mt-3 sm:mt-4 pt-3 border-t border-white/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
         <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1">
-          <button data-nav="dashboard" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-[#0f172a] shadow-sm cursor-pointer">
+          <button data-nav="dashboard" type="button" class="nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white text-teal-950 shadow-sm cursor-pointer transition">
             Executive Dashboard
           </button>
-          <button data-nav="bankbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-[#162c48] cursor-pointer">
+          <button data-nav="bankbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-teal-100/90 hover:bg-white/10 cursor-pointer transition">
             BankBook
           </button>
-          <button data-nav="cashbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-[#162c48] cursor-pointer">
+          <button data-nav="cashbook" type="button" class="nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-teal-100/90 hover:bg-white/10 cursor-pointer transition">
             CashBook
           </button>
-          <button data-nav="cheques" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-[#162c48] cursor-pointer">
+          <button data-nav="cheques" type="button" class="nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-teal-100/90 hover:bg-white/10 cursor-pointer transition">
             Cheque Tracker
           </button>
-          <button data-nav="import-export" type="button" class="nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-[#162c48] cursor-pointer">
+          <button data-nav="import-export" type="button" class="nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-teal-100/90 hover:bg-white/10 cursor-pointer transition">
             Import / Export CSV
           </button>
         </div>
 
         <!-- Sync State Pills & Desktop Controls -->
-        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2 text-[11px] sm:text-xs text-slate-300">
+        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2 text-[11px] sm:text-xs text-teal-200/90">
           <div class="flex flex-wrap items-center gap-1.5">
-            <span id="syncStatePill" class="px-2.5 py-0.5 rounded-full bg-[#162c48] border border-[#334155] text-slate-200">
+            <span id="syncStatePill" class="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-teal-100">
               Sync: Public Read
             </span>
-            <span id="oauthStatusBadge" class="px-2.5 py-0.5 rounded-full bg-[#162c48] border border-[#334155] text-slate-300">
+            <span id="oauthStatusBadge" class="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-teal-200">
               Read-Only
             </span>
           </div>
           <div class="hidden lg:flex items-center gap-2">
-            <span id="lastRefreshedLabel">Last synced: Just now</span>
+            <span id="lastRefreshedLabel" class="text-teal-200/80">Last synced: Just now</span>
             <button id="btnManualSync" type="button" title="Pull latest from Google Sheet (↻)" aria-label="Pull latest from Google Sheet"
-              class="px-2.5 py-1.5 rounded-lg bg-[#162c48] hover:bg-[#1e3a5f] text-white border border-[#334155] transition cursor-pointer flex items-center gap-1">
+              class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/15 transition cursor-pointer flex items-center gap-1">
               <span class="sync-icon inline-block text-sm leading-none">&#8635;</span>
             </button>
             <button id="btnToggleBanner" type="button" title="Collapse or expand status banner" aria-label="Collapse or expand status banner"
-              class="p-2 rounded-lg bg-[#162c48] hover:bg-[#1e3a5f] text-white border border-[#334155] transition cursor-pointer">
+              class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/15 transition cursor-pointer">
               <svg class="banner-chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
               </svg>
@@ -191,16 +177,16 @@
   </header>
 
   <!-- Collapsible Sync Status Banner -->
-  <div id="syncBanner" class="bg-white border-b border-slate-200 text-slate-800 text-xs sm:text-sm">
+  <div id="syncBanner" class="bg-amber-50/90 backdrop-blur-sm border-b border-amber-200/70 text-stone-800 text-xs sm:text-sm">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
-      <p id="syncBannerText" class="line-clamp-2 sm:truncate">
-        Connected to <strong>Income &amp; Expenses - 2026</strong> — Live public sheet reading active; connect Google OAuth 2.0 for two-way writes &amp; 5-second auto-sync.
+      <p id="syncBannerText" class="line-clamp-2 sm:truncate text-stone-800">
+        Connected to <strong class="font-semibold text-teal-950">Income &amp; Expenses - 2026</strong> — Live public sheet reading active; connect Google OAuth 2.0 for two-way writes &amp; 5-second auto-sync.
       </p>
       <div class="flex items-center gap-2 shrink-0">
-        <button id="btnBannerSignIn" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#1e3a5f] text-white hover:bg-[#162c48] transition cursor-pointer">
+        <button id="btnBannerSignIn" type="button" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-teal-700 text-white hover:bg-teal-800 shadow-sm transition cursor-pointer">
           Connect Google
         </button>
-        <button id="btnDismissBanner" type="button" class="text-xs font-medium text-slate-500 hover:text-[#0f172a] py-1 px-1.5 cursor-pointer">
+        <button id="btnDismissBanner" type="button" class="text-xs font-medium text-stone-600 hover:text-stone-950 py-1 px-1.5 cursor-pointer">
           Hide
         </button>
       </div>
@@ -208,58 +194,83 @@
   </div>
 
   <!-- Main Content Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6">
 
     <!-- ===================================================================== -->
     <!-- 1. EXECUTIVE DASHBOARD VIEW                                           -->
     <!-- ===================================================================== -->
-    <section id="view-dashboard" class="app-view is-active space-y-5 sm:space-y-6">
+    <section id="view-dashboard" class="app-view is-active space-y-6">
       <!-- KPI Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-[#1e3a5f]">
-          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Bank Balance</p>
-          <p id="kpiBank" class="text-xl sm:text-2xl font-bold text-[#0f172a] mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiBankSub" class="text-xs text-slate-500 mt-1 tabular-nums">Receipt: ₹0 | Payment: ₹0</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft hover:shadow-card hover:-translate-y-0.5 transition p-4 sm:p-5 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Bank Balance</p>
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-600 ring-4 ring-teal-50"></span>
+          </div>
+          <p id="kpiBank" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2 tabular-nums break-all">₹0</p>
+          <p id="kpiBankSub" class="text-xs text-slate-500 mt-1.5 tabular-nums">Receipt: ₹0 | Payment: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-[#334155]">
-          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Cash Balance</p>
-          <p id="kpiCash" class="text-xl sm:text-2xl font-bold text-[#0f172a] mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiCashSub" class="text-xs text-slate-500 mt-1 tabular-nums">Receipt: ₹0 | Payment: ₹0</p>
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft hover:shadow-card hover:-translate-y-0.5 transition p-4 sm:p-5 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Cash Balance</p>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></span>
+          </div>
+          <p id="kpiCash" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2 tabular-nums break-all">₹0</p>
+          <p id="kpiCashSub" class="text-xs text-slate-500 mt-1.5 tabular-nums">Receipt: ₹0 | Payment: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-[#0f172a]">
-          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Combined Balance</p>
-          <p id="kpiCombined" class="text-xl sm:text-2xl font-bold text-[#0f172a] mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiCombinedSub" class="text-xs text-slate-500 mt-1 tabular-nums">Bank: ₹0 | Cash: ₹0</p>
+        <div class="bg-gradient-to-br from-[#0f3d3a] to-[#134e4a] text-white rounded-2xl border border-teal-800/50 shadow-card hover:-translate-y-0.5 transition p-4 sm:p-5 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-teal-200">Combined Balance</p>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 ring-4 ring-amber-400/20"></span>
+          </div>
+          <p id="kpiCombined" class="text-xl sm:text-2xl font-extrabold text-white mt-2 tabular-nums break-all">₹0</p>
+          <p id="kpiCombinedSub" class="text-xs text-teal-200/90 mt-1.5 tabular-nums">Bank: ₹0 | Cash: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-[#0284c7]">
-          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Pending Cheques / NEFT</p>
-          <p id="kpiPendingInstruments" class="text-xl sm:text-2xl font-bold text-[#1e3a5f] mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiPendingInstrumentsSub" class="text-xs text-slate-500 mt-1 tabular-nums">0 Pending | Cleared: ₹0</p>
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft hover:shadow-card hover:-translate-y-0.5 transition p-4 sm:p-5 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Pending Cheques / NEFT</p>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-50"></span>
+          </div>
+          <p id="kpiPendingInstruments" class="text-xl sm:text-2xl font-extrabold text-amber-700 mt-2 tabular-nums break-all">₹0</p>
+          <p id="kpiPendingInstrumentsSub" class="text-xs text-slate-500 mt-1.5 tabular-nums">0 Pending | Cleared: ₹0</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 border-t-4 border-t-[#0f766e] sm:col-span-2 lg:col-span-1">
-          <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Book Collection</p>
-          <p id="kpiBookCollection" class="text-xl sm:text-2xl font-bold text-[#0f766e] mt-1 sm:mt-1.5 tabular-nums break-all">₹0</p>
-          <p id="kpiBookCollectionSub" class="text-xs text-slate-500 mt-1 tabular-nums">Street: ₹0 | Special: ₹0</p>
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft hover:shadow-card hover:-translate-y-0.5 transition p-4 sm:p-5 sm:col-span-2 lg:col-span-1 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Book Collection</p>
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-600 ring-4 ring-cyan-50"></span>
+          </div>
+          <p id="kpiBookCollection" class="text-xl sm:text-2xl font-extrabold text-teal-800 mt-2 tabular-nums break-all">₹0</p>
+          <p id="kpiBookCollectionSub" class="text-xs text-slate-500 mt-1.5 tabular-nums">Street: ₹0 | Special: ₹0</p>
         </div>
       </div>
 
       <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
-          <h2 class="text-base sm:text-lg font-bold text-[#0f172a]">Monthly Cash Flow (Receipts vs. Payments)</h2>
-          <p class="text-xs text-slate-500 mb-3">Period-wise inward receipts and outward payments across ledgers</p>
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5">
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Monthly Cash Flow</h2>
+              <p class="text-xs text-slate-500">Period-wise receipts vs. payments across ledgers</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-700">Live</span>
+          </div>
           <div class="h-56 sm:h-64 w-full relative">
             <canvas id="flowChartCanvas"></canvas>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
-          <h2 class="text-base sm:text-lg font-bold text-[#0f172a]">Balances, Book Collections &amp; Instruments</h2>
-          <p class="text-xs text-slate-500 mb-3">Distribution across Bank, Cash, Book Collections, Cheques &amp; NEFT</p>
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5">
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Balances, Collections &amp; Instruments</h2>
+              <p class="text-xs text-slate-500">Distribution across Bank, Cash, Book Collections, NEFT &amp; Pending</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800">Overview</span>
+          </div>
           <div class="h-56 sm:h-64 w-full relative">
             <canvas id="liquidityChartCanvas"></canvas>
           </div>
@@ -268,29 +279,29 @@
 
       <!-- Book Collection Summary & Grouped by Book Type Breakdown -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#1e3a5f] bg-[#0f172a] text-white flex items-center justify-between gap-2">
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden flex flex-col">
+          <div class="px-4 sm:px-5 py-4 border-b border-stone-200/80 bg-gradient-to-r from-stone-50/90 to-teal-50/50 flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-base sm:text-lg font-bold">Book Collection Summary</h2>
-              <p class="text-xs text-slate-300">Street Collection (40) &amp; Special Book Collection (20)</p>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Book Collection Summary</h2>
+              <p class="text-xs text-slate-500">Street Collection (40) &amp; Special Book Collection (20)</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <span id="bookColCountBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-slate-100">
+              <span id="bookColCountBadge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-100/80 text-teal-900">
                 0 / 60 Books
               </span>
               <button id="btnSyncBookCol" type="button" title="Sync Book Collection from Google Sheets"
-                class="px-2.5 py-1 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold transition cursor-pointer">
+                class="px-3 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-sm transition cursor-pointer">
                 Sync
               </button>
             </div>
           </div>
           <div class="overflow-x-auto flex-1">
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+              <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Collection Stream</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Books</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Collection Stream</th>
+                  <th class="py-3 px-3 sm:px-4 text-center font-semibold">Books</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">Amount</th>
                 </tr>
               </thead>
               <tbody id="dashBookSummaryBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -298,40 +309,40 @@
           </div>
         </div>
 
-        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#1e3a5f] bg-[#0f172a] text-white flex flex-col gap-3">
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden flex flex-col">
+          <div class="px-4 sm:px-5 py-4 border-b border-stone-200/80 bg-gradient-to-r from-stone-50/90 to-amber-50/50 flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <h2 class="text-base sm:text-lg font-bold">Book Collection Breakdown</h2>
-                <p id="dashBookGroupSubtitle" class="text-xs text-slate-300">
+                <h2 class="text-base sm:text-lg font-bold text-slate-900">Book Collection Breakdown</h2>
+                <p id="dashBookGroupSubtitle" class="text-xs text-slate-500">
                   Grouped by Book Type &rarr; Book Number &rarr; Responsible
                 </p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <select id="dashBookTypeFilter" aria-label="Filter by Book Type"
-                  class="min-h-[34px] px-2.5 py-1 rounded-lg bg-[#162c48] border border-[#334155] text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#0284c7]">
+                  class="min-h-[36px] px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
                   <option value="ALL">All Types</option>
                   <option value="Street Collection">Street Collection</option>
                   <option value="Special Book Collection">Special Book Collection</option>
                 </select>
                 <input id="dashRespSearch" type="text" placeholder="Search book # or member..."
-                  class="min-h-[34px] w-full sm:w-44 px-2.5 py-1 rounded-lg bg-[#162c48] border border-[#334155] text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0284c7]" />
+                  class="min-h-[36px] w-full sm:w-48 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
               </div>
             </div>
 
             <!-- Grouping Mode Pill Switcher -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#1e3a5f]">
-              <div class="inline-flex rounded-lg bg-[#162c48] p-0.5 border border-[#334155]" role="group" aria-label="Book Collection Grouping Mode">
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-stone-200/70">
+              <div class="inline-flex rounded-xl bg-stone-200/70 p-1" role="group" aria-label="Book Collection Grouping Mode">
                 <button type="button" data-book-group-mode="type_book_resp"
-                  class="book-group-pill min-h-[30px] px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-semibold bg-white text-[#0f172a] shadow-sm transition cursor-pointer">
+                  class="book-group-pill min-h-[30px] px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-white text-teal-950 shadow-sm transition cursor-pointer">
                   By Type &middot; Book No. &middot; Responsible
                 </button>
                 <button type="button" data-book-group-mode="type_resp"
-                  class="book-group-pill min-h-[30px] px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium text-slate-200 hover:bg-[#1e3a5f] transition cursor-pointer">
+                  class="book-group-pill min-h-[30px] px-3 py-1 rounded-lg text-[11px] sm:text-xs font-medium text-slate-600 hover:text-slate-900 transition cursor-pointer">
                   By Type &middot; Responsible
                 </button>
               </div>
-              <span id="dashBookFilteredMeta" class="text-[11px] text-slate-300 tabular-nums">0 groups</span>
+              <span id="dashBookFilteredMeta" class="text-[11px] font-medium text-slate-500 tabular-nums">0 groups</span>
             </div>
           </div>
 
@@ -341,12 +352,12 @@
           <!-- Desktop Table (>= 768px) -->
           <div class="hidden md:block overflow-x-auto max-h-96 overflow-y-auto flex-1">
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead id="dashBookColThead" class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+              <thead id="dashBookColThead" class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Book Number</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Responsible</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Collected Amount</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">% Share</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Book Number</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Responsible</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">Collected Amount</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">% Share</th>
                 </tr>
               </thead>
               <tbody id="dashResponsibleBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -357,24 +368,24 @@
 
       <!-- Recent Ledger Activity & Cheques/NEFT Overview -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#1e3a5f] bg-[#0f172a] text-white flex items-center justify-between gap-2">
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden">
+          <div class="px-4 sm:px-5 py-4 border-b border-stone-200/80 bg-stone-50/70 flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-base sm:text-lg font-bold">Ledger Activity (Chronological Order)</h2>
-              <p class="text-xs text-slate-300">BankBook &amp; CashBook entries in chronological order</p>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Ledger Activity</h2>
+              <p class="text-xs text-slate-500">BankBook &amp; CashBook entries in chronological order</p>
             </div>
-            <button id="btnDashViewBank" type="button" class="text-xs font-semibold text-sky-300 hover:underline shrink-0 py-1 cursor-pointer">
+            <button id="btnDashViewBank" type="button" class="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline shrink-0 py-1 cursor-pointer">
               Open Ledgers &rarr;
             </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+              <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Date</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Book</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Particular</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Date</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Book</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Particular</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">Amount</th>
                 </tr>
               </thead>
               <tbody id="dashRecentEntriesBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -382,24 +393,24 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#1e3a5f] bg-[#0f172a] text-white flex items-center justify-between gap-2">
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden">
+          <div class="px-4 sm:px-5 py-4 border-b border-stone-200/80 bg-stone-50/70 flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-base sm:text-lg font-bold">Cheques &amp; NEFT Overview (Chronological Order)</h2>
-              <p class="text-xs text-slate-300">Issued cheques &amp; NEFT transfers in chronological order</p>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Cheques &amp; NEFT Overview</h2>
+              <p class="text-xs text-slate-500">Issued cheques &amp; NEFT transfers in chronological order</p>
             </div>
-            <button id="btnDashViewCheques" type="button" class="text-xs font-semibold text-sky-300 hover:underline shrink-0 py-1 cursor-pointer">
+            <button id="btnDashViewCheques" type="button" class="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline shrink-0 py-1 cursor-pointer">
               Cheque Tracker &rarr;
             </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead class="sticky-head border-b border-slate-200 text-[11px] sm:text-xs uppercase tracking-wider text-slate-600">
+              <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Type / Ref #</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Payee / Party</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Amount</th>
-                  <th class="py-2.5 sm:py-3 px-3 sm:px-4">Status</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Type / Ref #</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Payee / Party</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">Amount</th>
+                  <th class="py-3 px-3 sm:px-4 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody id="dashRecentChequesBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -413,19 +424,19 @@
     <!-- 2. BANKBOOK VIEW                                                      -->
     <!-- ===================================================================== -->
     <section id="view-bankbook" class="app-view space-y-4 sm:space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">BankBook Ledger</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">BankBook Ledger</h2>
             <p class="text-xs sm:text-sm text-slate-500">Stored in chronological order · Bank receipts &amp; payments register (Bank Book sheet)</p>
           </div>
           <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportBankCsv" type="button"
-              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl border border-stone-200 bg-white text-slate-700 hover:bg-stone-50 text-xs sm:text-sm font-medium shadow-sm transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnAddBankEntry" type="button"
-              class="min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               + Add Entry
             </button>
           </div>
@@ -434,50 +445,50 @@
         <!-- Filters -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
           <input id="bankSearch" type="text" placeholder="Search particulars, voucher/ref..."
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           <select id="bankTypeFilter" aria-label="Bank Type Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Types (Receipt &amp; Payment)</option>
             <option value="INWARD">Receipt (+)</option>
             <option value="OUTWARD">Payment (-)</option>
           </select>
           <select id="bankCategoryFilter" aria-label="Bank Category Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Categories</option>
           </select>
           <select id="bankMonthFilter" aria-label="Bank Month Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Months</option>
           </select>
         </div>
 
         <!-- Mobile Card List (< 768px) -->
         <div id="bankMobileList" class="md:hidden space-y-2.5 mb-3"></div>
-        <div id="bankMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs space-y-1 tabular-nums"></div>
+        <div id="bankMobileSummary" class="md:hidden rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 text-xs space-y-1 tabular-nums"></div>
 
         <!-- Desktop Table (>= 768px) -->
-        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
+        <div class="hidden md:block overflow-x-auto border border-slate-200/80 rounded-xl">
           <table class="w-full text-left border-collapse text-sm">
-            <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
+            <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
               <tr>
-                <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Particular</th>
-                <th class="py-3 px-4">Category</th>
-                <th class="py-3 px-4">Reference</th>
-                <th class="py-3 px-4 text-right">Receipt (+)</th>
-                <th class="py-3 px-4 text-right">Payment (-)</th>
-                <th class="py-3 px-4 text-right">Running Bal</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3.5 px-4 font-semibold">Date</th>
+                <th class="py-3.5 px-4 font-semibold">Particular</th>
+                <th class="py-3.5 px-4 font-semibold">Category</th>
+                <th class="py-3.5 px-4 font-semibold">Reference</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Receipt (+)</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Payment (-)</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Running Bal</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody id="bankTableBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
-            <tfoot class="bg-slate-50 border-t-2 border-slate-200 font-semibold text-sm tabular-nums">
+            <tfoot class="bg-slate-50/90 border-t border-slate-200 font-semibold text-sm tabular-nums">
               <tr>
-                <td id="bankTotalLabel" colspan="4" class="py-3 px-4 text-slate-700">Filtered Totals (0 entries)</td>
-                <td id="bankTotalInward" class="py-3 px-4 text-right text-[#0f766e]">₹0</td>
-                <td id="bankTotalOutward" class="py-3 px-4 text-right text-[#b91c1c]">₹0</td>
-                <td id="bankNetTotal" class="py-3 px-4 text-right text-[#0f172a]">₹0</td>
-                <td class="py-3 px-4"></td>
+                <td id="bankTotalLabel" colspan="4" class="py-3.5 px-4 text-slate-700">Filtered Totals (0 entries)</td>
+                <td id="bankTotalInward" class="py-3.5 px-4 text-right text-emerald-700">₹0</td>
+                <td id="bankTotalOutward" class="py-3.5 px-4 text-right text-rose-600">₹0</td>
+                <td id="bankNetTotal" class="py-3.5 px-4 text-right text-slate-900">₹0</td>
+                <td class="py-3.5 px-4"></td>
               </tr>
             </tfoot>
           </table>
@@ -489,19 +500,19 @@
     <!-- 3. CASHBOOK VIEW                                                      -->
     <!-- ===================================================================== -->
     <section id="view-cashbook" class="app-view space-y-4 sm:space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">CashBook Ledger</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">CashBook Ledger</h2>
             <p class="text-xs sm:text-sm text-slate-500">Stored in chronological order · Cash receipts &amp; payments register (Cash Book sheet)</p>
           </div>
           <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportCashCsv" type="button"
-              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl border border-stone-200 bg-white text-slate-700 hover:bg-stone-50 text-xs sm:text-sm font-medium shadow-sm transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnAddCashEntry" type="button"
-              class="min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               + Add Entry
             </button>
           </div>
@@ -510,50 +521,50 @@
         <!-- Filters -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
           <input id="cashSearch" type="text" placeholder="Search particulars, voucher/ref..."
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           <select id="cashTypeFilter" aria-label="Cash Type Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Types (Receipt &amp; Payment)</option>
             <option value="INWARD">Receipt (+)</option>
             <option value="OUTWARD">Payment (-)</option>
           </select>
           <select id="cashCategoryFilter" aria-label="Cash Category Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Categories</option>
           </select>
           <select id="cashMonthFilter" aria-label="Cash Month Filter"
-            class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+            class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
             <option value="ALL">All Months</option>
           </select>
         </div>
 
         <!-- Mobile Card List (< 768px) -->
         <div id="cashMobileList" class="md:hidden space-y-2.5 mb-3"></div>
-        <div id="cashMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs space-y-1 tabular-nums"></div>
+        <div id="cashMobileSummary" class="md:hidden rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 text-xs space-y-1 tabular-nums"></div>
 
         <!-- Desktop Table (>= 768px) -->
-        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
+        <div class="hidden md:block overflow-x-auto border border-slate-200/80 rounded-xl">
           <table class="w-full text-left border-collapse text-sm">
-            <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
+            <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
               <tr>
-                <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Particular</th>
-                <th class="py-3 px-4">Category</th>
-                <th class="py-3 px-4">Reference</th>
-                <th class="py-3 px-4 text-right">Receipt (+)</th>
-                <th class="py-3 px-4 text-right">Payment (-)</th>
-                <th class="py-3 px-4 text-right">Running Bal</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3.5 px-4 font-semibold">Date</th>
+                <th class="py-3.5 px-4 font-semibold">Particular</th>
+                <th class="py-3.5 px-4 font-semibold">Category</th>
+                <th class="py-3.5 px-4 font-semibold">Reference</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Receipt (+)</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Payment (-)</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Running Bal</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody id="cashTableBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
-            <tfoot class="bg-slate-50 border-t-2 border-slate-200 font-semibold text-sm tabular-nums">
+            <tfoot class="bg-slate-50/90 border-t border-slate-200 font-semibold text-sm tabular-nums">
               <tr>
-                <td id="cashTotalLabel" colspan="4" class="py-3 px-4 text-slate-700">Filtered Totals (0 entries)</td>
-                <td id="cashTotalInward" class="py-3 px-4 text-right text-[#0f766e]">₹0</td>
-                <td id="cashTotalOutward" class="py-3 px-4 text-right text-[#b91c1c]">₹0</td>
-                <td id="cashNetTotal" class="py-3 px-4 text-right text-[#0f172a]">₹0</td>
-                <td class="py-3 px-4"></td>
+                <td id="cashTotalLabel" colspan="4" class="py-3.5 px-4 text-slate-700">Filtered Totals (0 entries)</td>
+                <td id="cashTotalInward" class="py-3.5 px-4 text-right text-emerald-700">₹0</td>
+                <td id="cashTotalOutward" class="py-3.5 px-4 text-right text-rose-600">₹0</td>
+                <td id="cashNetTotal" class="py-3.5 px-4 text-right text-slate-900">₹0</td>
+                <td class="py-3.5 px-4"></td>
               </tr>
             </tfoot>
           </table>
@@ -565,49 +576,49 @@
     <!-- 4. CHEQUE TRACKER VIEW (CHEQUES & NEFT TRANSACTIONS)                  -->
     <!-- ===================================================================== -->
     <section id="view-cheques" class="app-view space-y-4 sm:space-y-5">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4 sm:space-y-5">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-4 sm:p-6 space-y-5">
         <!-- 4 Summary KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-          <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 border-t-4 border-t-[#0f172a]">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-600">Total Cheques &amp; NEFT</p>
-            <p id="chqTotalAmt" class="text-lg font-bold text-[#0f172a] mt-0.5 tabular-nums">₹0</p>
-            <p id="chqTotalCount" class="text-xs text-slate-500 tabular-nums">0 Cheques · 0 NEFT</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="rounded-xl border border-stone-200/80 bg-stone-50/80 px-4 py-3.5">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Cheques &amp; NEFT</p>
+            <p id="chqTotalAmt" class="text-xl font-extrabold text-slate-900 mt-1 tabular-nums">₹0</p>
+            <p id="chqTotalCount" class="text-xs text-slate-500 mt-0.5 tabular-nums">0 Cheques · 0 NEFT</p>
           </div>
 
-          <div class="rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3 border-t-4 border-t-[#1e3a5f]">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#1e3a5f]">Pending Clearance</p>
-            <p id="chqPendingAmt" class="text-lg font-bold text-[#0f172a] mt-0.5 tabular-nums">₹0</p>
-            <p id="chqPendingCount" class="text-xs text-slate-600 tabular-nums">0 pending</p>
+          <div class="rounded-xl border border-amber-200/70 bg-amber-50/60 px-4 py-3.5">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Pending Clearance</p>
+            <p id="chqPendingAmt" class="text-xl font-extrabold text-amber-900 mt-1 tabular-nums">₹0</p>
+            <p id="chqPendingCount" class="text-xs text-amber-700 mt-0.5 tabular-nums">0 pending</p>
           </div>
 
-          <div class="rounded-lg border border-teal-200 bg-teal-50/60 px-4 py-3 border-t-4 border-t-[#0f766e]">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#0f766e]">Cleared Total</p>
-            <p id="chqClearedAmt" class="text-lg font-bold text-[#0f766e] mt-0.5 tabular-nums">₹0</p>
-            <p id="chqClearedCount" class="text-xs text-teal-800 tabular-nums">0 cleared</p>
+          <div class="rounded-xl border border-emerald-200/70 bg-emerald-50/60 px-4 py-3.5">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Cleared Total</p>
+            <p id="chqClearedAmt" class="text-xl font-extrabold text-emerald-800 mt-1 tabular-nums">₹0</p>
+            <p id="chqClearedCount" class="text-xs text-emerald-700 mt-0.5 tabular-nums">0 cleared</p>
           </div>
 
-          <div class="rounded-lg border border-sky-200 bg-sky-50/60 px-4 py-3 border-t-4 border-t-[#0284c7]">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#0369a1]">NEFT Transactions</p>
-            <p id="chqNeftAmt" class="text-lg font-bold text-[#0f172a] mt-0.5 tabular-nums">₹0</p>
-            <p id="chqNeftCount" class="text-xs text-[#0369a1] tabular-nums">0 NEFT transfers</p>
+          <div class="rounded-xl border border-cyan-200/70 bg-cyan-50/60 px-4 py-3.5">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-cyan-800">NEFT Transactions</p>
+            <p id="chqNeftAmt" class="text-xl font-extrabold text-cyan-950 mt-1 tabular-nums">₹0</p>
+            <p id="chqNeftCount" class="text-xs text-cyan-700 mt-0.5 tabular-nums">0 NEFT transfers</p>
           </div>
         </div>
 
         <!-- Table Card Header with Top-Right Export CSV + Issue Cheque / NEFT Button -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-slate-100">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-stone-100">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">Cheques &amp; NEFT Register</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Cheques &amp; NEFT Register</h2>
             <p class="text-xs sm:text-sm text-slate-500">
               Chronological order · Cheques Issued tab &amp; BankBook NEFT transfers · One-click clearance updates
             </p>
           </div>
           <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto">
             <button id="btnExportChequesCsv" type="button"
-              class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-medium transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl border border-stone-200 bg-white text-slate-700 hover:bg-stone-50 text-xs sm:text-sm font-medium shadow-sm transition cursor-pointer">
               Export CSV
             </button>
             <button id="btnIssueCheque" type="button"
-              class="min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
+              class="min-h-[40px] px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               + Issue Cheque / NEFT
             </button>
           </div>
@@ -618,33 +629,33 @@
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2.5">
               <!-- Status Filter Pills -->
-              <div class="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200" role="group" aria-label="Status Filter Pills">
+              <div class="inline-flex rounded-xl bg-stone-100 p-1 border border-stone-200/80" role="group" aria-label="Status Filter Pills">
                 <button data-chq-pill="ALL" type="button"
-                  class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-[#0f172a] text-white shadow-sm transition cursor-pointer">
+                  class="chq-filter-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer">
                   All
                 </button>
                 <button data-chq-pill="Pending" type="button"
-                  class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+                  class="chq-filter-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer">
                   Pending
                 </button>
                 <button data-chq-pill="Cleared" type="button"
-                  class="chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+                  class="chq-filter-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer">
                   Cleared
                 </button>
               </div>
 
               <!-- Type Filter Pills -->
-              <div class="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200" role="group" aria-label="Type Filter Pills">
+              <div class="inline-flex rounded-xl bg-stone-100 p-1 border border-stone-200/80" role="group" aria-label="Type Filter Pills">
                 <button data-chq-type-pill="ALL" type="button"
-                  class="chq-type-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-[#1e3a5f] text-white shadow-sm transition cursor-pointer">
+                  class="chq-type-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-semibold bg-teal-950 text-white shadow-sm transition cursor-pointer">
                   All Types
                 </button>
                 <button data-chq-type-pill="Cheque" type="button"
-                  class="chq-type-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+                  class="chq-type-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer">
                   Cheque
                 </button>
                 <button data-chq-type-pill="NEFT" type="button"
-                  class="chq-type-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+                  class="chq-type-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer">
                   NEFT
                 </button>
               </div>
@@ -653,52 +664,52 @@
             <!-- Search & Month Filter -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 lg:w-[26rem]">
               <input id="chequeSearch" type="text" placeholder="Search Ref #, payee, remarks..."
-                class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+                class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
               <select id="chequeMonthFilter" aria-label="Issue or Transfer Month"
-                class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]">
+                class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition">
                 <option value="ALL">All Months</option>
               </select>
             </div>
           </div>
 
           <!-- Auto-Include BankBook NEFT Toggle -->
-          <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3.5 py-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-teal-50/50 border border-teal-100 px-3.5 py-2.5">
             <label for="toggleBankNeft" class="inline-flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700 cursor-pointer select-none">
               <input id="toggleBankNeft" type="checkbox" checked
-                class="w-4 h-4 rounded border-slate-300 text-[#1e3a5f] focus:ring-[#0284c7] cursor-pointer" />
+                class="w-4 h-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600 cursor-pointer" />
               <span>Include BankBook NEFT entries</span>
             </label>
-            <span id="bankNeftMatchedInfo" class="text-xs text-slate-500">0 auto-included from BankBook</span>
+            <span id="bankNeftMatchedInfo" class="text-xs font-medium text-teal-800/85">0 auto-included from BankBook</span>
           </div>
         </div>
 
         <!-- Mobile Card List (< 768px) -->
         <div id="chequesMobileList" class="md:hidden space-y-2.5"></div>
-        <div id="chequesMobileSummary" class="md:hidden rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs font-semibold text-[#0f172a] flex items-center justify-between tabular-nums"></div>
+        <div id="chequesMobileSummary" class="md:hidden rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 text-xs font-semibold text-slate-900 flex items-center justify-between tabular-nums"></div>
 
         <!-- Desktop Table (>= 768px) -->
-        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
+        <div class="hidden md:block overflow-x-auto border border-slate-200/80 rounded-xl">
           <table class="w-full text-left border-collapse text-sm">
-            <thead class="sticky-head border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600">
+            <thead class="sticky-head border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500">
               <tr>
-                <th class="py-3 px-4">S No</th>
-                <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Type</th>
-                <th class="py-3 px-4">Cheque / NEFT Ref #</th>
-                <th class="py-3 px-4">Payee / Beneficiary</th>
-                <th class="py-3 px-4">Remarks</th>
-                <th class="py-3 px-4 text-right">Amount</th>
-                <th class="py-3 px-4">Cleared Date</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3.5 px-4 font-semibold">S No</th>
+                <th class="py-3.5 px-4 font-semibold">Date</th>
+                <th class="py-3.5 px-4 font-semibold">Type</th>
+                <th class="py-3.5 px-4 font-semibold">Cheque / NEFT Ref #</th>
+                <th class="py-3.5 px-4 font-semibold">Payee / Beneficiary</th>
+                <th class="py-3.5 px-4 font-semibold">Remarks</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Amount</th>
+                <th class="py-3.5 px-4 font-semibold">Cleared Date</th>
+                <th class="py-3.5 px-4 font-semibold">Status</th>
+                <th class="py-3.5 px-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody id="chequesTableBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
-            <tfoot class="bg-slate-50 border-t-2 border-slate-200 font-semibold text-sm tabular-nums">
+            <tfoot class="bg-slate-50/90 border-t border-slate-200 font-semibold text-sm tabular-nums">
               <tr>
-                <td id="chequeTotalLabel" colspan="6" class="py-3 px-4 text-slate-700">Filtered Total (0 records)</td>
-                <td id="chequeTotalAmount" class="py-3 px-4 text-right text-[#0f172a]">₹0</td>
-                <td colspan="3" class="py-3 px-4"></td>
+                <td id="chequeTotalLabel" colspan="6" class="py-3.5 px-4 text-slate-700">Filtered Total (0 records)</td>
+                <td id="chequeTotalAmount" class="py-3.5 px-4 text-right text-slate-900">₹0</td>
+                <td colspan="3" class="py-3.5 px-4"></td>
               </tr>
             </tfoot>
           </table>
@@ -709,92 +720,92 @@
     <!-- ===================================================================== -->
     <!-- 5. IMPORT / EXPORT CSV & GOOGLE SHEETS API v4 OAUTH SYNC              -->
     <!-- ===================================================================== -->
-    <section id="view-import-export" class="app-view space-y-4 sm:space-y-6">
+    <section id="view-import-export" class="app-view space-y-5 sm:space-y-6">
       <!-- Script-Free Google Sheets API v4 (OAuth 2.0) Panel -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5 sm:p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">Google Sheets API v4 (OAuth 2.0) Two-Way Sync</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Google Sheets API v4 (OAuth 2.0) Two-Way Sync</h2>
             <p class="text-xs sm:text-sm text-slate-500">
               Reads Bank Book, Cash Book, Cheques Issued, Street Collection &amp; Special Book Collection · Two-way writes &amp; 5-second auto-pull when signed in
             </p>
           </div>
-          <span id="oauthConnectionState" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 shrink-0">
+          <span id="oauthConnectionState" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-slate-700 shrink-0">
             Disconnected (Public Read Only)
           </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
           <div>
-            <label for="sheetIdInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            <label for="sheetIdInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
               Target Spreadsheet ID
             </label>
             <input id="sheetIdInput" type="text"
-              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+              class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           </div>
           <div>
-            <label for="oauthClientIdInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            <label for="oauthClientIdInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
               Google OAuth 2.0 Web Client ID
             </label>
             <input id="oauthClientIdInput" type="text"
-              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+              class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <button id="btnGoogleSignIn" type="button"
-            class="min-h-[40px] px-4 py-2 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-semibold cursor-pointer">
+            class="min-h-[40px] px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
             Sign in with Google
           </button>
           <button id="btnGoogleSignOut" type="button"
-            class="hidden min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold cursor-pointer">
+            class="hidden min-h-[40px] px-3.5 py-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-slate-700 text-xs sm:text-sm font-semibold transition cursor-pointer">
             Sign Out
           </button>
           <button id="btnSyncNowPanel" type="button"
-            class="min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold cursor-pointer">
+            class="min-h-[40px] px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
             Sync Now
           </button>
           <button id="btnPushNow" type="button"
-            class="min-h-[40px] px-4 py-2 rounded-lg bg-[#0f172a] hover:bg-[#1e3a5f] text-white text-xs sm:text-sm font-semibold cursor-pointer">
+            class="min-h-[40px] px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
             Push Now
           </button>
           <button id="btnSaveOauthConfig" type="button"
-            class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-medium cursor-pointer">
+            class="min-h-[40px] px-3.5 py-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-slate-700 text-xs sm:text-sm font-medium transition cursor-pointer">
             Save IDs
           </button>
           <button id="btnTestSync" type="button"
-            class="min-h-[40px] px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium cursor-pointer">
+            class="min-h-[40px] px-3.5 py-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-slate-700 text-xs sm:text-sm font-medium transition cursor-pointer">
             Diagnostic Info
           </button>
         </div>
 
-        <pre id="syncDebugOutput" class="hidden p-3.5 rounded-lg bg-[#0f172a] text-sky-200 text-xs overflow-x-auto"></pre>
+        <pre id="syncDebugOutput" class="hidden p-4 rounded-xl bg-slate-950 text-emerald-300 text-xs overflow-x-auto"></pre>
       </div>
 
       <!-- Opening Balances Editor -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5 sm:p-6 space-y-4">
         <div>
-          <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">Opening Balances (2026)</h2>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-900">Opening Balances (2026)</h2>
           <p class="text-xs sm:text-sm text-slate-500">Set opening balances used for running balance calculations across BankBook and CashBook</p>
         </div>
-        <form id="openingBalancesForm" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        <form id="openingBalancesForm" class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
           <div>
-            <label for="openingBankInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            <label for="openingBankInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
               Opening Bank Balance
             </label>
             <input id="openingBankInput" type="number" step="0.01" min="0"
-              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+              class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           </div>
           <div>
-            <label for="openingCashInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            <label for="openingCashInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
               Opening Cash Balance
             </label>
             <input id="openingCashInput" type="number" step="0.01" min="0"
-              class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0284c7]" />
+              class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 transition" />
           </div>
           <div>
             <button type="submit"
-              class="w-full min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold transition cursor-pointer">
+              class="w-full min-h-[42px] px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               Save Opening Balances
             </button>
           </div>
@@ -803,15 +814,15 @@
 
       <!-- CSV Import & Export / JSON Backup & Restore Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5 sm:p-6 space-y-4">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">Import CSV</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Import CSV</h2>
             <p class="text-xs sm:text-sm text-slate-500">Upload a CSV export and map columns into BankBook, CashBook, or Cheques &amp; NEFT Register</p>
           </div>
 
           <div>
-            <label for="csvTargetBook" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Target Module</label>
-            <select id="csvTargetBook" class="min-h-[40px] w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <label for="csvTargetBook" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Target Module</label>
+            <select id="csvTargetBook" class="min-h-[42px] w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
               <option value="Bank">BankBook</option>
               <option value="Cash">CashBook</option>
               <option value="Cheques">Cheques &amp; NEFT Register</option>
@@ -819,75 +830,75 @@
           </div>
 
           <div>
-            <label for="csvFileInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Choose CSV File</label>
+            <label for="csvFileInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Choose CSV File</label>
             <input id="csvFileInput" type="file" accept=".csv,text/csv"
-              class="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-[#1e3a5f] file:text-white hover:file:bg-[#162c48] cursor-pointer" />
+              class="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-teal-700 file:text-white hover:file:bg-teal-800 cursor-pointer" />
           </div>
 
-          <div id="csvMappingBox" class="hidden space-y-3 pt-2 border-t border-slate-200">
-            <p class="text-xs font-semibold text-[#0f172a]">Map CSV Columns</p>
+          <div id="csvMappingBox" class="hidden space-y-3 pt-3 border-t border-stone-200/80">
+            <p class="text-xs font-semibold text-slate-900">Map CSV Columns</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <label class="block text-slate-600 mb-1">Date Column</label>
-                <select id="mapDate" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapDate" class="min-h-[38px] w-full px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Particular / Payee Column</label>
-                <select id="mapParticular" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapParticular" class="min-h-[38px] w-full px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Receipt / Amount Column</label>
-                <select id="mapInward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapInward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white"></select>
               </div>
               <div>
                 <label class="block text-slate-600 mb-1">Payment / Ref # Column</label>
-                <select id="mapOutward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded border border-slate-300 bg-white"></select>
+                <select id="mapOutward" class="min-h-[38px] w-full px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white"></select>
               </div>
             </div>
             <button id="btnConfirmImport" type="button"
-              class="w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold cursor-pointer">
+              class="w-full sm:w-auto min-h-[40px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
               Import Rows
             </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+        <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5 sm:p-6 space-y-4">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#0f172a]">Export CSV &amp; JSON Backup / Restore</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Export CSV &amp; JSON Backup / Restore</h2>
             <p class="text-xs sm:text-sm text-slate-500">Download individual module CSVs, backup/restore full JSON snapshot, or clear local cache</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             <button id="btnExportBankCsvPanel" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
               Export BankBook CSV
             </button>
             <button id="btnExportCashCsvPanel" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
               Export CashBook CSV
             </button>
             <button id="btnExportChequesCsvPanel" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg bg-[#334155] hover:bg-[#1e293b] text-white text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
               Export Cheques &amp; NEFT CSV
             </button>
             <button id="btnExportAllCsv" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer">
               Export All Ledgers CSV
             </button>
             <button id="btnExportJson" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer">
               Backup Full JSON
             </button>
             <label for="jsonRestoreInput"
-              class="min-h-[42px] px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left cursor-pointer flex items-center">
+              class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer flex items-center">
               Restore JSON Backup
               <input id="jsonRestoreInput" type="file" accept=".json,application/json" class="hidden" />
             </label>
           </div>
 
-          <div class="pt-2 border-t border-slate-100">
+          <div class="pt-3 border-t border-slate-100">
             <button id="btnClearAll" type="button"
-              class="w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-[#b91c1c] text-xs sm:text-sm font-semibold cursor-pointer">
+              class="w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold transition cursor-pointer">
               Clear Local Cache
             </button>
           </div>
@@ -899,26 +910,26 @@
   <!-- ======================================================================= -->
   <!-- NEW / EDIT LEDGER ENTRY MODAL (Bottom-Sheet on Mobile)                  -->
   <!-- ======================================================================= -->
-  <div id="entryModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+  <div id="entryModal" class="hidden fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200/80 shadow-2xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 id="entryModalTitle" class="text-lg font-bold text-[#0f172a]">Add Ledger Entry</h3>
+        <h3 id="entryModalTitle" class="text-lg font-bold text-slate-900">Add Ledger Entry</h3>
         <button id="btnCloseEntryModal" type="button" aria-label="Close modal"
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
+          class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer transition">&times;</button>
       </div>
       <form id="entryForm" class="space-y-3.5">
         <input type="hidden" id="entryId" />
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="entryBook" class="block text-xs font-semibold text-slate-600 mb-1">Ledger Book</label>
-            <select id="entryBook" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="entryBook" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
               <option value="Bank">BankBook</option>
               <option value="Cash">CashBook</option>
             </select>
           </div>
           <div>
             <label for="entryType" class="block text-xs font-semibold text-slate-600 mb-1">Transaction Type</label>
-            <select id="entryType" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="entryType" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
               <option value="INWARD">Receipt / Inward (+)</option>
               <option value="OUTWARD">Payment / Outward (-)</option>
             </select>
@@ -928,25 +939,25 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="entryDate" class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
-            <input id="entryDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="entryDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
           <div>
             <label for="entryAmount" class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="entryAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="entryAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
 
         <div>
           <label for="entryParticular" class="block text-xs font-semibold text-slate-600 mb-1">Particular</label>
           <input id="entryParticular" type="text" required placeholder="e.g., Annadhanam Seva / NEFT Vendor Payment"
-            class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="entryCategory" class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
             <input id="entryCategory" type="text" list="categoryOptions" placeholder="e.g., Seva, NEFT, Expenses"
-              class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+              class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
             <datalist id="categoryOptions">
               <option value="Seva & Offerings"></option>
               <option value="Annadhanam"></option>
@@ -959,15 +970,15 @@
           <div>
             <label for="entryRef" class="block text-xs font-semibold text-slate-600 mb-1">Voucher / Reference</label>
             <input id="entryRef" type="text" placeholder="Voucher / NEFT UTR / Ref #"
-              class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+              class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelEntryModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
-            Cancel
+          <button id="btnCancelEntryModal" type="button" class="min-h-[42px] px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-slate-700 hover:bg-stone-50 cursor-pointer transition">
+            Close
           </button>
-          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
             Save Entry
           </button>
         </div>
@@ -978,17 +989,17 @@
   <!-- ======================================================================= -->
   <!-- CONTRA TRANSFER MODAL (Bottom-Sheet on Mobile)                          -->
   <!-- ======================================================================= -->
-  <div id="contraModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-md p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+  <div id="contraModal" class="hidden fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl border border-stone-200/80 shadow-2xl w-full max-w-md p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-lg font-bold text-[#0f172a]">Record Contra Transfer</h3>
+        <h3 class="text-lg font-bold text-slate-900">Record Contra Transfer</h3>
         <button id="btnCloseContraModal" type="button" aria-label="Close modal"
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
+          class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer transition">&times;</button>
       </div>
       <form id="contraForm" class="space-y-3.5">
         <div>
           <label for="contraDirection" class="block text-xs font-semibold text-slate-600 mb-1">Transfer Direction</label>
-          <select id="contraDirection" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+          <select id="contraDirection" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
             <option value="BANK_TO_CASH">Bank to Cash (Withdrawal)</option>
             <option value="CASH_TO_BANK">Cash to Bank (Deposit)</option>
           </select>
@@ -996,22 +1007,22 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="contraDate" class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
-            <input id="contraDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="contraDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
           <div>
             <label for="contraAmount" class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="contraAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="contraAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
         <div>
           <label for="contraRef" class="block text-xs font-semibold text-slate-600 mb-1">Reference / Note</label>
-          <input id="contraRef" type="text" placeholder="Cheque / Slip / Contra note" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+          <input id="contraRef" type="text" placeholder="Cheque / Slip / Contra note" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
         </div>
         <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelContraModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+          <button id="btnCancelContraModal" type="button" class="min-h-[42px] px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-slate-700 hover:bg-stone-50 cursor-pointer transition">
             Cancel
           </button>
-          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
             Record Transfer
           </button>
         </div>
@@ -1022,12 +1033,12 @@
   <!-- ======================================================================= -->
   <!-- ISSUE / EDIT CHEQUE OR NEFT MODAL (Bottom-Sheet on Mobile)              -->
   <!-- ======================================================================= -->
-  <div id="chequeModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-t-2xl sm:rounded-xl border border-slate-200 shadow-xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+  <div id="chequeModal" class="hidden fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl border border-stone-200/80 shadow-2xl w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 id="chequeModalTitle" class="text-lg font-bold text-[#0f172a]">Issue Cheque / NEFT</h3>
+        <h3 id="chequeModalTitle" class="text-lg font-bold text-slate-900">Issue Cheque / NEFT</h3>
         <button id="btnCloseChequeModal" type="button" aria-label="Close modal"
-          class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer">&times;</button>
+          class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer transition">&times;</button>
       </div>
       <form id="chequeForm" class="space-y-3.5">
         <input type="hidden" id="chequeId" />
@@ -1036,13 +1047,13 @@
         <!-- Transaction Type Pill Toggle -->
         <div>
           <span class="block text-xs font-semibold text-slate-600 mb-1.5">Transaction Type</span>
-          <div class="grid grid-cols-2 gap-2 p-1 rounded-lg bg-slate-100 border border-slate-200" role="group" aria-label="Transaction Type">
+          <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-stone-100 border border-stone-200/80" role="group" aria-label="Transaction Type">
             <button type="button" data-modal-chq-type="Cheque"
-              class="modal-chq-type-btn min-h-[38px] rounded-md text-xs sm:text-sm font-semibold bg-[#1e3a5f] text-white shadow-sm transition cursor-pointer">
+              class="modal-chq-type-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer">
               Cheque
             </button>
             <button type="button" data-modal-chq-type="NEFT"
-              class="modal-chq-type-btn min-h-[38px] rounded-md text-xs sm:text-sm font-medium text-slate-700 hover:bg-white transition cursor-pointer">
+              class="modal-chq-type-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer">
               NEFT Transfer
             </button>
           </div>
@@ -1051,49 +1062,49 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label id="chequeDateLabel" for="chequeDate" class="block text-xs font-semibold text-slate-600 mb-1">Issue / Transfer Date</label>
-            <input id="chequeDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeDate" type="date" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
           <div>
             <label id="chequeNoLabel" for="chequeNo" class="block text-xs font-semibold text-slate-600 mb-1">Cheque Number</label>
-            <input id="chequeNo" type="text" required placeholder="e.g., 123456 / CHQ-001" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeNo" type="text" required placeholder="e.g., 123456 / CHQ-001" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="chequePayee" class="block text-xs font-semibold text-slate-600 mb-1">Payee / Beneficiary Name</label>
-            <input id="chequePayee" type="text" required placeholder="Payee or beneficiary name" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequePayee" type="text" required placeholder="Payee or beneficiary name" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
           <div>
             <label for="chequeAmount" class="block text-xs font-semibold text-slate-600 mb-1">Amount</label>
-            <input id="chequeAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeAmount" type="number" step="0.01" min="0.01" required class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
 
         <div>
           <label for="chequePurpose" class="block text-xs font-semibold text-slate-600 mb-1">Remarks / Purpose</label>
-          <input id="chequePurpose" type="text" placeholder="e.g., Pandal, Flowers, Vendor NEFT" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+          <input id="chequePurpose" type="text" placeholder="e.g., Pandal, Flowers, Vendor NEFT" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="chequeStatus" class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-            <select id="chequeStatus" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+            <select id="chequeStatus" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600">
               <option value="Pending">Pending</option>
               <option value="Cleared">Cleared</option>
             </select>
           </div>
           <div>
             <label for="chequeClearedDate" class="block text-xs font-semibold text-slate-600 mb-1">Cleared Date</label>
-            <input id="chequeClearedDate" type="date" class="min-h-[42px] w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="chequeClearedDate" type="date" class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <button id="btnCancelChequeModal" type="button" class="min-h-[42px] px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+          <button id="btnCancelChequeModal" type="button" class="min-h-[42px] px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-slate-700 hover:bg-stone-50 cursor-pointer transition">
             Cancel
           </button>
-          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-lg bg-[#1e3a5f] hover:bg-[#162c48] text-white text-sm font-semibold cursor-pointer">
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
             Save Record
           </button>
         </div>
@@ -1238,6 +1249,8 @@
       let parsedCsvRows = [];
       let chequeStatusFilter = 'ALL';
       let chequeTypeFilter = 'ALL';
+      let bankDataStartRow = 3;
+      let cashDataStartRow = 2;
       let chequeDataStartRow = 3;
       let chequeSheetHasSNo = true;
       let clearCacheArmed = false;
@@ -1335,7 +1348,7 @@
         const container = document.getElementById('toastContainer');
         if (!container) return;
         const el = document.createElement('div');
-        el.className = 'bg-[#0f172a] text-white text-xs sm:text-sm px-4 py-3 rounded-lg shadow-lg border border-[#1e3a5f] pointer-events-auto transition-opacity text-center sm:text-left';
+        el.className = 'bg-[#0f2e2e] text-white text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xl border border-amber-400/30 pointer-events-auto transition-opacity text-center sm:text-left';
         el.textContent = message;
         container.appendChild(el);
         setTimeout(() => {
@@ -1485,44 +1498,44 @@
         if (hasValidOAuthToken()) {
           if (badge) {
             badge.textContent = 'OAuth Connected';
-            badge.className = 'px-2.5 py-0.5 rounded-full bg-teal-900/80 border border-teal-500/50 text-teal-200';
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200';
           }
           if (statusEl) {
             statusEl.textContent = 'OAuth Connected (Two-Way Sync)';
-            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-[#0f766e] shrink-0';
+            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 shrink-0';
           }
           if (bannerBtn) bannerBtn.classList.add('hidden');
           if (signOutBtn) signOutBtn.classList.remove('hidden');
           if (syncPill) {
             if (customStateText) {
               syncPill.textContent = customStateText;
-              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-sky-900/80 border border-sky-400/50 text-sky-100';
+              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-teal-400/20 border border-teal-300/35 text-teal-100';
             } else if (state.hasDirtyLocalChanges) {
               syncPill.textContent = 'Sync: Pushing...';
-              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-sky-900/80 border border-sky-400/50 text-sky-100';
+              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-100';
             } else {
               syncPill.textContent = 'Sync: Live (5s)';
-              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-sky-900/80 border border-sky-400/50 text-sky-100';
+              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-100';
             }
           }
         } else {
           if (badge) {
             badge.textContent = 'Read-Only';
-            badge.className = 'px-2.5 py-0.5 rounded-full bg-[#162c48] border border-[#334155] text-slate-300';
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-teal-200';
           }
           if (statusEl) {
             statusEl.textContent = 'Disconnected (Public Read Only)';
-            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 shrink-0';
+            statusEl.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-slate-700 shrink-0';
           }
           if (bannerBtn) bannerBtn.classList.remove('hidden');
           if (signOutBtn) signOutBtn.classList.add('hidden');
           if (syncPill) {
             if (state.hasDirtyLocalChanges) {
               syncPill.textContent = 'Sync: Pending Sign-In';
-              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-slate-700 border border-slate-500 text-slate-100';
+              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-100';
             } else {
               syncPill.textContent = customStateText || 'Sync: Public Read';
-              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-[#162c48] border border-[#334155] text-slate-200';
+              syncPill.className = 'px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-teal-100';
             }
           }
         }
@@ -1712,22 +1725,21 @@
         const outwardSeries = monthKeys.length > 0
           ? monthKeys.map(k => monthMap.get(k).outward)
           : [0, t.bankOutward, 0, t.cashOutward];
-
-        const navySlatePalette = ['#0f172a', '#1e3a5f', '#0f766e', '#0284c7', '#334155'];
+        const modernPalette = ['#0f766e', '#059669', '#d97706', '#0284c7', '#f59e0b'];
 
         if (typeof window.Chart === 'undefined') {
           drawCanvasFallback(
             flowCanvas,
             flowLabels,
             inwardSeries.map((v, i) => v + (outwardSeries[i] || 0)),
-            navySlatePalette,
+            modernPalette,
             'Cash Flow Summary'
           );
           drawCanvasFallback(
             liqCanvas,
             ['Bank', 'Cash', 'Book Col', 'NEFT', 'Pending'],
             [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.totalBookColAmt, t.neftAmt, t.pendingAmt],
-            navySlatePalette,
+            modernPalette,
             'Liquidity, Collections & Instruments'
           );
           return;
@@ -1739,15 +1751,18 @@
           data: {
             labels: flowLabels,
             datasets: [
-              { label: 'Receipt (+)', data: inwardSeries, backgroundColor: '#1e3a5f', borderRadius: 6 },
-              { label: 'Payment (-)', data: outwardSeries, backgroundColor: '#64748b', borderRadius: 6 }
+              { label: 'Receipt (+)', data: inwardSeries, backgroundColor: '#0d9488', borderRadius: 8, maxBarThickness: 36 },
+              { label: 'Payment (-)', data: outwardSeries, backgroundColor: '#e11d48', borderRadius: 8, maxBarThickness: 36 }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: { y: { beginAtZero: true } }
+            plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } },
+            scales: {
+              x: { grid: { display: false } },
+              y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+            }
           }
         });
 
@@ -1759,15 +1774,19 @@
             datasets: [{
               label: 'Amount',
               data: [Math.max(0, t.cashAtBank), Math.max(0, t.cashInHand), t.totalBookColAmt, t.neftAmt, t.pendingAmt],
-              backgroundColor: navySlatePalette,
-              borderRadius: 6
+              backgroundColor: modernPalette,
+              borderRadius: 8,
+              maxBarThickness: 42
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
+            scales: {
+              x: { grid: { display: false } },
+              y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+            }
           }
         });
       }
@@ -1809,13 +1828,13 @@
             }
           ];
           summaryBody.innerHTML = summaryRows.map(r => `
-            <tr class="${r.isTotal ? 'bg-slate-50 font-semibold border-t-2 border-slate-200' : 'hover:bg-slate-50'}">
+            <tr class="${r.isTotal ? 'bg-slate-50/90 font-semibold border-t border-slate-200' : 'hover:bg-slate-50/70'}">
               <td class="py-3 px-3 sm:px-4">
-                <p class="${r.isTotal ? 'text-[#0f172a] font-bold' : 'font-medium text-slate-900'}">${escapeHtml(r.label)}</p>
+                <p class="${r.isTotal ? 'text-slate-900 font-bold' : 'font-medium text-slate-900'}">${escapeHtml(r.label)}</p>
                 <p class="text-[11px] text-slate-500">${escapeHtml(r.sub)}</p>
               </td>
               <td class="py-3 px-3 sm:px-4 text-center text-slate-700">${escapeHtml(r.books)}</td>
-              <td class="py-3 px-3 sm:px-4 text-right font-semibold ${r.isTotal ? 'text-[#0f766e]' : 'text-slate-900'}">${formatMoney(r.amount)}</td>
+              <td class="py-3 px-3 sm:px-4 text-right font-semibold ${r.isTotal ? 'text-emerald-700' : 'text-slate-900'}">${formatMoney(r.amount)}</td>
             </tr>
           `).join('');
         }
@@ -1824,8 +1843,8 @@
         document.querySelectorAll('.book-group-pill').forEach(btn => {
           const isSelected = btn.getAttribute('data-book-group-mode') === mode;
           btn.className = isSelected
-            ? 'book-group-pill min-h-[30px] px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-semibold bg-white text-[#0f172a] shadow-sm transition cursor-pointer'
-            : 'book-group-pill min-h-[30px] px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium text-slate-200 hover:bg-[#1e3a5f] transition cursor-pointer';
+            ? 'book-group-pill min-h-[30px] px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-white text-teal-950 shadow-sm transition cursor-pointer'
+            : 'book-group-pill min-h-[30px] px-3 py-1 rounded-lg text-[11px] sm:text-xs font-medium text-slate-600 hover:text-slate-900 transition cursor-pointer';
         });
 
         setText(
@@ -1953,8 +1972,8 @@
           const streamShare = grandTotal > 0 ? ((sg.totalAmt / grandTotal) * 100).toFixed(1) : '0.0';
           const isSpecial = streamName === 'Special Book Collection';
           const badgeCls = isSpecial
-            ? 'bg-slate-200 text-[#0f172a] border-slate-300'
-            : 'bg-sky-100 text-[#1e3a5f] border-sky-200';
+            ? 'bg-amber-100 text-amber-900 border-amber-200'
+            : 'bg-teal-100 text-teal-800 border-teal-200';
           const uniqueBooksCount = sg.bookSet.size;
 
           if (mode === 'type_book_resp') {
@@ -1967,15 +1986,15 @@
 
             // Desktop Category Header Row
             desktopHtml.push(`
-              <tr class="bg-slate-100/95 border-y border-slate-200 font-semibold">
-                <td colspan="2" class="py-2.5 px-3 sm:px-4 text-[#0f172a]">
+              <tr class="bg-slate-50/95 border-y border-slate-200/80 font-semibold">
+                <td colspan="2" class="py-2.5 px-3 sm:px-4 text-slate-900">
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badgeCls}">${escapeHtml(streamName)}</span>
-                    <span class="text-xs text-slate-600">${uniqueBooksCount} Book${uniqueBooksCount === 1 ? '' : 's'} · ${rowsList.length} Group${rowsList.length === 1 ? '' : 's'}</span>
+                    <span class="text-xs text-slate-500">${uniqueBooksCount} Book${uniqueBooksCount === 1 ? '' : 's'} · ${rowsList.length} Group${rowsList.length === 1 ? '' : 's'}</span>
                   </div>
                 </td>
-                <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-[#0f172a] whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
-                <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-700 whitespace-nowrap">${streamShare}%</td>
+                <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
+                <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-600 whitespace-nowrap">${streamShare}%</td>
               </tr>
             `);
 
@@ -1984,31 +2003,31 @@
             for (const g of rowsList) {
               const sharePct = grandTotal > 0 ? ((g.amount / grandTotal) * 100).toFixed(1) : '0.0';
               const multiBadge = g.entryCount > 1
-                ? `<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">${g.entryCount} entries</span>`
+                ? `<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">${g.entryCount} entries</span>`
                 : '';
 
               desktopHtml.push(`
-                <tr class="hover:bg-slate-50">
-                  <td class="py-2.5 pl-5 pr-3 sm:pl-6 sm:pr-4 font-mono text-xs font-semibold text-[#0f172a] whitespace-nowrap">
+                <tr class="hover:bg-teal-50/40 transition-colors">
+                  <td class="py-2.5 pl-5 pr-3 sm:pl-6 sm:pr-4 font-mono text-xs font-semibold text-slate-900 whitespace-nowrap">
                     ${escapeHtml(g.bookLabel)}${multiBadge}
                   </td>
-                  <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-800">${escapeHtml(g.responsible)}</td>
-                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-[#1e3a5f] whitespace-nowrap">${formatMoney(g.amount)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-700">${escapeHtml(g.responsible)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(g.amount)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
                 </tr>
               `);
 
               mobileCards.push(`
-                <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
+                <div class="rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-1">
-                      <span class="text-xs font-mono font-bold text-[#0f172a] bg-slate-100 px-2 py-0.5 rounded">${escapeHtml(g.bookLabel)}</span>
+                      <span class="text-xs font-mono font-bold text-teal-950 bg-teal-50 px-2 py-0.5 rounded-md">${escapeHtml(g.bookLabel)}</span>
                       ${multiBadge}
                     </div>
                     <p class="text-sm font-semibold text-slate-800 mt-1 break-words">${escapeHtml(g.responsible)}</p>
                   </div>
                   <div class="text-right shrink-0">
-                    <p class="text-sm font-bold text-[#1e3a5f]">${formatMoney(g.amount)}</p>
+                    <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
                     <p class="text-[11px] text-slate-500">${sharePct}% share</p>
                   </div>
                 </div>
@@ -2017,14 +2036,14 @@
 
             mobileHtml.push(`
               <div class="space-y-2">
-                <div class="rounded-lg bg-slate-200/80 border border-slate-300 px-3 py-2 flex items-center justify-between gap-2 tabular-nums">
+                <div class="rounded-xl bg-slate-100/90 border border-slate-200 px-3 py-2 flex items-center justify-between gap-2 tabular-nums">
                   <div class="min-w-0">
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${badgeCls}">${escapeHtml(streamName)}</span>
                     <p class="text-[11px] text-slate-600 mt-1">${uniqueBooksCount} Book${uniqueBooksCount === 1 ? '' : 's'} · ${rowsList.length} Group${rowsList.length === 1 ? '' : 's'}</p>
                   </div>
                   <div class="text-right shrink-0">
-                    <p class="text-xs font-bold text-[#0f172a]">${formatMoney(sg.totalAmt)}</p>
-                    <p class="text-[11px] font-semibold text-slate-700">${streamShare}%</p>
+                    <p class="text-xs font-bold text-slate-900">${formatMoney(sg.totalAmt)}</p>
+                    <p class="text-[11px] font-semibold text-slate-600">${streamShare}%</p>
                   </div>
                 </div>
                 <div class="space-y-2">${mobileCards.join('')}</div>
@@ -2041,17 +2060,17 @@
             totalRenderedGroups += membersList.length;
 
             desktopHtml.push(`
-              <tr class="bg-slate-100/95 border-y border-slate-200 font-semibold">
-                <td class="py-2.5 px-3 sm:px-4 text-[#0f172a]">
+              <tr class="bg-slate-50/95 border-y border-slate-200/80 font-semibold">
+                <td class="py-2.5 px-3 sm:px-4 text-slate-900">
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badgeCls}">${escapeHtml(streamName)}</span>
-                    <span class="text-xs text-slate-600">Subtotal</span>
+                    <span class="text-xs text-slate-500">Subtotal</span>
                   </div>
                 </td>
-                <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-600">All Assigned</td>
+                <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-500">All Assigned</td>
                 <td class="py-2.5 px-3 sm:px-4 text-center text-xs text-slate-700">${uniqueBooksCount}</td>
-                <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-[#0f172a] whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
-                <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-700 whitespace-nowrap">${streamShare}%</td>
+                <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
+                <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-600 whitespace-nowrap">${streamShare}%</td>
               </tr>
             `);
 
@@ -2063,23 +2082,23 @@
                 : `${g.books.slice(0, 3).join(', ')} +${g.books.length - 3} more`;
 
               desktopHtml.push(`
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-teal-50/40 transition-colors">
                   <td class="py-2.5 pl-6 pr-3 sm:pl-7 sm:pr-4 font-medium text-slate-900">${escapeHtml(g.name)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-600">${escapeHtml(booksPreview || '-')}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-center text-xs text-slate-700">${g.books.length}</td>
-                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-[#1e3a5f] whitespace-nowrap">${formatMoney(g.amount)}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(g.amount)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
                 </tr>
               `);
 
               mobileCards.push(`
-                <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
+                <div class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-slate-900 break-words">${escapeHtml(g.name)}</p>
                     <p class="text-xs text-slate-500 mt-0.5 break-words">${escapeHtml(booksPreview || '-')} (${g.books.length} book${g.books.length === 1 ? '' : 's'})</p>
                   </div>
                   <div class="text-right shrink-0">
-                    <p class="text-sm font-bold text-[#1e3a5f]">${formatMoney(g.amount)}</p>
+                    <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
                     <p class="text-[11px] text-slate-500">${sharePct}% share</p>
                   </div>
                 </div>
@@ -2088,14 +2107,14 @@
 
             mobileHtml.push(`
               <div class="space-y-2">
-                <div class="rounded-lg bg-slate-200/80 border border-slate-300 px-3 py-2 flex items-center justify-between gap-2 tabular-nums">
+                <div class="rounded-xl bg-slate-100/90 border border-slate-200 px-3 py-2 flex items-center justify-between gap-2 tabular-nums">
                   <div class="min-w-0">
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${badgeCls}">${escapeHtml(streamName)}</span>
                     <p class="text-[11px] text-slate-600 mt-1">${uniqueBooksCount} Book${uniqueBooksCount === 1 ? '' : 's'} · ${membersList.length} Member${membersList.length === 1 ? '' : 's'}</p>
                   </div>
                   <div class="text-right shrink-0">
-                    <p class="text-xs font-bold text-[#0f172a]">${formatMoney(sg.totalAmt)}</p>
-                    <p class="text-[11px] font-semibold text-slate-700">${streamShare}%</p>
+                    <p class="text-xs font-bold text-slate-900">${formatMoney(sg.totalAmt)}</p>
+                    <p class="text-[11px] font-semibold text-slate-600">${streamShare}%</p>
                   </div>
                 </div>
                 <div class="space-y-2">${mobileCards.join('')}</div>
@@ -2134,11 +2153,11 @@
             recentEntriesBody.innerHTML = topEntries.map(e => {
               const isIn = e.type === 'INWARD';
               return `
-                <tr class="hover:bg-slate-50">
-                  <td class="py-2.5 px-3 sm:px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(e.date))}</td>
-                  <td class="py-2.5 px-3 sm:px-4"><span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#0f172a]">${escapeHtml(e.book || 'Bank')}</span></td>
+                <tr class="hover:bg-teal-50/40 transition-colors">
+                  <td class="py-2.5 px-3 sm:px-4 whitespace-nowrap text-slate-500">${escapeHtml(normalizeDateStr(e.date))}</td>
+                  <td class="py-2.5 px-3 sm:px-4"><span class="px-2 py-0.5 rounded-md text-xs font-semibold ${e.book === 'Cash' ? 'bg-amber-50 text-amber-800' : 'bg-teal-50 text-teal-800'}">${escapeHtml(e.book || 'Bank')}</span></td>
                   <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-900">${escapeHtml(e.particular)}</td>
-                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${isIn ? 'text-[#0f766e]' : 'text-[#b91c1c]'}">${isIn ? '+' : '-'}${formatMoney(toNum(e.amount))}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${isIn ? 'text-emerald-700' : 'text-rose-600'}">${isIn ? '+' : '-'}${formatMoney(toNum(e.amount))}</td>
                 </tr>
               `;
             }).join('');
@@ -2156,15 +2175,15 @@
               const isCleared = c.status === 'Cleared';
               const isNeft = c.type === 'NEFT';
               return `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-teal-50/40 transition-colors">
                   <td class="py-2.5 px-3 sm:px-4 whitespace-nowrap">
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold mr-1 ${isNeft ? 'bg-sky-100 text-[#0369a1]' : 'bg-slate-200 text-[#1e3a5f]'}">${escapeHtml(c.type)}</span>
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold mr-1 ${isNeft ? 'bg-cyan-100 text-cyan-800' : 'bg-stone-200/80 text-slate-700'}">${escapeHtml(c.type)}</span>
                     <span class="font-mono text-slate-800">${escapeHtml(c.chequeNumber)}</span>
                   </td>
                   <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-slate-900 whitespace-nowrap">${formatMoney(toNum(c.amount))}</td>
                   <td class="py-2.5 px-3 sm:px-4">
-                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-teal-100 text-[#0f766e]' : 'bg-slate-200 text-[#1e3a5f]'}">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                       ${escapeHtml(c.status)}
                     </span>
                   </td>
@@ -2250,19 +2269,19 @@
             tbody.innerHTML = `<tr><td colspan="8" class="py-8 px-4 text-center text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Click "+ Add Entry" to record one.</td></tr>`;
           } else {
             tbody.innerHTML = enriched.map(({ entry: e, amt, isIn, runningBal }) => `
-              <tr class="hover:bg-slate-50">
-                <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(normalizeDateStr(e.date))}</td>
+              <tr class="hover:bg-teal-50/40 transition-colors">
+                <td class="py-3 px-4 whitespace-nowrap text-slate-500">${escapeHtml(normalizeDateStr(e.date))}</td>
                 <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(e.particular)}</td>
                 <td class="py-3 px-4 text-slate-600">${escapeHtml(e.category || 'General')}</td>
                 <td class="py-3 px-4 text-slate-500">${escapeHtml(e.reference || '-')}</td>
-                <td class="py-3 px-4 text-right font-semibold text-[#0f766e]">${isIn ? formatMoney(amt) : '-'}</td>
-                <td class="py-3 px-4 text-right font-semibold text-[#b91c1c]">${!isIn ? formatMoney(amt) : '-'}</td>
-                <td class="py-3 px-4 text-right font-semibold text-[#0f172a]">${formatMoney(runningBal)}</td>
+                <td class="py-3 px-4 text-right font-semibold text-emerald-700">${isIn ? formatMoney(amt) : '-'}</td>
+                <td class="py-3 px-4 text-right font-semibold text-rose-600">${!isIn ? formatMoney(amt) : '-'}</td>
+                <td class="py-3 px-4 text-right font-semibold text-slate-900">${formatMoney(runningBal)}</td>
                 <td class="py-3 px-4 text-right whitespace-nowrap space-x-2">
                   <button type="button" data-action="edit-entry" data-id="${escapeHtml(e.id)}"
-                    class="text-xs font-semibold text-[#0284c7] hover:underline cursor-pointer">Edit</button>
+                    class="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline cursor-pointer">Edit</button>
                   <button type="button" data-action="delete-entry" data-id="${escapeHtml(e.id)}"
-                    class="text-xs font-semibold text-[#b91c1c] hover:underline cursor-pointer">Delete</button>
+                    class="text-xs font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer">Delete</button>
                 </td>
               </tr>
             `).join('');
@@ -2271,10 +2290,10 @@
 
         if (mobileList) {
           if (enriched.length === 0) {
-            mobileList.innerHTML = `<div class="rounded-lg border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Tap "+ Add Entry" to record one.</div>`;
+            mobileList.innerHTML = `<div class="rounded-xl border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No entries in ${isCash ? 'CashBook' : 'BankBook'} yet. Tap "+ Add Entry" to record one.</div>`;
           } else {
             mobileList.innerHTML = enriched.map(({ entry: e, amt, isIn, runningBal }) => `
-              <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm space-y-2 tabular-nums">
+              <div class="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-sm space-y-2 tabular-nums">
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-slate-900 break-words">${escapeHtml(e.particular)}</p>
@@ -2283,17 +2302,17 @@
                     </p>
                   </div>
                   <div class="text-right shrink-0">
-                    <p class="text-sm font-bold ${isIn ? 'text-[#0f766e]' : 'text-[#b91c1c]'}">
+                    <p class="text-sm font-bold ${isIn ? 'text-emerald-700' : 'text-rose-600'}">
                       ${isIn ? '+' : '-'}${formatMoney(amt)}
                     </p>
                     <p class="text-[11px] text-slate-500">Bal: ${formatMoney(runningBal)}</p>
                   </div>
                 </div>
-                <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                   <button type="button" data-action="edit-entry" data-id="${escapeHtml(e.id)}"
-                    class="min-h-[34px] px-3 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-[#1e3a5f] cursor-pointer">Edit</button>
+                    class="min-h-[34px] px-3 py-1 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Edit</button>
                   <button type="button" data-action="delete-entry" data-id="${escapeHtml(e.id)}"
-                    class="min-h-[34px] px-3 py-1 rounded-lg bg-red-50 text-xs font-semibold text-[#b91c1c] cursor-pointer">Delete</button>
+                    class="min-h-[34px] px-3 py-1 rounded-lg bg-rose-50 text-xs font-semibold text-rose-700 cursor-pointer">Delete</button>
                 </div>
               </div>
             `).join('');
@@ -2304,11 +2323,11 @@
           mobileSummary.innerHTML = `
             <div class="flex items-center justify-between text-slate-600">
               <span>Entries: <strong>${enriched.length}</strong></span>
-              <span>Balance: <strong class="text-[#0f172a]">${formatMoney(running)}</strong></span>
+              <span>Balance: <strong class="text-slate-900">${formatMoney(running)}</strong></span>
             </div>
-            <div class="flex items-center justify-between pt-1 border-t border-slate-200">
-              <span class="text-[#0f766e]">Receipt: <strong>${formatMoney(sumIn)}</strong></span>
-              <span class="text-[#b91c1c]">Payment: <strong>${formatMoney(sumOut)}</strong></span>
+            <div class="flex items-center justify-between pt-1.5 border-t border-slate-200">
+              <span class="text-emerald-700">Receipt: <strong>${formatMoney(sumIn)}</strong></span>
+              <span class="text-rose-600">Payment: <strong>${formatMoney(sumOut)}</strong></span>
             </div>
           `;
         }
@@ -2378,16 +2397,16 @@
         document.querySelectorAll('.chq-filter-pill').forEach(btn => {
           const isSelected = btn.getAttribute('data-chq-pill') === chequeStatusFilter;
           btn.className = isSelected
-            ? 'chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-[#0f172a] text-white shadow-sm transition cursor-pointer'
-            : 'chq-filter-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer';
+            ? 'chq-filter-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer'
+            : 'chq-filter-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer';
         });
 
         // Update Type Filter Pills
         document.querySelectorAll('.chq-type-pill').forEach(btn => {
           const isSelected = btn.getAttribute('data-chq-type-pill') === chequeTypeFilter;
           btn.className = isSelected
-            ? 'chq-type-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-semibold bg-[#1e3a5f] text-white shadow-sm transition cursor-pointer'
-            : 'chq-type-pill min-h-[34px] px-3 py-1 rounded-md text-xs font-medium text-slate-700 hover:bg-white transition cursor-pointer';
+            ? 'chq-type-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-semibold bg-teal-950 text-white shadow-sm transition cursor-pointer'
+            : 'chq-type-pill min-h-[34px] px-3.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/80 transition cursor-pointer';
         });
 
         const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
@@ -2418,33 +2437,33 @@
               const isFromBank = c.source === 'bankbook';
 
               const typeBadge = isNeft
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-[#0369a1]">NEFT</span>`
-                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-200 text-[#1e3a5f]">Cheque</span>`;
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-100 text-cyan-800">NEFT</span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-stone-200/80 text-slate-700">Cheque</span>`;
 
               const sourceBadge = isFromBank
-                ? `<span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 border border-slate-300 text-slate-600" title="Auto-included from BankBook">BankBook</span>`
+                ? `<span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-stone-100 border border-stone-200 text-slate-600" title="Auto-included from BankBook">BankBook</span>`
                 : '';
 
               const actionsHtml = isFromBank
-                ? `<button type="button" data-action="edit-entry" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-[#0284c7] hover:underline cursor-pointer">Edit</button>`
+                ? `<button type="button" data-action="edit-entry" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-teal-700 hover:underline cursor-pointer">Edit</button>`
                 : `
-                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-[#0f766e] hover:underline cursor-pointer">Mark Cleared</button>` : ''}
-                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-[#0284c7] hover:underline cursor-pointer">Edit</button>
-                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-[#b91c1c] hover:underline cursor-pointer">Delete</button>
+                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">Mark Cleared</button>` : ''}
+                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-teal-700 hover:underline cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
                   `;
 
               return `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-teal-50/40 transition-colors">
                   <td class="py-3 px-4 text-slate-500">${idx + 1}</td>
-                  <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(c.issuedDate || '-')}</td>
+                  <td class="py-3 px-4 whitespace-nowrap text-slate-500">${escapeHtml(c.issuedDate || '-')}</td>
                   <td class="py-3 px-4 whitespace-nowrap">${typeBadge}${sourceBadge}</td>
                   <td class="py-3 px-4 font-mono text-slate-800 whitespace-nowrap">${escapeHtml(c.chequeNumber || '-')}</td>
                   <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(c.payee)}</td>
                   <td class="py-3 px-4 text-slate-600">${escapeHtml(c.purpose || '-')}</td>
                   <td class="py-3 px-4 text-right font-semibold text-slate-900 whitespace-nowrap">${formatMoney(amt)}</td>
-                  <td class="py-3 px-4 whitespace-nowrap text-slate-600">${escapeHtml(c.clearedDate || '-')}</td>
+                  <td class="py-3 px-4 whitespace-nowrap text-slate-500">${escapeHtml(c.clearedDate || '-')}</td>
                   <td class="py-3 px-4 whitespace-nowrap">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-teal-100 text-[#0f766e]' : 'bg-slate-200 text-[#1e3a5f]'}">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                       ${isCleared ? 'Cleared' : 'Pending'}
                     </span>
                   </td>
@@ -2459,7 +2478,7 @@
 
         if (mobileList) {
           if (filtered.length === 0) {
-            mobileList.innerHTML = '<div class="rounded-lg border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No cheques or NEFT transactions match the selected filters. Tap "+ Issue Cheque / NEFT" to add one.</div>';
+            mobileList.innerHTML = '<div class="rounded-xl border border-slate-200 py-8 px-4 text-center text-xs text-slate-400">No cheques or NEFT transactions match the selected filters. Tap "+ Issue Cheque / NEFT" to add one.</div>';
           } else {
             mobileList.innerHTML = filtered.map((c, idx) => {
               const amt = toNum(c.amount);
@@ -2468,22 +2487,22 @@
               const isFromBank = c.source === 'bankbook';
 
               const mobileActions = isFromBank
-                ? `<button type="button" data-action="edit-entry" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-[#1e3a5f] cursor-pointer">Edit in BankBook</button>`
+                ? `<button type="button" data-action="edit-entry" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Edit in BankBook</button>`
                 : `
-                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-teal-50 text-xs font-semibold text-[#0f766e] cursor-pointer">Mark Cleared</button>` : ''}
-                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-[#1e3a5f] cursor-pointer">Edit</button>
-                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-red-50 text-xs font-semibold text-[#b91c1c] cursor-pointer">Delete</button>
+                    ${!isCleared ? `<button type="button" data-action="clear-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-emerald-50 text-xs font-semibold text-emerald-700 cursor-pointer">Mark Cleared</button>` : ''}
+                    <button type="button" data-action="edit-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-cheque" data-id="${escapeHtml(c.id)}" class="min-h-[34px] px-3 py-1 rounded-lg bg-rose-50 text-xs font-semibold text-rose-700 cursor-pointer">Delete</button>
                   `;
 
               return `
-                <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm space-y-2 tabular-nums">
+                <div class="rounded-xl border border-stone-200/80 bg-white p-3.5 shadow-sm space-y-2 tabular-nums">
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
                       <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isNeft ? 'bg-sky-100 text-[#0369a1]' : 'bg-slate-200 text-[#1e3a5f]'}">${escapeHtml(c.type)}</span>
-                        ${isFromBank ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 border border-slate-300 text-slate-600">BankBook</span>' : ''}
-                        <span class="text-xs font-mono font-semibold text-[#0f172a] bg-slate-100 px-2 py-0.5 rounded">${escapeHtml(c.chequeNumber || '-')}</span>
-                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isCleared ? 'bg-teal-100 text-[#0f766e]' : 'bg-slate-200 text-[#1e3a5f]'}">
+                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isNeft ? 'bg-cyan-100 text-cyan-800' : 'bg-stone-200/80 text-slate-700'}">${escapeHtml(c.type)}</span>
+                        ${isFromBank ? '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">BankBook</span>' : ''}
+                        <span class="text-xs font-mono font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">${escapeHtml(c.chequeNumber || '-')}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isCleared ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                           ${isCleared ? 'Cleared' : 'Pending'}
                         </span>
                       </div>
@@ -2491,7 +2510,7 @@
                       <p class="text-xs text-slate-500 mt-0.5">
                         Date: ${escapeHtml(c.issuedDate || '-')}${c.purpose ? ` · ${escapeHtml(c.purpose)}` : ''}
                       </p>
-                      ${isCleared && c.clearedDate ? `<p class="text-[11px] text-[#0f766e] mt-0.5">Cleared: ${escapeHtml(c.clearedDate)}</p>` : ''}
+                      ${isCleared && c.clearedDate ? `<p class="text-[11px] text-emerald-700 mt-0.5">Cleared: ${escapeHtml(c.clearedDate)}</p>` : ''}
                     </div>
                     <p class="text-sm font-bold text-slate-900 shrink-0">${formatMoney(amt)}</p>
                   </div>
@@ -2570,8 +2589,8 @@
         document.querySelectorAll('.nav-tab').forEach(btn => {
           const isCurrent = btn.getAttribute('data-nav') === targetKey;
           btn.className = isCurrent
-            ? 'nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-[#0f172a] shadow-sm cursor-pointer'
-            : 'nav-tab shrink-0 min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:bg-[#162c48] cursor-pointer';
+            ? 'nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white text-teal-950 shadow-sm cursor-pointer transition'
+            : 'nav-tab shrink-0 min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-teal-100/90 hover:bg-white/10 cursor-pointer transition';
           if (isCurrent && btn.scrollIntoView) {
             btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
           }
@@ -2593,7 +2612,10 @@
       function parseBookRows(rows, bookName) {
         const entries = [];
         let opening = 0;
-        if (!Array.isArray(rows) || rows.length < 2) return { entries, opening };
+        let openingRowIdx = -1;
+        if (!Array.isArray(rows) || rows.length < 2) {
+          return { entries, opening, dataStartRow: bookName === 'Bank' ? 3 : 2 };
+        }
 
         for (let i = 1; i < rows.length; i++) {
           const r = rows[i] || [];
@@ -2602,6 +2624,7 @@
           const colC = String(r[2] || '').trim();
 
           if (colA.includes('opening') || colB.toLowerCase().includes('opening') || colC.toLowerCase().includes('opening')) {
+            openingRowIdx = i;
             const openVal = bookName === 'Cash'
               ? (toNum(r[3]) || toNum(r[5]) || toNum(r[2]))
               : (toNum(r[5]) || toNum(r[7]) || toNum(r[3]));
@@ -2673,7 +2696,8 @@
             }
           }
         }
-        return { entries, opening };
+        const dataStartRow = openingRowIdx >= 1 ? openingRowIdx + 2 : (bookName === 'Bank' ? 3 : 2);
+        return { entries, opening, dataStartRow };
       }
 
       /**
@@ -2917,6 +2941,8 @@
 
           const parsedBank = parseBookRows(bankRows, 'Bank');
           const parsedCash = parseBookRows(cashRows, 'Cash');
+          if (bankRows.length >= 2) bankDataStartRow = parsedBank.dataStartRow;
+          if (cashRows.length >= 2) cashDataStartRow = parsedCash.dataStartRow;
           const syncedEntries = parsedBank.entries.concat(parsedCash.entries);
           const syncedCheques = parseChequeRows(chequeRows);
           const parsedStreetCols = parseSingleBookCollectionSheet(streetColRows, 'Street Collection', 'bc-street', 40);
@@ -2932,9 +2958,7 @@
           });
 
           if (parsedBank.opening > 0) state.openingBank = parsedBank.opening;
-          if (parsedCash.opening > 0 || parsedCash.entries.length > 0) state.openingCash = parsedCash.opening;
-
-          // Anti-wipe protection: empty/unauthenticated reads never clear local state
+          if (parsedCash.opening > 0) state.openingCash = parsedCash.opening;
           if (syncedEntries.length > 0 || (usedOAuth && (availableTabs.includes(resolvedTabNames.bank) || availableTabs.includes(resolvedTabNames.cash)))) {
             if (!(syncedEntries.length === 0 && state.entries.length > 0 && silent)) {
               state.entries = syncedEntries;
@@ -3065,8 +3089,8 @@
 
           // Unconditional trailing-row batchClear guarantees deleted rows are removed from Google Sheets
           const clearRanges = [
-            `'${resolvedTabNames.bank}'!A${3 + bankValues.length}:H500`,
-            `'${resolvedTabNames.cash}'!A${2 + cashValues.length}:F500`,
+            `'${resolvedTabNames.bank}'!A${bankDataStartRow + bankValues.length}:H500`,
+            `'${resolvedTabNames.cash}'!A${cashDataStartRow + cashValues.length}:F500`,
             `'${resolvedTabNames.cheques}'!A${chequeDataStartRow + chequeValues.length}:${chequeEndCol}500`
           ];
 
@@ -3091,13 +3115,13 @@
           const dataUpdates = [];
           if (bankValues.length > 0) {
             dataUpdates.push({
-              range: `'${resolvedTabNames.bank}'!A3:H${2 + bankValues.length}`,
+              range: `'${resolvedTabNames.bank}'!A${bankDataStartRow}:H${bankDataStartRow - 1 + bankValues.length}`,
               values: bankValues
             });
           }
           if (cashValues.length > 0) {
             dataUpdates.push({
-              range: `'${resolvedTabNames.cash}'!A2:F${1 + cashValues.length}`,
+              range: `'${resolvedTabNames.cash}'!A${cashDataStartRow}:F${cashDataStartRow - 1 + cashValues.length}`,
               values: cashValues
             });
           }
@@ -3167,8 +3191,8 @@
         document.querySelectorAll('.modal-chq-type-btn').forEach(btn => {
           const isSelected = btn.getAttribute('data-modal-chq-type') === normalized;
           btn.className = isSelected
-            ? 'modal-chq-type-btn min-h-[38px] rounded-md text-xs sm:text-sm font-semibold bg-[#1e3a5f] text-white shadow-sm transition cursor-pointer'
-            : 'modal-chq-type-btn min-h-[38px] rounded-md text-xs sm:text-sm font-medium text-slate-700 hover:bg-white transition cursor-pointer';
+            ? 'modal-chq-type-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer'
+            : 'modal-chq-type-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer';
         });
 
         const noLabel = document.getElementById('chequeNoLabel');
@@ -3483,7 +3507,17 @@
             });
           }
 
-          document.getElementById('entryModal').classList.add('hidden');
+          if (idVal) {
+            document.getElementById('entryModal').classList.add('hidden');
+          } else {
+            // Keep Add Entry screen open for consecutive entries; preserve Book, Type & Date
+            document.getElementById('entryAmount').value = '';
+            document.getElementById('entryParticular').value = '';
+            document.getElementById('entryCategory').value = '';
+            document.getElementById('entryRef').value = '';
+            document.getElementById('entryAmount').focus();
+            showToast('Entry saved. Add another or click Close.');
+          }
           renderAll();
           pushToGoogleSheet(false, true);
         });
@@ -3807,6 +3841,8 @@
             oauthConnected: hasValidOAuthToken(),
             hasDirtyLocalChanges: state.hasDirtyLocalChanges,
             activeView: state.activeView,
+            bankDataStartRow,
+            cashDataStartRow,
             chequeDataStartRow,
             chequeSheetHasSNo,
             resolvedTabNames,
