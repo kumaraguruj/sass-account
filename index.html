@@ -1438,6 +1438,17 @@
         return m ? `${m[1]}-${m[2]}` : '';
       }
 
+      const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      function formatMonthLabel(monthKey) {
+        if (!monthKey || monthKey === 'Undated') return monthKey || 'Undated';
+        const m = String(monthKey).match(/^(\d{4})-(\d{2})$/);
+        if (!m) return String(monthKey);
+        const idx = parseInt(m[2], 10) - 1;
+        if (idx < 0 || idx > 11) return String(monthKey);
+        return `${MONTH_NAMES_SHORT[idx]}-${m[1]}`;
+      }
+
       function escapeHtml(str) {
         return String(str || '')
           .replace(/&/g, '&amp;')
@@ -1872,7 +1883,11 @@
           else rec.outward += toNum(e.amount);
         }
 
-        const keys = Array.from(monthMap.keys()).sort();
+        const keys = Array.from(monthMap.keys()).sort((a, b) => {
+          if (a === 'Undated') return 1;
+          if (b === 'Undated') return -1;
+          return a.localeCompare(b);
+        });
         setText('dashMonthlyPeriodCount', `${keys.length} Period${keys.length === 1 ? '' : 's'}`);
 
         if (keys.length === 0) {
@@ -1896,7 +1911,7 @@
 
           return `
             <tr class="hover:bg-teal-50/40 transition-colors">
-              <td class="py-2.5 px-3 sm:px-4 font-semibold text-slate-900 whitespace-nowrap">${escapeHtml(k)}</td>
+              <td class="py-2.5 px-3 sm:px-4 font-semibold text-slate-900 whitespace-nowrap">${escapeHtml(formatMonthLabel(k))}</td>
               <td class="py-2.5 px-3 sm:px-4 text-center text-slate-600">${m.count}</td>
               <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(m.inward)}</td>
               <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-rose-600 whitespace-nowrap">${formatMoney(m.outward)}</td>
@@ -2344,7 +2359,7 @@
         const months = Array.from(new Set(bookEntries.map(e => getMonthKey(e.date)).filter(Boolean))).sort();
 
         catSel.innerHTML = '<option value="ALL">All Categories</option>' + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-        monthSel.innerHTML = '<option value="ALL">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        monthSel.innerHTML = '<option value="ALL">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(formatMonthLabel(m))}</option>`).join('');
 
         if (categories.includes(prevCat)) catSel.value = prevCat;
         if (months.includes(prevMonth)) monthSel.value = prevMonth;
@@ -2492,7 +2507,7 @@
         if (monthSel) {
           const prevMonth = monthSel.value;
           const months = Array.from(new Set(combinedRecords.map(c => getMonthKey(c.issuedDate)).filter(Boolean))).sort();
-          monthSel.innerHTML = '<option value="ALL">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+          monthSel.innerHTML = '<option value="ALL">All Months</option>' + months.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(formatMonthLabel(m))}</option>`).join('');
           if (months.includes(prevMonth)) monthSel.value = prevMonth;
         }
 
