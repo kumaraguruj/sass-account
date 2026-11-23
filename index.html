@@ -1190,6 +1190,13 @@
         <input type="hidden" id="bookColId" />
         <input type="hidden" id="bookColStream" value="Street Collection" />
 
+        <!-- Multi-Book Switcher (Shown when updating a member with multiple books) -->
+        <div id="bookColSwitcherWrap" class="hidden rounded-xl bg-teal-50/70 border border-teal-200/70 p-3">
+          <label for="bookColSwitcher" class="block text-xs font-semibold text-teal-900 mb-1">Select Book to Update</label>
+          <select id="bookColSwitcher"
+            class="min-h-[38px] w-full px-3 py-1.5 rounded-lg border border-teal-200 bg-white text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600"></select>
+        </div>
+
         <!-- Book Type Pill Toggle -->
         <div>
           <span class="block text-xs font-semibold text-slate-600 mb-1.5">Book Type</span>
@@ -1229,7 +1236,7 @@
           <button id="btnCancelBookColModal" type="button" class="min-h-[42px] px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-slate-700 hover:bg-stone-50 cursor-pointer transition">
             Close
           </button>
-          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
+          <button id="btnSubmitBookCol" type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
             Save Book
           </button>
         </div>
@@ -2130,6 +2137,7 @@
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Count</th>
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Collected Amount</th>
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">% Share</th>
+                <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Actions</th>
               </tr>
             `;
         }
@@ -2200,11 +2208,13 @@
             sg.memberMap.set(mKey, {
               name,
               books: [],
+              items: [],
               amount: 0
             });
           }
           const mGrp = sg.memberMap.get(mKey);
           if (bookNo && !mGrp.books.includes(bookNo)) mGrp.books.push(bookNo);
+          mGrp.items.push(item);
           mGrp.amount += amt;
         }
 
@@ -2214,7 +2224,7 @@
           setText('dashBookFilteredMeta', '0 groups');
           const emptyMsg = 'No Book Collection records match the current filter. Click "+ Add Book" or "Sync" to fetch from Google Sheets.';
           if (respBody) {
-            respBody.innerHTML = `<tr><td colspan="5" class="py-6 px-4 text-center text-slate-400">${emptyMsg}</td></tr>`;
+            respBody.innerHTML = `<tr><td colspan="${mode === 'type_resp' ? 6 : 5}" class="py-6 px-4 text-center text-slate-400">${emptyMsg}</td></tr>`;
           }
           if (mobileList) {
             mobileList.innerHTML = `<div class="rounded-lg border border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-400">${emptyMsg}</div>`;
@@ -2279,7 +2289,7 @@
                   <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap space-x-2">
                     <button type="button" data-action="edit-bookcol" data-id="${escapeHtml(primaryId)}"
-                      class="text-xs font-semibold text-teal-700 hover:underline cursor-pointer">Edit</button>
+                      class="text-xs font-semibold text-teal-700 hover:underline cursor-pointer">Update</button>
                     <button type="button" data-action="delete-bookcol" data-ids="${escapeHtml(allIdsAttr)}"
                       class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
                   </td>
@@ -2303,7 +2313,7 @@
                   </div>
                   <div class="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-100">
                     <button type="button" data-action="edit-bookcol" data-id="${escapeHtml(primaryId)}"
-                      class="min-h-[30px] px-2.5 py-0.5 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Edit</button>
+                      class="min-h-[30px] px-2.5 py-0.5 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Update</button>
                     <button type="button" data-action="delete-bookcol" data-ids="${escapeHtml(allIdsAttr)}"
                       class="min-h-[30px] px-2.5 py-0.5 rounded-lg bg-rose-50 text-xs font-semibold text-rose-700 cursor-pointer">Delete</button>
                   </div>
@@ -2331,6 +2341,7 @@
               .map(m => ({
                 name: m.name,
                 books: m.books.slice().sort(compareBookNumbersNatural),
+                items: m.items.slice().sort((a, b) => compareBookNumbersNatural(a.bookLabel, b.bookLabel)),
                 amount: m.amount
               }))
               .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
@@ -2348,6 +2359,7 @@
                 <td class="py-2.5 px-3 sm:px-4 text-center text-xs text-slate-700">${uniqueBooksCount}</td>
                 <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
                 <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-600 whitespace-nowrap">${streamShare}%</td>
+                <td class="py-2.5 px-3 sm:px-4"></td>
               </tr>
             `);
 
@@ -2357,26 +2369,45 @@
               const booksPreview = g.books.length <= 4
                 ? g.books.join(', ')
                 : `${g.books.slice(0, 3).join(', ')} +${g.books.length - 3} more`;
+              const itemIdsAttr = g.items.map(it => it.id).filter(Boolean).join(',');
+              const bookChipsHtml = g.items.slice(0, 4).map(it => `
+                <button type="button" data-action="edit-bookcol" data-id="${escapeHtml(it.id)}" title="Click to update ${escapeHtml(it.bookLabel)}"
+                  class="inline-flex items-center px-2 py-0.5 rounded-md bg-stone-100 hover:bg-teal-100 text-slate-700 hover:text-teal-900 text-[11px] font-mono font-medium transition cursor-pointer">
+                  ${escapeHtml(it.bookLabel)}
+                </button>
+              `).join(' ') + (g.items.length > 4 ? ` <span class="text-[11px] text-slate-500">+${g.items.length - 4} more</span>` : '');
 
               desktopHtml.push(`
                 <tr class="hover:bg-teal-50/40 transition-colors">
                   <td class="py-2.5 pl-6 pr-3 sm:pl-7 sm:pr-4 font-medium text-slate-900">${escapeHtml(g.name)}</td>
-                  <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-600">${escapeHtml(booksPreview || '-')}</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-xs text-slate-600">
+                    <div class="flex flex-wrap items-center gap-1">${bookChipsHtml || '-'}</div>
+                  </td>
                   <td class="py-2.5 px-3 sm:px-4 text-center text-xs text-slate-700">${g.books.length}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(g.amount)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                    <button type="button" data-action="update-member-books" data-ids="${escapeHtml(itemIdsAttr)}"
+                      class="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline cursor-pointer">Update</button>
+                  </td>
                 </tr>
               `);
 
               mobileCards.push(`
-                <div class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
-                  <div class="min-w-0">
-                    <p class="text-sm font-semibold text-slate-900 break-words">${escapeHtml(g.name)}</p>
-                    <p class="text-xs text-slate-500 mt-0.5 break-words">${escapeHtml(booksPreview || '-')} (${g.books.length} book${g.books.length === 1 ? '' : 's'})</p>
+                <div class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm space-y-2 tabular-nums">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-slate-900 break-words">${escapeHtml(g.name)}</p>
+                      <p class="text-xs text-slate-500 mt-0.5 break-words">${escapeHtml(booksPreview || '-')} (${g.books.length} book${g.books.length === 1 ? '' : 's'})</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
+                      <p class="text-[11px] text-slate-500">${sharePct}% share</p>
+                    </div>
                   </div>
-                  <div class="text-right shrink-0">
-                    <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
-                    <p class="text-[11px] text-slate-500">${sharePct}% share</p>
+                  <div class="flex items-center justify-end pt-1.5 border-t border-slate-100">
+                    <button type="button" data-action="update-member-books" data-ids="${escapeHtml(itemIdsAttr)}"
+                      class="min-h-[30px] px-3 py-0.5 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Update</button>
                   </div>
                 </div>
               `);
@@ -3572,45 +3603,45 @@
         }
         modal.classList.remove('hidden');
       }
-
-      function setBookColModalStream(streamValue) {
-        const normalized = streamValue === 'Special Book Collection' ? 'Special Book Collection' : 'Street Collection';
-        const hiddenInput = document.getElementById('bookColStream');
-        if (hiddenInput) hiddenInput.value = normalized;
-
-        document.querySelectorAll('.modal-bc-stream-btn').forEach(btn => {
-          const isSelected = btn.getAttribute('data-modal-bc-stream') === normalized;
-          btn.className = isSelected
-            ? 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer'
-            : 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer';
-        });
-
-        const lblInput = document.getElementById('bookColLabel');
-        if (lblInput) {
-          lblInput.placeholder = normalized === 'Special Book Collection'
-            ? 'e.g., Special #1 or 5'
-            : 'e.g., Book #1 or 12';
-        }
+      function populateBookColFormFields(item) {
+        if (!item) return;
+        document.getElementById('bookColId').value = item.id || '';
+        setBookColModalStream(item.stream === 'Special Book Collection' || item.stream === 'VIP / QR'
+          ? 'Special Book Collection'
+          : 'Street Collection');
+        document.getElementById('bookColLabel').value = item.bookLabel || '';
+        document.getElementById('bookColResponsible').value = item.responsible || '';
+        document.getElementById('bookColAmount').value = toNum(item.amount);
       }
 
-      function openBookCollectionModal(editItem = null) {
+      function openBookCollectionModal(editItem = null, groupItems = null) {
         const modal = document.getElementById('bookCollectionModal');
         const form = document.getElementById('bookColForm');
+        const switcherWrap = document.getElementById('bookColSwitcherWrap');
+        const switcherSel = document.getElementById('bookColSwitcher');
+        const submitBtn = document.getElementById('btnSubmitBookCol');
         if (!modal || !form) return;
         form.reset();
 
         if (editItem) {
-          setText('bookColModalTitle', 'Edit Book Collection');
-          document.getElementById('bookColId').value = editItem.id || '';
-          setBookColModalStream(editItem.stream === 'Special Book Collection' || editItem.stream === 'VIP / QR'
-            ? 'Special Book Collection'
-            : 'Street Collection');
-          document.getElementById('bookColLabel').value = editItem.bookLabel || '';
-          document.getElementById('bookColResponsible').value = editItem.responsible || '';
-          document.getElementById('bookColAmount').value = toNum(editItem.amount);
+          setText('bookColModalTitle', 'Update Book Collection');
+          if (submitBtn) submitBtn.textContent = 'Update Book';
+          populateBookColFormFields(editItem);
+
+          if (switcherWrap && switcherSel && Array.isArray(groupItems) && groupItems.length > 1) {
+            switcherSel.innerHTML = groupItems.map(it =>
+              `<option value="${escapeHtml(it.id)}">${escapeHtml(it.bookLabel)} — ${escapeHtml(formatMoney(it.amount))}</option>`
+            ).join('');
+            switcherSel.value = editItem.id;
+            switcherWrap.classList.remove('hidden');
+          } else if (switcherWrap) {
+            switcherWrap.classList.add('hidden');
+          }
         } else {
           setText('bookColModalTitle', 'Add Book Collection');
+          if (submitBtn) submitBtn.textContent = 'Save Book';
           document.getElementById('bookColId').value = '';
+          if (switcherWrap) switcherWrap.classList.add('hidden');
           const typeFilterEl = document.getElementById('dashBookTypeFilter');
           const defaultStream = (typeFilterEl && typeFilterEl.value === 'Special Book Collection')
             ? 'Special Book Collection'
@@ -4436,6 +4467,15 @@
           } else if (action === 'edit-bookcol') {
             const item = state.bookCollections.find(x => x.id === id);
             if (item) openBookCollectionModal(item);
+          } else if (action === 'update-member-books') {
+            const idsAttr = actionEl.getAttribute('data-ids') || '';
+            const idSet = new Set(idsAttr.split(',').filter(Boolean));
+            const matched = state.bookCollections
+              .filter(x => idSet.has(x.id))
+              .sort((a, b) => compareBookNumbersNatural(a.bookLabel, b.bookLabel));
+            if (matched.length > 0) {
+              openBookCollectionModal(matched[0], matched);
+            }
           } else if (action === 'delete-bookcol') {
             const idsAttr = actionEl.getAttribute('data-ids') || id || '';
             const idSet = new Set(idsAttr.split(',').filter(Boolean));
@@ -4535,6 +4575,10 @@
         on('btnAddBookCol', 'click', () => openBookCollectionModal(null));
         on('btnCloseBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
         on('btnCancelBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
+        on('bookColSwitcher', 'change', (e) => {
+          const selected = state.bookCollections.find(b => b.id === e.target.value);
+          if (selected) populateBookColFormFields(selected);
+        });
 
         on('bookColForm', 'submit', (e) => {
           e.preventDefault();
@@ -4563,120 +4607,15 @@
                 amount
               });
             }
-            document.getElementById('bookCollectionModal').classList.add('hidden');
-            showToast('Book collection entry updated.');
-          } else {
-            state.bookCollections.push({
-              id: `bc-local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              stream: streamVal,
-              bookLabel,
-              responsible,
-              amount
-            });
-            // Keep modal open for rapid consecutive book entries
-            document.getElementById('bookColLabel').value = '';
-            document.getElementById('bookColAmount').value = '';
-            document.getElementById('bookColLabel').focus();
-            showToast('Book collection added. Add another or click Close.');
-          }
-
-          state.hasDirtyBookCollections = true;
-          saveState();
-          renderAll();
-          pushToGoogleSheet(false, true);
-        });
-
-        // Contra Transfer Modal
-        on('btnContraTransfer', 'click', () => {
-          document.getElementById('contraForm').reset();
-          document.getElementById('contraDate').value = new Date().toISOString().slice(0, 10);
-          document.getElementById('contraModal').classList.remove('hidden');
-        });
-        on('btnCloseContraModal', 'click', () => document.getElementById('contraModal').classList.add('hidden'));
-        on('btnCancelContraModal', 'click', () => document.getElementById('contraModal').classList.add('hidden'));
-
-        on('contraForm', 'submit', (e) => {
-          e.preventDefault();
-          const dir = document.getElementById('contraDirection').value;
-          const dateVal = normalizeDateStr(document.getElementById('contraDate').value);
-          const amt = toNum(document.getElementById('contraAmount').value);
-          const ref = document.getElementById('contraRef').value.trim() || 'Contra';
-          if (amt <= 0) return;
-
-          const stamp = Date.now();
-          if (dir === 'CASH_TO_BANK') {
-            state.entries.push(
-              { id: `ct-${stamp}-1`, book: 'Cash', type: 'OUTWARD', date: dateVal, particular: 'Cash Deposit (Contra)', category: 'Contra Transfer', reference: ref, amount: amt },
-              { id: `ct-${stamp}-2`, book: 'Bank', type: 'INWARD', date: dateVal, particular: 'Cash Deposit (Contra)', category: 'Contra Transfer', reference: ref, amount: amt }
-            );
-          } else {
-            state.entries.push(
-              { id: `ct-${stamp}-1`, book: 'Bank', type: 'OUTWARD', date: dateVal, particular: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', reference: ref, amount: amt },
-              { id: `ct-${stamp}-2`, book: 'Cash', type: 'INWARD', date: dateVal, particular: 'Bank Withdrawal (Contra)', category: 'Contra Transfer', reference: ref, amount: amt }
-            );
-          }
-
-          document.getElementById('contraModal').classList.add('hidden');
-          renderAll();
-          pushToGoogleSheet(false, true);
-        });
-
-        // BankBook & CashBook Filters & Exports
-        ['bankSearch', 'bankTypeFilter', 'bankCategoryFilter', 'bankMonthFilter'].forEach(id => {
-          on(id, 'input', () => renderSingleBookLedger('Bank', BANK_LEDGER_CONFIG));
-          on(id, 'change', () => renderSingleBookLedger('Bank', BANK_LEDGER_CONFIG));
-        });
-        on('btnExportBankCsv', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book !== 'Cash'), 'bankbook_2026.csv'));
-        on('btnExportBankCsvPanel', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book !== 'Cash'), 'bankbook_2026.csv'));
-
-        ['cashSearch', 'cashTypeFilter', 'cashCategoryFilter', 'cashMonthFilter'].forEach(id => {
-          on(id, 'input', () => renderSingleBookLedger('Cash', CASH_LEDGER_CONFIG));
-          on(id, 'change', () => renderSingleBookLedger('Cash', CASH_LEDGER_CONFIG));
-        });
-        on('btnExportCashCsv', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book === 'Cash'), 'cashbook_2026.csv'));
-        on('btnExportCashCsvPanel', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book === 'Cash'), 'cashbook_2026.csv'));
-
-        // Cheque & NEFT Tracker Modal, Filters & Exports
-        on('btnIssueCheque', 'click', () => openChequeModal(null));
-        on('btnCloseChequeModal', 'click', () => document.getElementById('chequeModal').classList.add('hidden'));
-        on('btnCancelChequeModal', 'click', () => document.getElementById('chequeModal').classList.add('hidden'));
-
-        on('toggleBankNeft', 'change', (e) => {
-          state.includeBankNeft = Boolean(e.target.checked);
-          saveState();
-          renderDashboard();
-          renderCheques();
-        });
-
-        on('chequeForm', 'submit', (e) => {
-          e.preventDefault();
-          const idVal = document.getElementById('chequeId').value.trim();
-          const typeVal = document.getElementById('chequeType').value === 'NEFT' ? 'NEFT' : 'Cheque';
-          const issuedDate = normalizeDateStr(document.getElementById('chequeDate').value);
-          const chequeNumber = document.getElementById('chequeNo').value.trim();
-          const payee = document.getElementById('chequePayee').value.trim();
-          const amount = toNum(document.getElementById('chequeAmount').value);
-          const purpose = document.getElementById('chequePurpose').value.trim();
-          const status = document.getElementById('chequeStatus').value === 'Cleared' ? 'Cleared' : 'Pending';
-          const clearedDate = status === 'Cleared'
-            ? (normalizeDateStr(document.getElementById('chequeClearedDate').value) || new Date().toISOString().slice(0, 10))
-            : '';
-
-          if (!chequeNumber || !payee || amount <= 0) return;
-
-          if (idVal) {
-            const idx = state.cheques.findIndex(c => c.id === idVal);
-            if (idx >= 0) {
-              state.cheques[idx] = Object.assign({}, state.cheques[idx], {
-                type: typeVal,
-                issuedDate,
-                chequeNumber,
-                payee,
-                amount,
-                purpose,
-                status,
-                clearedDate
-              });
+            const switcherWrap = document.getElementById('bookColSwitcherWrap');
+            const switcherSel = document.getElementById('bookColSwitcher');
+            if (switcherWrap && !switcherWrap.classList.contains('hidden') && switcherSel) {
+              const opt = Array.from(switcherSel.options).find(o => o.value === idVal);
+              if (opt) opt.textContent = `${bookLabel} — ${formatMoney(amount)}`;
+              showToast(`Updated ${bookLabel}. Select another book or click Close.`);
+            } else {
+              document.getElementById('bookCollectionModal').classList.add('hidden');
+              showToast(`Updated ${bookLabel}.`);
             }
           } else {
             state.cheques.push({
