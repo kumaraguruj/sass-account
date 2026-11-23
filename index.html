@@ -340,6 +340,10 @@
               <span id="bookColCountBadge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-100/80 text-teal-900">
                 0 / 60 Books
               </span>
+              <button id="btnAddBookCol" type="button" title="Add Book Collection Entry"
+                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold shadow-sm transition cursor-pointer">
+                + Add Book
+              </button>
               <button id="btnSyncBookCol" type="button" title="Sync Book Collection from Google Sheets"
                 class="px-3 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-sm transition cursor-pointer">
                 Sync
@@ -409,6 +413,7 @@
                   <th class="py-3 px-3 sm:px-4 font-semibold">Responsible</th>
                   <th class="py-3 px-3 sm:px-4 text-right font-semibold">Collected Amount</th>
                   <th class="py-3 px-3 sm:px-4 text-right font-semibold">% Share</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody id="dashResponsibleBody" class="divide-y divide-slate-100 tabular-nums"></tbody>
@@ -915,8 +920,8 @@
 
         <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft p-5 sm:p-6 space-y-4">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Export CSV &amp; JSON Backup / Restore</h2>
-            <p class="text-xs sm:text-sm text-slate-500">Download individual module CSVs, backup/restore full JSON snapshot, or clear local cache</p>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Export &amp; Full CSV Backup / Restore</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Download individual module CSVs, backup/restore a complete CSV snapshot, or clear local cache</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
@@ -932,6 +937,10 @@
               class="min-h-[42px] px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
               Export Cheques &amp; NEFT CSV
             </button>
+            <button id="btnExportBookColCsvPanel" type="button"
+              class="min-h-[42px] px-4 py-2.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
+              Export Book Collection CSV
+            </button>
             <button id="btnExportAllCsv" type="button"
               class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer">
               Export All Ledgers CSV
@@ -940,14 +949,14 @@
               class="min-h-[42px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0f3d3a] to-teal-700 hover:from-[#114a46] hover:to-teal-800 text-white text-xs sm:text-sm font-semibold text-left shadow-sm transition cursor-pointer">
               Download On-Date PDF Summary
             </button>
-            <button id="btnExportJson" type="button"
-              class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer">
-              Backup Full JSON
+            <button id="btnBackupFullCsv" type="button"
+              class="min-h-[42px] px-4 py-2.5 rounded-xl border border-teal-200 bg-teal-50/70 hover:bg-teal-100/70 text-teal-900 text-xs sm:text-sm font-semibold text-left transition cursor-pointer">
+              Backup Full CSV
             </button>
-            <label for="jsonRestoreInput"
+            <label for="csvBackupRestoreInput"
               class="min-h-[42px] px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold text-left transition cursor-pointer flex items-center">
-              Restore JSON Backup
-              <input id="jsonRestoreInput" type="file" accept=".json,application/json" class="hidden" />
+              Restore CSV Backup
+              <input id="csvBackupRestoreInput" type="file" accept=".csv,text/csv" class="hidden" />
             </label>
           </div>
 
@@ -1167,6 +1176,67 @@
     </div>
   </div>
 
+  <!-- ======================================================================= -->
+  <!-- ADD / EDIT BOOK COLLECTION MODAL (Bottom-Sheet on Mobile)               -->
+  <!-- ======================================================================= -->
+  <div id="bookCollectionModal" class="hidden fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl border border-stone-200/80 shadow-2xl w-full max-w-md p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="bookColModalTitle" class="text-lg font-bold text-slate-900">Add Book Collection</h3>
+        <button id="btnCloseBookColModal" type="button" aria-label="Close modal"
+          class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-2xl leading-none cursor-pointer transition">&times;</button>
+      </div>
+      <form id="bookColForm" class="space-y-3.5">
+        <input type="hidden" id="bookColId" />
+        <input type="hidden" id="bookColStream" value="Street Collection" />
+
+        <!-- Book Type Pill Toggle -->
+        <div>
+          <span class="block text-xs font-semibold text-slate-600 mb-1.5">Book Type</span>
+          <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-stone-100 border border-stone-200/80" role="group" aria-label="Book Collection Type">
+            <button type="button" data-modal-bc-stream="Street Collection"
+              class="modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer">
+              Street Collection
+            </button>
+            <button type="button" data-modal-bc-stream="Special Book Collection"
+              class="modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer">
+              Special Book
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="bookColLabel" class="block text-xs font-semibold text-slate-600 mb-1">Book Number</label>
+            <input id="bookColLabel" type="text" required placeholder="e.g., Book #1 or 12"
+              class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
+          </div>
+          <div>
+            <label for="bookColAmount" class="block text-xs font-semibold text-slate-600 mb-1">Collected Amount</label>
+            <input id="bookColAmount" type="number" step="0.01" min="0" required placeholder="0"
+              class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
+          </div>
+        </div>
+
+        <div>
+          <label for="bookColResponsible" class="block text-xs font-semibold text-slate-600 mb-1">Responsible Member</label>
+          <input id="bookColResponsible" type="text" list="responsibleOptions" required placeholder="e.g., Ramesh / Committee Member"
+            class="min-h-[42px] w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600" />
+          <datalist id="responsibleOptions"></datalist>
+        </div>
+
+        <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button id="btnCancelBookColModal" type="button" class="min-h-[42px] px-4 py-2 rounded-xl border border-stone-200 text-sm font-medium text-slate-700 hover:bg-stone-50 cursor-pointer transition">
+            Close
+          </button>
+          <button type="submit" class="min-h-[42px] px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold shadow-sm cursor-pointer transition">
+            Save Book
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 z-50 space-y-2 pointer-events-none"></div>
 
@@ -1233,6 +1303,7 @@
           oauthClientId: DEFAULT_CLIENT_ID,
           lastRefreshed: 'Just now',
           hasDirtyLocalChanges: false,
+          hasDirtyBookCollections: false,
           includeBankNeft: true,
           bookGroupMode: 'type_book_resp',
           entries: [],
@@ -1308,6 +1379,8 @@
       let cashDataStartRow = 2;
       let chequeDataStartRow = 3;
       let chequeSheetHasSNo = true;
+      let streetColDataStartRow = 2;
+      let specialColDataStartRow = 2;
       let clearCacheArmed = false;
 
       let resolvedTabNames = {
@@ -1484,7 +1557,7 @@
       }
 
       function isAnyModalOpen() {
-        return ['entryModal', 'contraModal', 'chequeModal'].some(id => {
+        return ['entryModal', 'contraModal', 'chequeModal', 'bookCollectionModal'].some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
         });
@@ -1975,6 +2048,17 @@
         const activeBooksCount = validCols.filter(b => toNum(b.amount) > 0 || (b.responsible && b.responsible !== 'Unassigned')).length;
         setText('bookColCountBadge', `${activeBooksCount} / 60 Books`);
 
+        // Keep Responsible Member datalist populated for quick Book Collection entry
+        const respDatalist = document.getElementById('responsibleOptions');
+        if (respDatalist) {
+          const uniqueNames = Array.from(new Set(
+            validCols
+              .map(b => String(b.responsible || '').trim())
+              .filter(n => n && n.toLowerCase() !== 'unassigned')
+          )).sort();
+          respDatalist.innerHTML = uniqueNames.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+        }
+
         const summaryBody = document.getElementById('dashBookSummaryBody');
         if (summaryBody) {
           const streetActive = validCols.filter(b => b.stream !== 'Special Book Collection' && b.stream !== 'VIP / QR' && toNum(b.amount) > 0).length;
@@ -2036,6 +2120,7 @@
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4">Responsible</th>
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Collected Amount</th>
                 <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">% Share</th>
+                <th class="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Actions</th>
               </tr>
             `
             : `
@@ -2100,12 +2185,14 @@
               bookLabel: bookNo,
               responsible: name,
               amount: 0,
-              entryCount: 0
+              entryCount: 0,
+              ids: []
             });
           }
           const brGrp = sg.bookRespMap.get(brKey);
           brGrp.amount += amt;
           brGrp.entryCount += 1;
+          if (item.id) brGrp.ids.push(item.id);
 
           // Group 2: (Book Type, Responsible)
           const mKey = name.toLowerCase();
@@ -2125,9 +2212,9 @@
 
         if (orderedStreams.length === 0) {
           setText('dashBookFilteredMeta', '0 groups');
-          const emptyMsg = 'No Book Collection records match the current filter. Click "Sync" to fetch from Google Sheets.';
+          const emptyMsg = 'No Book Collection records match the current filter. Click "+ Add Book" or "Sync" to fetch from Google Sheets.';
           if (respBody) {
-            respBody.innerHTML = `<tr><td colspan="${mode === 'type_book_resp' ? 4 : 5}" class="py-6 px-4 text-center text-slate-400">${emptyMsg}</td></tr>`;
+            respBody.innerHTML = `<tr><td colspan="5" class="py-6 px-4 text-center text-slate-400">${emptyMsg}</td></tr>`;
           }
           if (mobileList) {
             mobileList.innerHTML = `<div class="rounded-lg border border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-400">${emptyMsg}</div>`;
@@ -2168,6 +2255,7 @@
                 </td>
                 <td class="py-2.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatMoney(sg.totalAmt)}</td>
                 <td class="py-2.5 px-3 sm:px-4 text-right text-xs font-semibold text-slate-600 whitespace-nowrap">${streamShare}%</td>
+                <td class="py-2.5 px-3 sm:px-4"></td>
               </tr>
             `);
 
@@ -2178,6 +2266,8 @@
               const multiBadge = g.entryCount > 1
                 ? `<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-600">${g.entryCount} entries</span>`
                 : '';
+              const primaryId = g.ids[0] || '';
+              const allIdsAttr = g.ids.join(',');
 
               desktopHtml.push(`
                 <tr class="hover:bg-teal-50/40 transition-colors">
@@ -2187,21 +2277,35 @@
                   <td class="py-2.5 px-3 sm:px-4 font-medium text-slate-700">${escapeHtml(g.responsible)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right font-semibold text-emerald-700 whitespace-nowrap">${formatMoney(g.amount)}</td>
                   <td class="py-2.5 px-3 sm:px-4 text-right text-xs text-slate-500 whitespace-nowrap">${sharePct}%</td>
+                  <td class="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap space-x-2">
+                    <button type="button" data-action="edit-bookcol" data-id="${escapeHtml(primaryId)}"
+                      class="text-xs font-semibold text-teal-700 hover:underline cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-bookcol" data-ids="${escapeHtml(allIdsAttr)}"
+                      class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">Delete</button>
+                  </td>
                 </tr>
               `);
 
               mobileCards.push(`
-                <div class="rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm flex items-start justify-between gap-2 tabular-nums">
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-1">
-                      <span class="text-xs font-mono font-bold text-teal-950 bg-teal-50 px-2 py-0.5 rounded-md">${escapeHtml(g.bookLabel)}</span>
-                      ${multiBadge}
+                <div class="rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm space-y-2 tabular-nums">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-1">
+                        <span class="text-xs font-mono font-bold text-teal-950 bg-teal-50 px-2 py-0.5 rounded-md">${escapeHtml(g.bookLabel)}</span>
+                        ${multiBadge}
+                      </div>
+                      <p class="text-sm font-semibold text-slate-800 mt-1 break-words">${escapeHtml(g.responsible)}</p>
                     </div>
-                    <p class="text-sm font-semibold text-slate-800 mt-1 break-words">${escapeHtml(g.responsible)}</p>
+                    <div class="text-right shrink-0">
+                      <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
+                      <p class="text-[11px] text-slate-500">${sharePct}% share</p>
+                    </div>
                   </div>
-                  <div class="text-right shrink-0">
-                    <p class="text-sm font-bold text-emerald-700">${formatMoney(g.amount)}</p>
-                    <p class="text-[11px] text-slate-500">${sharePct}% share</p>
+                  <div class="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-100">
+                    <button type="button" data-action="edit-bookcol" data-id="${escapeHtml(primaryId)}"
+                      class="min-h-[30px] px-2.5 py-0.5 rounded-lg bg-teal-50 text-xs font-semibold text-teal-800 cursor-pointer">Edit</button>
+                    <button type="button" data-action="delete-bookcol" data-ids="${escapeHtml(allIdsAttr)}"
+                      class="min-h-[30px] px-2.5 py-0.5 rounded-lg bg-rose-50 text-xs font-semibold text-rose-700 cursor-pointer">Delete</button>
                   </div>
                 </div>
               `);
@@ -2949,6 +3053,11 @@
           }
         }
         if (headerIdx < 0) headerIdx = 0;
+        if (streamName === 'Special Book Collection') {
+          specialColDataStartRow = headerIdx + 2;
+        } else {
+          streetColDataStartRow = headerIdx + 2;
+        }
         const headerRow = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
 
         let bookIdx = headerRow.findIndex(h => h.includes('book') || h.includes('no'));
@@ -3268,6 +3377,21 @@
             `'${resolvedTabNames.cheques}'!A${chequeDataStartRow + chequeValues.length}:${chequeEndCol}500`
           ];
 
+          const streetRowsToWrite = state.bookCollections
+            .filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel) && b.stream !== 'Special Book Collection' && b.stream !== 'VIP / QR')
+            .map((b, idx) => [idx + 1, b.bookLabel || `Book #${idx + 1}`, b.responsible || 'Unassigned', toNum(b.amount)]);
+
+          const specialRowsToWrite = state.bookCollections
+            .filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel) && (b.stream === 'Special Book Collection' || b.stream === 'VIP / QR'))
+            .map((b, idx) => [idx + 1, b.bookLabel || `Special #${idx + 1}`, b.responsible || 'Unassigned', toNum(b.amount)]);
+
+          if (state.hasDirtyBookCollections) {
+            clearRanges.push(
+              `'${resolvedTabNames.streetCollection}'!A${streetColDataStartRow + streetRowsToWrite.length}:D150`,
+              `'${resolvedTabNames.specialBookCollection}'!A${specialColDataStartRow + specialRowsToWrite.length}:D150`
+            );
+          }
+
           const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchClear`, {
             method: 'POST',
             headers: {
@@ -3305,6 +3429,20 @@
               values: chequeValues
             });
           }
+          if (state.hasDirtyBookCollections) {
+            if (streetRowsToWrite.length > 0) {
+              dataUpdates.push({
+                range: `'${resolvedTabNames.streetCollection}'!A${streetColDataStartRow}:D${streetColDataStartRow - 1 + streetRowsToWrite.length}`,
+                values: streetRowsToWrite
+              });
+            }
+            if (specialRowsToWrite.length > 0) {
+              dataUpdates.push({
+                range: `'${resolvedTabNames.specialBookCollection}'!A${specialColDataStartRow}:D${specialColDataStartRow - 1 + specialRowsToWrite.length}`,
+                values: specialRowsToWrite
+              });
+            }
+          }
 
           if (dataUpdates.length > 0) {
             const upRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchUpdate`, {
@@ -3322,6 +3460,7 @@
           }
 
           state.hasDirtyLocalChanges = false;
+          state.hasDirtyBookCollections = false;
           lastWriteTimestamp = Date.now();
           state.lastRefreshed = new Date().toLocaleString('en-IN', {
             day: '2-digit',
@@ -3434,6 +3573,53 @@
         modal.classList.remove('hidden');
       }
 
+      function setBookColModalStream(streamValue) {
+        const normalized = streamValue === 'Special Book Collection' ? 'Special Book Collection' : 'Street Collection';
+        const hiddenInput = document.getElementById('bookColStream');
+        if (hiddenInput) hiddenInput.value = normalized;
+
+        document.querySelectorAll('.modal-bc-stream-btn').forEach(btn => {
+          const isSelected = btn.getAttribute('data-modal-bc-stream') === normalized;
+          btn.className = isSelected
+            ? 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer'
+            : 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer';
+        });
+
+        const lblInput = document.getElementById('bookColLabel');
+        if (lblInput) {
+          lblInput.placeholder = normalized === 'Special Book Collection'
+            ? 'e.g., Special #1 or 5'
+            : 'e.g., Book #1 or 12';
+        }
+      }
+
+      function openBookCollectionModal(editItem = null) {
+        const modal = document.getElementById('bookCollectionModal');
+        const form = document.getElementById('bookColForm');
+        if (!modal || !form) return;
+        form.reset();
+
+        if (editItem) {
+          setText('bookColModalTitle', 'Edit Book Collection');
+          document.getElementById('bookColId').value = editItem.id || '';
+          setBookColModalStream(editItem.stream === 'Special Book Collection' || editItem.stream === 'VIP / QR'
+            ? 'Special Book Collection'
+            : 'Street Collection');
+          document.getElementById('bookColLabel').value = editItem.bookLabel || '';
+          document.getElementById('bookColResponsible').value = editItem.responsible || '';
+          document.getElementById('bookColAmount').value = toNum(editItem.amount);
+        } else {
+          setText('bookColModalTitle', 'Add Book Collection');
+          document.getElementById('bookColId').value = '';
+          const typeFilterEl = document.getElementById('dashBookTypeFilter');
+          const defaultStream = (typeFilterEl && typeFilterEl.value === 'Special Book Collection')
+            ? 'Special Book Collection'
+            : 'Street Collection';
+          setBookColModalStream(defaultStream);
+        }
+        modal.classList.remove('hidden');
+      }
+
       function downloadFile(filename, content, mimeType) {
         const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
@@ -3482,16 +3668,189 @@
         downloadFile('cheques_and_neft_2026.csv', lines.join('\n'), 'text/csv;charset=utf-8;');
       }
 
+      function exportBookCollectionCsv() {
+        const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
+        const lines = ['S No,Book Type,Book Number,Responsible,Collected Amount'];
+        validCols.forEach((b, idx) => {
+          const stream = (b.stream === 'Special Book Collection' || b.stream === 'VIP / QR')
+            ? 'Special Book Collection'
+            : 'Street Collection';
+          lines.push([
+            idx + 1,
+            stream,
+            b.bookLabel || '',
+            b.responsible || 'Unassigned',
+            toNum(b.amount)
+          ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+        });
+        downloadFile('book_collection_2026.csv', lines.join('\n'), 'text/csv;charset=utf-8;');
+      }
+
       /**
-       * Formats currency values using ASCII-safe symbols for jsPDF standard fonts.
+       * Exports a full, self-contained CSV backup covering opening balances,
+       * currency, BankBook & CashBook ledgers, Cheques & NEFT, and Book Collections.
        */
-      function formatMoneyPdf(amount) {
-        const num = Number(amount) || 0;
-        const abs = Math.abs(num);
-        const sign = num < 0 ? '-' : '';
-        if (state.currency === 'USD') {
-          return `${sign}$${abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+      function exportFullBackupCsv() {
+        const csvEscape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        const lines = [
+          'Section,ID,Date,BookOrType,SubTypeOrStatus,ParticularOrPayee,CategoryOrBookNo,ReferenceOrResponsible,Amount,ClearedDate'
+        ];
+
+        // Metadata rows
+        lines.push(['META', 'openingBank', '', 'OPENING_BANK', '', 'Opening Bank Balance', '', '', toNum(state.openingBank), ''].map(csvEscape).join(','));
+        lines.push(['META', 'openingCash', '', 'OPENING_CASH', '', 'Opening Cash Balance', '', '', toNum(state.openingCash), ''].map(csvEscape).join(','));
+        lines.push(['META', 'currency', '', 'CURRENCY', state.currency || 'INR', 'Currency Setting', '', '', '', ''].map(csvEscape).join(','));
+
+        // Ledger entries
+        for (const e of state.entries) {
+          lines.push([
+            'LEDGER',
+            e.id || '',
+            normalizeDateStr(e.date),
+            e.book === 'Cash' ? 'Cash' : 'Bank',
+            e.type === 'OUTWARD' ? 'OUTWARD' : 'INWARD',
+            e.particular || '',
+            e.category || 'General',
+            e.reference || '',
+            toNum(e.amount),
+            ''
+          ].map(csvEscape).join(','));
         }
+
+        // Direct Cheques & NEFT records
+        for (const c of state.cheques) {
+          lines.push([
+            'CHEQUE',
+            c.id || '',
+            normalizeDateStr(c.issuedDate),
+            detectInstrumentType(c.type, c.chequeNumber, c.purpose),
+            String(c.status).toLowerCase() === 'cleared' ? 'Cleared' : 'Pending',
+            c.payee || '',
+            c.chequeNumber || '',
+            c.purpose || '',
+            toNum(c.amount),
+            normalizeDateStr(c.clearedDate)
+          ].map(csvEscape).join(','));
+        }
+
+        // Book Collection records
+        const validCols = state.bookCollections.filter(b => !isBookCollectionHeaderEntry(b.responsible, b.bookLabel));
+        for (const b of validCols) {
+          const stream = (b.stream === 'Special Book Collection' || b.stream === 'VIP / QR')
+            ? 'Special Book Collection'
+            : 'Street Collection';
+          lines.push([
+            'BOOK_COLLECTION',
+            b.id || '',
+            '',
+            stream,
+            '',
+            '',
+            b.bookLabel || '',
+            b.responsible || 'Unassigned',
+            toNum(b.amount),
+            ''
+          ].map(csvEscape).join(','));
+        }
+
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        downloadFile(`sass_full_backup_${dateStamp}.csv`, lines.join('\n'), 'text/csv;charset=utf-8;');
+        showToast('Downloaded full CSV backup.');
+      }
+
+      /**
+       * Restores a complete application snapshot from a CSV backup created by exportFullBackupCsv().
+       */
+      function restoreFullBackupCsv(csvText) {
+        const rows = parseCsvText(csvText);
+        if (!rows || rows.length < 2) {
+          throw new Error('Backup CSV is empty or missing data rows.');
+        }
+
+        const header = rows[0].map(h => String(h || '').trim().toLowerCase());
+        const secIdx = header.indexOf('section');
+        if (secIdx < 0) {
+          throw new Error('Invalid backup CSV format (missing "Section" column).');
+        }
+
+        const restoredEntries = [];
+        const restoredCheques = [];
+        const restoredBookCols = [];
+        let restoredOpenBank = state.openingBank;
+        let restoredOpenCash = state.openingCash;
+        let restoredCurrency = state.currency;
+
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const section = String(r[secIdx] || '').trim().toUpperCase();
+          if (!section) continue;
+
+          const idVal = String(r[1] || '').trim();
+          const dateVal = normalizeDateStr(r[2]);
+          const bookOrType = String(r[3] || '').trim();
+          const subTypeOrStatus = String(r[4] || '').trim();
+          const particularOrPayee = String(r[5] || '').trim();
+          const categoryOrBookNo = String(r[6] || '').trim();
+          const refOrResp = String(r[7] || '').trim();
+          const amtVal = toNum(r[8]);
+          const clearedVal = normalizeDateStr(r[9]);
+
+          if (section === 'META') {
+            const key = bookOrType.toUpperCase();
+            if (key === 'OPENING_BANK') restoredOpenBank = amtVal;
+            else if (key === 'OPENING_CASH') restoredOpenCash = amtVal;
+            else if (key === 'CURRENCY' && ['INR', 'USD', 'EUR'].includes(subTypeOrStatus.toUpperCase())) {
+              restoredCurrency = subTypeOrStatus.toUpperCase();
+            }
+          } else if (section === 'LEDGER') {
+            restoredEntries.push({
+              id: idVal || `res-ent-${Date.now()}-${i}`,
+              book: bookOrType === 'Cash' ? 'Cash' : 'Bank',
+              type: subTypeOrStatus.toUpperCase() === 'OUTWARD' ? 'OUTWARD' : 'INWARD',
+              date: dateVal,
+              particular: particularOrPayee || 'Restored Entry',
+              category: categoryOrBookNo || 'General',
+              reference: refOrResp,
+              amount: amtVal
+            });
+          } else if (section === 'CHEQUE') {
+            restoredCheques.push({
+              id: idVal || `res-chq-${Date.now()}-${i}`,
+              type: detectInstrumentType(bookOrType, categoryOrBookNo, refOrResp),
+              issuedDate: dateVal,
+              status: subTypeOrStatus.toLowerCase() === 'cleared' ? 'Cleared' : 'Pending',
+              payee: particularOrPayee || 'Restored Payee',
+              chequeNumber: categoryOrBookNo,
+              purpose: refOrResp,
+              amount: amtVal,
+              clearedDate: clearedVal
+            });
+          } else if (section === 'BOOK_COLLECTION') {
+            if (isBookCollectionHeaderEntry(refOrResp, categoryOrBookNo)) continue;
+            restoredBookCols.push({
+              id: idVal || `res-bc-${Date.now()}-${i}`,
+              stream: (bookOrType === 'Special Book Collection' || bookOrType === 'VIP / QR')
+                ? 'Special Book Collection'
+                : 'Street Collection',
+              bookLabel: categoryOrBookNo || `Book #${restoredBookCols.length + 1}`,
+              responsible: refOrResp || 'Unassigned',
+              amount: amtVal
+            });
+          }
+        }
+
+        state.openingBank = restoredOpenBank;
+        state.openingCash = restoredOpenCash;
+        state.currency = restoredCurrency;
+        state.entries = restoredEntries;
+        state.cheques = restoredCheques;
+        state.bookCollections = restoredBookCols;
+        state.hasDirtyLocalChanges = true;
+        state.hasDirtyBookCollections = restoredBookCols.length > 0;
+        saveState();
+        renderAll();
+        showToast(`Restored CSV backup: ${restoredEntries.length} ledger, ${restoredCheques.length} cheques/NEFT & ${restoredBookCols.length} books.`);
+      }
         if (state.currency === 'EUR') {
           return `${sign}EUR ${abs.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
@@ -4020,6 +4379,12 @@
             return;
           }
 
+          const modalBcStreamBtn = e.target.closest('[data-modal-bc-stream]');
+          if (modalBcStreamBtn) {
+            setBookColModalStream(modalBcStreamBtn.getAttribute('data-modal-bc-stream'));
+            return;
+          }
+
           const bookGroupBtn = e.target.closest('[data-book-group-mode]');
           if (bookGroupBtn) {
             state.bookGroupMode = bookGroupBtn.getAttribute('data-book-group-mode') === 'type_resp'
@@ -4057,6 +4422,19 @@
             state.cheques = state.cheques.filter(x => x.id !== id);
             renderAll();
             pushToGoogleSheet(false, true);
+          } else if (action === 'edit-bookcol') {
+            const item = state.bookCollections.find(x => x.id === id);
+            if (item) openBookCollectionModal(item);
+          } else if (action === 'delete-bookcol') {
+            const idsAttr = actionEl.getAttribute('data-ids') || id || '';
+            const idSet = new Set(idsAttr.split(',').filter(Boolean));
+            if (idSet.size > 0) {
+              state.bookCollections = state.bookCollections.filter(x => !idSet.has(x.id));
+              state.hasDirtyBookCollections = true;
+              saveState();
+              renderAll();
+              pushToGoogleSheet(false, true);
+            }
           }
         });
 
@@ -4070,79 +4448,56 @@
         on('btnManualSyncMobile', 'click', () => syncAllFromGoogleSheet(false));
         on('btnSyncNowPanel', 'click', () => syncAllFromGoogleSheet(false));
         on('btnSyncBookCol', 'click', () => syncAllFromGoogleSheet(false));
+        on('btnAddBookCol', 'click', () => openBookCollectionModal(null));
+        on('btnCloseBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
+        on('btnCancelBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
 
-        on('btnToggleBanner', 'click', toggleStatusBanner);
-        on('btnToggleBannerMobile', 'click', toggleStatusBanner);
-        on('btnDismissBanner', 'click', toggleStatusBanner);
-
-        on('btnBannerSignIn', 'click', () => requestOAuthToken(() => {
-          if (state.hasDirtyLocalChanges) pushToGoogleSheet(false, false);
-          else syncAllFromGoogleSheet(false);
-        }));
-
-        on('btnDashViewBank', 'click', () => switchTab('bankbook', true));
-        on('btnDashViewCheques', 'click', () => switchTab('cheques', true));
-        on('dashRespSearch', 'input', () => renderBookCollectionDashboard(computeTotals()));
-        on('dashBookTypeFilter', 'change', () => renderBookCollectionDashboard(computeTotals()));
-
-        // Ledger Entry Modal
-        on('btnNewEntry', 'click', () => openEntryModal(state.activeView === 'cashbook' ? 'Cash' : 'Bank', null));
-        on('btnAddBankEntry', 'click', () => openEntryModal('Bank', null));
-        on('btnAddCashEntry', 'click', () => openEntryModal('Cash', null));
-        on('btnCloseEntryModal', 'click', () => document.getElementById('entryModal').classList.add('hidden'));
-        on('btnCancelEntryModal', 'click', () => document.getElementById('entryModal').classList.add('hidden'));
-
-        on('entryForm', 'submit', (e) => {
+        on('bookColForm', 'submit', (e) => {
           e.preventDefault();
-          const idVal = document.getElementById('entryId').value.trim();
-          const bookVal = document.getElementById('entryBook').value === 'Cash' ? 'Cash' : 'Bank';
-          const typeVal = document.getElementById('entryType').value === 'OUTWARD' ? 'OUTWARD' : 'INWARD';
-          const dateVal = normalizeDateStr(document.getElementById('entryDate').value);
-          const amountVal = toNum(document.getElementById('entryAmount').value);
-          const particularVal = document.getElementById('entryParticular').value.trim();
-          const categoryVal = document.getElementById('entryCategory').value.trim() || 'General';
-          const refVal = document.getElementById('entryRef').value.trim();
+          const idVal = document.getElementById('bookColId').value.trim();
+          const streamVal = document.getElementById('bookColStream').value === 'Special Book Collection'
+            ? 'Special Book Collection'
+            : 'Street Collection';
+          const rawLabel = document.getElementById('bookColLabel').value.trim();
+          const defaultPrefix = streamVal === 'Special Book Collection' ? 'Special' : 'Book';
+          const bookLabel = /^\d+$/.test(rawLabel) ? `${defaultPrefix} #${rawLabel}` : rawLabel;
+          const responsible = document.getElementById('bookColResponsible').value.trim() || 'Unassigned';
+          const amount = toNum(document.getElementById('bookColAmount').value);
 
-          if (!particularVal || amountVal <= 0) return;
+          if (!bookLabel || isBookCollectionHeaderEntry(responsible, bookLabel)) {
+            showToast('Please enter a valid Book Number and Responsible member.');
+            return;
+          }
 
           if (idVal) {
-            const idx = state.entries.findIndex(x => x.id === idVal);
+            const idx = state.bookCollections.findIndex(b => b.id === idVal);
             if (idx >= 0) {
-              state.entries[idx] = Object.assign({}, state.entries[idx], {
-                book: bookVal,
-                type: typeVal,
-                date: dateVal,
-                amount: amountVal,
-                particular: particularVal,
-                category: categoryVal,
-                reference: refVal
+              state.bookCollections[idx] = Object.assign({}, state.bookCollections[idx], {
+                stream: streamVal,
+                bookLabel,
+                responsible,
+                amount
               });
             }
+            document.getElementById('bookCollectionModal').classList.add('hidden');
+            showToast('Book collection entry updated.');
           } else {
-            // Append at end for strict chronological order
-            state.entries.push({
-              id: `ent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              book: bookVal,
-              type: typeVal,
-              date: dateVal,
-              amount: amountVal,
-              particular: particularVal,
-              category: categoryVal,
-              reference: refVal
+            state.bookCollections.push({
+              id: `bc-local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              stream: streamVal,
+              bookLabel,
+              responsible,
+              amount
             });
+            // Keep modal open for rapid consecutive book entries
+            document.getElementById('bookColLabel').value = '';
+            document.getElementById('bookColAmount').value = '';
+            document.getElementById('bookColLabel').focus();
+            showToast('Book collection added. Add another or click Close.');
           }
 
-          if (idVal) {
-            document.getElementById('entryModal').classList.add('hidden');
-          } else {
-            // Keep Add Entry screen open for consecutive entries; preserve Book, Type & Date
-            document.getElementById('entryAmount').value = '';
-            document.getElementById('entryParticular').value = '';
-            document.getElementById('entryCategory').value = '';
-            document.getElementById('entryRef').value = '';
-            document.getElementById('entryAmount').focus();
-            showToast('Entry saved. Add another or click Close.');
-          }
+          state.hasDirtyBookCollections = true;
+          saveState();
           renderAll();
           pushToGoogleSheet(false, true);
         });
@@ -4377,36 +4732,20 @@
         });
 
         on('btnExportAllCsv', 'click', () => exportEntriesCsv(state.entries, 'all_ledgers_2026.csv'));
+        on('btnExportBookColCsvPanel', 'click', exportBookCollectionCsv);
         on('btnDownloadPdfDash', 'click', generateOnDateSummaryPdf);
         on('btnDownloadPdfPanel', 'click', generateOnDateSummaryPdf);
-        on('btnExportJson', 'click', () => downloadFile('sass_backup_2026.json', JSON.stringify(state, null, 2), 'application/json'));
+        on('btnBackupFullCsv', 'click', exportFullBackupCsv);
 
-        on('jsonRestoreInput', 'change', (e) => {
+        on('csvBackupRestoreInput', 'change', (e) => {
           const file = e.target.files && e.target.files[0];
           if (!file) return;
           const reader = new FileReader();
           reader.onload = (ev) => {
             try {
-              const parsed = JSON.parse(String(ev.target.result || '{}'));
-              if (!parsed || typeof parsed !== 'object') throw new Error('Invalid JSON');
-              state = Object.assign(createInitialSnapshot(), parsed, {
-                activeView: VIEW_IDS[parsed.activeView] ? parsed.activeView : state.activeView,
-                includeBankNeft: parsed.includeBankNeft !== false,
-                entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-                cheques: Array.isArray(parsed.cheques)
-                  ? parsed.cheques.map(c => Object.assign({}, c, {
-                      type: detectInstrumentType(c && c.type, c && c.chequeNumber, c && c.purpose)
-                    }))
-                  : [],
-                bookCollections: Array.isArray(parsed.bookCollections)
-                  ? parsed.bookCollections.filter(b => !isBookCollectionHeaderEntry(b && b.responsible, b && b.bookLabel))
-                  : []
-              });
-              saveState();
-              renderAll();
-              showToast('JSON backup restored successfully.');
+              restoreFullBackupCsv(String(ev.target.result || ''));
             } catch (err) {
-              showToast('Could not restore JSON backup: invalid file format.');
+              showToast(`Could not restore CSV backup: ${err && err.message ? err.message : 'invalid file format.'}`);
             } finally {
               e.target.value = '';
             }
@@ -4431,6 +4770,7 @@
           state.cheques = [];
           state.bookCollections = [];
           state.hasDirtyLocalChanges = false;
+          state.hasDirtyBookCollections = false;
           saveState();
           renderAll();
           showToast('Cleared local cache.');
