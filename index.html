@@ -1443,7 +1443,8 @@
           const cleanBookCollections = Array.isArray(parsed.bookCollections)
             ? parsed.bookCollections
                 .filter(b => !isBookCollectionHeaderEntry(b && b.responsible, b && b.bookLabel))
-                .map(b => Object.assign({}, b, {
+                .map((b, idx) => Object.assign({}, b, {
+                  id: (b && b.id) ? String(b.id) : `bc-restored-${idx}`,
                   stream: (b && (b.stream === 'VIP / QR' || b.stream === 'Special Book Collection'))
                     ? 'Special Book Collection'
                     : 'Street Collection'
@@ -3603,6 +3604,29 @@
         }
         modal.classList.remove('hidden');
       }
+
+      function setBookColModalStream(streamValue) {
+        const normalized = (streamValue === 'Special Book Collection' || streamValue === 'VIP / QR')
+          ? 'Special Book Collection'
+          : 'Street Collection';
+        const hiddenInput = document.getElementById('bookColStream');
+        if (hiddenInput) hiddenInput.value = normalized;
+
+        document.querySelectorAll('.modal-bc-stream-btn').forEach(btn => {
+          const isSelected = btn.getAttribute('data-modal-bc-stream') === normalized;
+          btn.className = isSelected
+            ? 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white shadow-sm transition cursor-pointer'
+            : 'modal-bc-stream-btn min-h-[38px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white transition cursor-pointer';
+        });
+
+        const labelInput = document.getElementById('bookColLabel');
+        if (labelInput) {
+          labelInput.placeholder = normalized === 'Special Book Collection'
+            ? 'e.g., Special #1 or 5'
+            : 'e.g., Book #1 or 12';
+        }
+      }
+
       function populateBookColFormFields(item) {
         if (!item) return;
         document.getElementById('bookColId').value = item.id || '';
@@ -4616,6 +4640,148 @@
             } else {
               document.getElementById('bookCollectionModal').classList.add('hidden');
               showToast(`Updated ${bookLabel}.`);
+            }
+          } else {
+            state.bookCollections.push({
+              id: `bc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              stream: streamVal,
+              bookLabel,
+              responsible,
+              amount
+            });
+            document.getElementById('bookColLabel').value = '';
+            document.getElementById('bookColAmount').value = '';
+            document.getElementById('bookColLabel').focus();
+            showToast(`Added ${bookLabel}. Add another or click Close.`);
+          }
+
+          state.hasDirtyBookCollections = true;
+          saveState();
+          renderAll();
+          pushToGoogleSheet(false, true);
+        });
+
+        // BankBook & CashBook Filters and Exports
+        ['bankSearch', 'bankTypeFilter', 'bankCategoryFilter', 'bankMonthFilter'].forEach(id => {
+          on(id, id === 'bankSearch' ? 'input' : 'change', () => renderSingleBookLedger('Bank', BANK_LEDGER_CONFIG));
+        });
+        ['cashSearch', 'cashTypeFilter', 'cashCategoryFilter', 'cashMonthFilter'].forEach(id => {
+          on(id, id === 'cashSearch' ? 'input' : 'change', () => renderSingleBookLedger('Cash', CASH_LEDGER_CONFIG));
+        });
+        on('btnExportBankCsv', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book !== 'Cash'), 'bankbook_2026.csv'));
+        on('btnExportBankCsvPanel', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book !== 'Cash'), 'bankbook_2026.csv'));
+        on('btnExportCashCsv', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book === 'Cash'), 'cashbook_2026.csv'));
+        on('btnExportCashCsvPanel', 'click', () => exportEntriesCsv(state.entries.filter(e => e.book === 'Cash'), 'cashbook_2026.csv'));
+
+        // Contra Transfer Modal
+        on('btnContraTransfer', 'click', () => {
+          const form = document.getElementById('contraForm');
+          if (form) form.reset();
+          const dt = document.getElementById('contraDate');
+          if (dt) dt.value = new Date().toISOString().slice(0, 10);
+          document.getElementById('contraModal').classList.remove('hidden');
+        });
+        on('btnCloseContraModal', 'click', () => document.getElementById('contraModal').classList.add('hidden'));
+        on('btnCancelContraModal', 'click', () => document.getElementById('contraModal').classList.add('hidden'));
+
+        on('contraForm', 'submit', (e) => {
+          e.preventDefault();
+          const dir = document.getElementById('contraDirection').value;
+          const dateVal = normalizeDateStr(document.getElementById('contraDate').value);
+          const amtVal = toNum(document.getElementById('contraAmount').value);
+          const refVal = document.getElementById('contraRef').value.trim() || 'Contra';
+          if (amtVal <= 0) return;
+
+          const stamp = Date.now();
+          if (dir === 'BANK_TO_CASH') {
+            state.entries.push({
+              id: `contra-${stamp}-b`,
+              book: 'Bank',
+              type: 'OUTWARD',
+              date: dateVal,
+              particular: 'Bank Withdrawal (Contra to Cash)',
+              category: 'Contra Transfer',
+              reference: refVal,
+              amount: amtVal
+            });
+            state.entries.push({
+              id: `contra-${stamp}-c`,
+              book: 'Cash',
+              type: 'INWARD',
+              date: dateVal,
+              particular: 'Cash Received from Bank (Contra)',
+              category: 'Contra Transfer',
+              reference: refVal,
+              amount: amtVal
+            });
+          } else {
+            state.entries.push({
+              id: `contra-${stamp}-c`,
+              book: 'Cash',
+              type: 'OUTWARD',
+              date: dateVal,
+              particular: 'Cash Deposited to Bank (Contra)',
+              category: 'Contra Transfer',
+              reference: refVal,
+              amount: amtVal
+            });
+            state.entries.push({
+              id: `contra-${stamp}-b`,
+              book: 'Bank',
+              type: 'INWARD',
+              date: dateVal,
+              particular: 'Cash Deposit to Bank (Contra)',
+              category: 'Contra Transfer',
+              reference: refVal,
+              amount: amtVal
+            });
+          }
+
+          document.getElementById('contraModal').classList.add('hidden');
+          renderAll();
+          pushToGoogleSheet(false, true);
+          showToast('Contra transfer recorded in BankBook and CashBook.');
+        });
+
+        // Cheque & NEFT Modal
+        on('btnIssueCheque', 'click', () => openChequeModal(null));
+        on('btnCloseChequeModal', 'click', () => document.getElementById('chequeModal').classList.add('hidden'));
+        on('btnCancelChequeModal', 'click', () => document.getElementById('chequeModal').classList.add('hidden'));
+        on('toggleBankNeft', 'change', (e) => {
+          state.includeBankNeft = Boolean(e.target.checked);
+          saveState();
+          renderAll();
+        });
+
+        on('chequeForm', 'submit', (e) => {
+          e.preventDefault();
+          const idVal = document.getElementById('chequeId').value.trim();
+          const typeVal = document.getElementById('chequeType').value === 'NEFT' ? 'NEFT' : 'Cheque';
+          const issuedDate = normalizeDateStr(document.getElementById('chequeDate').value);
+          const chequeNumber = document.getElementById('chequeNo').value.trim();
+          const payee = document.getElementById('chequePayee').value.trim();
+          const amount = toNum(document.getElementById('chequeAmount').value);
+          const purpose = document.getElementById('chequePurpose').value.trim();
+          const status = document.getElementById('chequeStatus').value === 'Cleared' ? 'Cleared' : 'Pending';
+          const clearedDate = status === 'Cleared'
+            ? (normalizeDateStr(document.getElementById('chequeClearedDate').value) || new Date().toISOString().slice(0, 10))
+            : '';
+
+          if (!payee || amount <= 0) return;
+
+          if (idVal) {
+            const idx = state.cheques.findIndex(c => c.id === idVal);
+            if (idx >= 0) {
+              state.cheques[idx] = Object.assign({}, state.cheques[idx], {
+                type: typeVal,
+                issuedDate,
+                chequeNumber,
+                payee,
+                amount,
+                purpose,
+                status,
+                clearedDate
+              });
             }
           } else {
             state.cheques.push({
