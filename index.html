@@ -3851,6 +3851,17 @@
         renderAll();
         showToast(`Restored CSV backup: ${restoredEntries.length} ledger, ${restoredCheques.length} cheques/NEFT & ${restoredBookCols.length} books.`);
       }
+
+      /**
+       * ASCII-safe currency formatter for jsPDF tables (avoids missing ₹ glyph issues).
+       */
+      function formatMoneyPdf(amount) {
+        const num = Number(amount) || 0;
+        const abs = Math.abs(num);
+        const sign = num < 0 ? '-' : '';
+        if (state.currency === 'USD') {
+          return `${sign}$${abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
         if (state.currency === 'EUR') {
           return `${sign}EUR ${abs.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
@@ -4448,6 +4459,79 @@
         on('btnManualSyncMobile', 'click', () => syncAllFromGoogleSheet(false));
         on('btnSyncNowPanel', 'click', () => syncAllFromGoogleSheet(false));
         on('btnSyncBookCol', 'click', () => syncAllFromGoogleSheet(false));
+        on('btnToggleBanner', 'click', toggleStatusBanner);
+        on('btnToggleBannerMobile', 'click', toggleStatusBanner);
+        on('btnDismissBanner', 'click', toggleStatusBanner);
+        on('btnBannerSignIn', 'click', () => {
+          requestOAuthToken(() => {
+            if (state.hasDirtyLocalChanges) pushToGoogleSheet(false, false);
+            else syncAllFromGoogleSheet(false);
+          });
+        });
+
+        on('btnDashViewBank', 'click', () => switchTab('bankbook', true));
+        on('btnDashViewCheques', 'click', () => switchTab('cheques', true));
+        on('dashRespSearch', 'input', () => renderBookCollectionDashboard(computeTotals()));
+        on('dashBookTypeFilter', 'change', () => renderBookCollectionDashboard(computeTotals()));
+
+        // Ledger Entry Modal (stays open after saving a new entry until closed by user)
+        on('btnNewEntry', 'click', () => openEntryModal(state.activeView === 'cashbook' ? 'Cash' : 'Bank', null));
+        on('btnAddBankEntry', 'click', () => openEntryModal('Bank', null));
+        on('btnAddCashEntry', 'click', () => openEntryModal('Cash', null));
+        on('btnCloseEntryModal', 'click', () => document.getElementById('entryModal').classList.add('hidden'));
+        on('btnCancelEntryModal', 'click', () => document.getElementById('entryModal').classList.add('hidden'));
+
+        on('entryForm', 'submit', (e) => {
+          e.preventDefault();
+          const idVal = document.getElementById('entryId').value.trim();
+          const bookVal = document.getElementById('entryBook').value === 'Cash' ? 'Cash' : 'Bank';
+          const typeVal = document.getElementById('entryType').value === 'OUTWARD' ? 'OUTWARD' : 'INWARD';
+          const dateVal = normalizeDateStr(document.getElementById('entryDate').value);
+          const amountVal = toNum(document.getElementById('entryAmount').value);
+          const particularVal = document.getElementById('entryParticular').value.trim();
+          const categoryVal = document.getElementById('entryCategory').value.trim() || 'General';
+          const refVal = document.getElementById('entryRef').value.trim();
+          if (!particularVal || amountVal <= 0) return;
+
+          if (idVal) {
+            const idx = state.entries.findIndex(x => x.id === idVal);
+            if (idx >= 0) {
+              state.entries[idx] = Object.assign({}, state.entries[idx], {
+                book: bookVal,
+                type: typeVal,
+                date: dateVal,
+                amount: amountVal,
+                particular: particularVal,
+                category: categoryVal,
+                reference: refVal
+              });
+            }
+            document.getElementById('entryModal').classList.add('hidden');
+            showToast('Ledger entry updated.');
+          } else {
+            state.entries.push({
+              id: `ent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              book: bookVal,
+              type: typeVal,
+              date: dateVal,
+              amount: amountVal,
+              particular: particularVal,
+              category: categoryVal,
+              reference: refVal
+            });
+            // Keep Add Entry screen open for consecutive entries until user clicks Close or ×
+            document.getElementById('entryAmount').value = '';
+            document.getElementById('entryParticular').value = '';
+            document.getElementById('entryCategory').value = '';
+            document.getElementById('entryRef').value = '';
+            document.getElementById('entryAmount').focus();
+            showToast('Entry saved. Add another or click Close.');
+          }
+
+          renderAll();
+          pushToGoogleSheet(false, true);
+        });
+
         on('btnAddBookCol', 'click', () => openBookCollectionModal(null));
         on('btnCloseBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
         on('btnCancelBookColModal', 'click', () => document.getElementById('bookCollectionModal').classList.add('hidden'));
