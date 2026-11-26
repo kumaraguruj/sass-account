@@ -204,7 +204,7 @@
       <div class="bg-white rounded-2xl border border-stone-200/80 shadow-soft px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 class="text-sm sm:text-base font-bold text-slate-900">On-Date Financial Summary Report</h2>
-          <p class="text-xs text-slate-500">Download a complete PDF snapshot covering BankBook, CashBook, Cheques &amp; NEFT, and Book Collections</p>
+          <p class="text-xs text-slate-500">Download a complete PDF snapshot covering all Dashboard KPIs, Charts, Monthly Flow, Category Report, Book Collections &amp; Ledgers</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
           <div class="flex items-center gap-2">
@@ -4330,7 +4330,58 @@
           });
           curY = doc.lastAutoTable.finalY + 20;
 
-          // --- SECTION 2: MONTHLY CASH FLOW SUMMARY ---
+          // --- SECTION 2: DASHBOARD VISUAL ANALYTICS (CHARTS) ---
+          let sectionNum = 2;
+          try {
+            const catCanvas = document.getElementById('categoryChartCanvas');
+            const liqCanvas = document.getElementById('liquidityChartCanvas');
+            const hasCatImg = catCanvas && catCanvas.width > 40 && catCanvas.height > 40;
+            const hasLiqImg = liqCanvas && liqCanvas.width > 40 && liqCanvas.height > 40;
+
+            if (hasCatImg || hasLiqImg) {
+              const chartBoxH = 158;
+              if (curY + chartBoxH + 30 > pageH - 40) {
+                doc.addPage();
+                curY = 44;
+              }
+              addSectionHeading(`${sectionNum}. Dashboard Visual Analytics`, 'Expense Breakdown by Category & Balances, Collections & Instruments');
+              sectionNum++;
+
+              const gap = 12;
+              const boxW = (pageW - marginX * 2 - gap) / 2;
+              const drawChartBox = (canvasEl, title, xPos) => {
+                doc.setDrawColor(226, 232, 240);
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(xPos, curY, boxW, chartBoxH, 6, 6, 'FD');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.setTextColor(...tealDark);
+                doc.text(title, xPos + 8, curY + 14);
+
+                const imgData = canvasEl.toDataURL('image/png', 1.0);
+                const availW = boxW - 14;
+                const availH = chartBoxH - 26;
+                const ratio = canvasEl.width / canvasEl.height;
+                let drawW = availW;
+                let drawH = drawW / ratio;
+                if (drawH > availH) {
+                  drawH = availH;
+                  drawW = drawH * ratio;
+                }
+                const imgX = xPos + (boxW - drawW) / 2;
+                const imgY = curY + 20 + (availH - drawH) / 2;
+                doc.addImage(imgData, 'PNG', imgX, imgY, drawW, drawH);
+              };
+
+              if (hasCatImg) drawChartBox(catCanvas, 'Expense Breakdown by Category', marginX);
+              if (hasLiqImg) drawChartBox(liqCanvas, 'Balances, Collections & Instruments', marginX + boxW + gap);
+              curY += chartBoxH + 20;
+            }
+          } catch (chartErr) {
+            // Skip chart snapshot gracefully if canvas export is unavailable
+          }
+
+          // --- MONTHLY CASH FLOW SUMMARY ---
           const monthMap = new Map();
           for (const e of entriesOnDate) {
             const mKey = getMonthKey(e.date) || 'Undated';
@@ -4346,7 +4397,8 @@
             return a.localeCompare(b);
           });
 
-          addSectionHeading('2. Monthly Cash Flow Summary', 'Period-wise receipts vs. payments across BankBook & CashBook');
+          addSectionHeading(`${sectionNum}. Monthly Cash Flow Summary`, 'Period-wise receipts vs. payments across BankBook & CashBook');
+          sectionNum++;
           let cumNet = 0, mTotIn = 0, mTotOut = 0, mTotCnt = 0;
           const monthlyBody = monthKeys.map(k => {
             const m = monthMap.get(k);
@@ -4391,44 +4443,91 @@
           });
           curY = doc.lastAutoTable.finalY + 20;
 
-          // --- SECTION 3: EXPENSE BREAKDOWN BY CATEGORY ---
+          // --- CATEGORY-WISE REPORT (ALL RECEIPTS & PAYMENTS BY CATEGORY) ---
           const catMap = new Map();
-          let totalOutflow = 0;
+          let totalCatIn = 0, totalCatOut = 0, totalCatEntries = 0;
           for (const e of entriesOnDate) {
-            if (e.type !== 'OUTWARD') continue;
             const amt = toNum(e.amount);
-            if (amt <= 0) continue;
             const cat = (e.category || '').trim() || 'General';
-            if (!catMap.has(cat)) catMap.set(cat, { count: 0, amount: 0 });
+            if (!catMap.has(cat)) catMap.set(cat, { count: 0, inward: 0, outward: 0 });
             const cRec = catMap.get(cat);
             cRec.count += 1;
-            cRec.amount += amt;
-            totalOutflow += amt;
+            totalCatEntries += 1;
+            if (e.type === 'INWARD') {
+              cRec.inward += amt;
+              totalCatIn += amt;
+            } else {
+              cRec.outward += amt;
+              totalCatOut += amt;
+            }
           }
           const catRows = Array.from(catMap.entries())
-            .sort((a, b) => b[1].amount - a[1].amount)
-            .map(([cat, info]) => [
-              cat,
-              String(info.count),
-              formatMoneyPdf(info.amount),
-              `${totalOutflow > 0 ? ((info.amount / totalOutflow) * 100).toFixed(1) : '0.0'}%`
-            ]);
+            .sort((a, b) => (b[1].outward + b[1].inward) - (a[1].outward + a[1].inward) || a[0].localeCompare(b[0]))
+            .map(([cat, info]) => {
+              const net = info.inward - info.outward;
+              const expShare = totalCatOut > 0 ? ((info.outward / totalCatOut) * 100).toFixed(1) : '0.0';
+              return [
+                cat,
+                String(info.count),
+                info.inward > 0 ? formatMoneyPdf(info.inward) : '-',
+                info.outward > 0 ? formatMoneyPdf(info.outward) : '-',
+                `${net >= 0 ? '+' : ''}${formatMoneyPdf(net)}`,
+                `${expShare}%`
+              ];
+            });
+          const totalCatNet = totalCatIn - totalCatOut;
 
-          addSectionHeading('3. Expense Breakdown by Category', 'All outward payment categories across BankBook & CashBook');
+          addSectionHeading(`${sectionNum}. Category-wise Report`, 'Receipts, payments, net balance & expense share grouped by category across BankBook & CashBook');
+          sectionNum++;
           doc.autoTable({
             ...commonTableStyles,
             startY: curY,
-            head: [['Expense Category', 'Entries', 'Total Payment (-)', '% Share']],
-            body: catRows.length ? catRows : [['No expense entries recorded up to this date', '0', formatMoneyPdf(0), '0.0%']],
-            foot: [['Total Expenses', String(entriesOnDate.filter(e => e.type === 'OUTWARD').length), formatMoneyPdf(totalOutflow), '100.0%']],
+            head: [['Category', 'Entries', 'Receipt (+)', 'Payment (-)', 'Net Amount', 'Expense Share']],
+            body: catRows.length ? catRows : [['No category entries recorded up to this date', '0', '-', '-', formatMoneyPdf(0), '0.0%']],
+            foot: [[
+              `Total (${catRows.length} Categories)`,
+              String(totalCatEntries),
+              formatMoneyPdf(totalCatIn),
+              formatMoneyPdf(totalCatOut),
+              `${totalCatNet >= 0 ? '+' : ''}${formatMoneyPdf(totalCatNet)}`,
+              totalCatOut > 0 ? '100.0%' : '0.0%'
+            ]],
             footStyles: { fillColor: [241, 245, 249], textColor: tealDark, fontStyle: 'bold' },
-            columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right', fontStyle: 'bold' }, 3: { halign: 'right' } }
+            columnStyles: {
+              1: { halign: 'center' },
+              2: { halign: 'right' },
+              3: { halign: 'right' },
+              4: { halign: 'right', fontStyle: 'bold' },
+              5: { halign: 'right' }
+            }
           });
           curY = doc.lastAutoTable.finalY + 20;
 
-          // --- SECTION 4: BOOK COLLECTION BREAKDOWN ---
-          addSectionHeading('4. Book Collection Breakdown', 'Grouped by Book Type -> Book Number -> Responsible (Street & Special Book Collections)');
+          // --- BOOK COLLECTION SUMMARY & BREAKDOWN (BOTH GROUPINGS) ---
+          const streetActiveCnt = streetCols.filter(b => toNum(b.amount) > 0).length;
+          const specialActiveCnt = specialCols.filter(b => toNum(b.amount) > 0).length;
+
+          addSectionHeading(`${sectionNum}. Book Collection Summary & Breakdown`, 'Stream summary, grouped by Book Type -> Book Number -> Responsible, and Member Rollup');
+          sectionNum++;
+
+          // Stream Summary Table
+          doc.autoTable({
+            ...commonTableStyles,
+            startY: curY,
+            head: [['Collection Stream', 'Book Range', 'Active Books', 'Collected Amount', '% Share']],
+            body: [
+              ['Street Collection', 'Books 1-40', `${streetActiveCnt} / 40`, formatMoneyPdf(streetAmt), `${totalBookColAmt > 0 ? ((streetAmt / totalBookColAmt) * 100).toFixed(1) : '0.0'}%`],
+              ['Special Book Collection', '20 Books', `${specialActiveCnt} / 20`, formatMoneyPdf(specialAmt), `${totalBookColAmt > 0 ? ((specialAmt / totalBookColAmt) * 100).toFixed(1) : '0.0'}%`]
+            ],
+            foot: [['Total Book Collections', 'All 60 Receipt Books', `${streetActiveCnt + specialActiveCnt} / 60`, formatMoneyPdf(totalBookColAmt), totalBookColAmt > 0 ? '100.0%' : '0.0%']],
+            footStyles: { fillColor: [241, 245, 249], textColor: tealDark, fontStyle: 'bold' },
+            columnStyles: { 2: { halign: 'center' }, 3: { halign: 'right', fontStyle: 'bold' }, 4: { halign: 'right' } }
+          });
+          curY = doc.lastAutoTable.finalY + 14;
+
+          // Grouped by Book Type -> Book Number -> Responsible
           const bcGrouped = new Map();
+          const bcMemberRollup = new Map();
           for (const item of validBookCols) {
             const stream = (item.stream === 'Special Book Collection' || item.stream === 'VIP / QR')
               ? 'Special Book Collection'
@@ -4437,11 +4536,20 @@
             const resp = (item.responsible || '').trim() || 'Unassigned';
             const amt = toNum(item.amount);
             if (resp === 'Unassigned' && amt === 0) continue;
+
             const key = `${stream}||${bookNo.toLowerCase()}||${resp.toLowerCase()}`;
             if (!bcGrouped.has(key)) {
               bcGrouped.set(key, { stream, bookNo, resp, amount: 0 });
             }
             bcGrouped.get(key).amount += amt;
+
+            const mKey = `${stream}||${resp.toLowerCase()}`;
+            if (!bcMemberRollup.has(mKey)) {
+              bcMemberRollup.set(mKey, { stream, resp, books: [], amount: 0 });
+            }
+            const mRec = bcMemberRollup.get(mKey);
+            if (bookNo && !mRec.books.includes(bookNo)) mRec.books.push(bookNo);
+            mRec.amount += amt;
           }
           const bcRows = Array.from(bcGrouped.values())
             .sort((a, b) => {
@@ -4463,14 +4571,49 @@
             startY: curY,
             head: [['Book Type', 'Book Number', 'Responsible', 'Collected Amount', '% Share']],
             body: bcRows.length ? bcRows : [['-', '-', 'No Book Collection records synced yet', formatMoneyPdf(0), '0.0%']],
-            foot: [['Total Book Collection', `${bcRows.length} Groups`, '', formatMoneyPdf(totalBookColAmt), '100.0%']],
+            foot: [['Total Book Breakdown', `${bcRows.length} Groups`, '', formatMoneyPdf(totalBookColAmt), totalBookColAmt > 0 ? '100.0%' : '0.0%']],
             footStyles: { fillColor: [241, 245, 249], textColor: tealDark, fontStyle: 'bold' },
             columnStyles: { 3: { halign: 'right', fontStyle: 'bold' }, 4: { halign: 'right' } }
           });
-          curY = doc.lastAutoTable.finalY + 20;
+          curY = doc.lastAutoTable.finalY + 14;
 
-          // --- SECTION 5: BANKBOOK REGISTER ---
-          addSectionHeading('5. BankBook Ledger (Completed Entries)', `Opening Balance: ${formatMoneyPdf(openBank)}  |  ${bankEntries.length} entries up to ${formatDisplayDate(asOfDate)}`);
+          // Member Rollup: By Type -> Responsible
+          const bcMemberRows = Array.from(bcMemberRollup.values())
+            .sort((a, b) => {
+              if (a.stream !== b.stream) return a.stream === 'Street Collection' ? -1 : 1;
+              return b.amount - a.amount || a.resp.localeCompare(b.resp);
+            })
+            .map(m => {
+              const sortedBooks = m.books.slice().sort(compareBookNumbersNatural);
+              return [
+                m.stream,
+                m.resp,
+                sortedBooks.join(', ') || '-',
+                String(sortedBooks.length),
+                formatMoneyPdf(m.amount),
+                `${totalBookColAmt > 0 ? ((m.amount / totalBookColAmt) * 100).toFixed(1) : '0.0'}%`
+              ];
+            });
+
+          if (bcMemberRows.length > 0) {
+            doc.autoTable({
+              ...commonTableStyles,
+              startY: curY,
+              headStyles: { ...commonTableStyles.headStyles, fillColor: tealMid },
+              head: [['Book Type', 'Responsible (Member Rollup)', 'Assigned Books', 'Count', 'Collected Amount', '% Share']],
+              body: bcMemberRows,
+              foot: [['Total Member Rollup', `${bcMemberRows.length} Members`, '', String(validBookCols.length), formatMoneyPdf(totalBookColAmt), totalBookColAmt > 0 ? '100.0%' : '0.0%']],
+              footStyles: { fillColor: [241, 245, 249], textColor: tealDark, fontStyle: 'bold' },
+              columnStyles: { 3: { halign: 'center' }, 4: { halign: 'right', fontStyle: 'bold' }, 5: { halign: 'right' } }
+            });
+            curY = doc.lastAutoTable.finalY + 20;
+          } else {
+            curY += 6;
+          }
+
+          // --- BANKBOOK REGISTER ---
+          addSectionHeading(`${sectionNum}. BankBook Ledger (Completed Entries)`, `Opening Balance: ${formatMoneyPdf(openBank)}  |  ${bankEntries.length} entries up to ${formatDisplayDate(asOfDate)}`);
+          sectionNum++;
           let runBank = openBank;
           const bankBody = bankEntries.map((e, i) => {
             const amt = toNum(e.amount);
@@ -4506,8 +4649,9 @@
           });
           curY = doc.lastAutoTable.finalY + 20;
 
-          // --- SECTION 6: CASHBOOK REGISTER ---
-          addSectionHeading('6. CashBook Ledger (Completed Entries)', `Opening Balance: ${formatMoneyPdf(openCash)}  |  ${cashEntries.length} entries up to ${formatDisplayDate(asOfDate)}`);
+          // --- CASHBOOK REGISTER ---
+          addSectionHeading(`${sectionNum}. CashBook Ledger (Completed Entries)`, `Opening Balance: ${formatMoneyPdf(openCash)}  |  ${cashEntries.length} entries up to ${formatDisplayDate(asOfDate)}`);
+          sectionNum++;
           let runCash = openCash;
           const cashBody = cashEntries.map((e, i) => {
             const amt = toNum(e.amount);
@@ -4543,8 +4687,8 @@
           });
           curY = doc.lastAutoTable.finalY + 20;
 
-          // --- SECTION 7: CHEQUES & NEFT REGISTER ---
-          addSectionHeading('7. Cheques & NEFT Register', `${instrumentsOnDate.length} instruments (${clearedInst.length} Cleared, ${pendingInst.length} Pending) up to ${formatDisplayDate(asOfDate)}`);
+          // --- CHEQUES & NEFT REGISTER ---
+          addSectionHeading(`${sectionNum}. Cheques & NEFT Register`, `${instrumentsOnDate.length} instruments (${clearedInst.length} Cleared, ${pendingInst.length} Pending) up to ${formatDisplayDate(asOfDate)}`);
           const chqTotalAmt = instrumentsOnDate.reduce((s, c) => s + toNum(c.amount), 0);
           const chqBody = instrumentsOnDate.map((c, i) => [
             String(i + 1),
