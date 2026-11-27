@@ -1555,7 +1555,11 @@
       function toNum(val) {
         if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
         if (!val) return 0;
-        const cleaned = String(val).replace(/[₹$€,\s]/g, '').trim();
+        const cleaned = String(val)
+          .replace(/^(?:rs\.?|inr|usd|eur)\s*/i, '')
+          .replace(/[₹$€£,\s]/g, '')
+          .replace(/\/-$/, '')
+          .trim();
         const n = parseFloat(cleaned);
         return Number.isFinite(n) ? n : 0;
       }
@@ -3890,29 +3894,50 @@
           return { opening, entries, dataStartRow };
         }
 
+        // Locate the actual header row within the first 5 rows
+        let headerIdx = 0;
+        for (let rIdx = 0; rIdx < Math.min(5, rows.length); rIdx++) {
+          const rowLower = (rows[rIdx] || []).map(c => String(c || '').trim().toLowerCase());
+          const hits = rowLower.filter(h =>
+            h.includes('date') || h.includes('partic') || h.includes('inward') ||
+            h.includes('outward') || h.includes('receipt') || h.includes('payment') ||
+            h.includes('balance')
+          ).length;
+          if (hits >= 2) {
+            headerIdx = rIdx;
+            break;
+          }
+        }
+        dataStartRow = headerIdx + 2;
+
         // Detect column layout (8-column Bank Book vs 6-column Cash Book)
-        const header = rows[0].map(h => String(h || '').trim().toLowerCase());
+        const header = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
         const hasPurposeCol = header.some(h => h.includes('purpose') || h.includes('category'));
         const hasRefCol = header.some(h => h.includes('ref') || h.includes('voucher'));
 
-        const idxDate = Math.max(1, header.findIndex(h => h.includes('date')));
-        const idxPart = Math.max(2, header.findIndex(h => h.includes('partic') || h.includes('desc')));
+        const foundDate = header.findIndex(h => h.includes('date'));
+        const foundPart = header.findIndex(h => h.includes('partic') || h.includes('desc'));
+        const idxDate = foundDate >= 0 ? foundDate : 1;
+        const idxPart = foundPart >= 0 ? foundPart : 2;
         const idxCat = hasPurposeCol ? header.findIndex(h => h.includes('purpose') || h.includes('category')) : -1;
         const idxRef = hasRefCol ? header.findIndex(h => h.includes('ref') || h.includes('voucher')) : -1;
-        let idxIn = header.findIndex(h => h.includes('inward') || h.includes('receipt') || h.includes('credit'));
-        let idxOut = header.findIndex(h => h.includes('outward') || h.includes('payment') || h.includes('debit'));
+        const idxBal = header.findIndex(h => h.includes('bal'));
+        let idxIn = header.findIndex(h => h.includes('inward') || h.includes('receipt') || h.includes('credit') || h.includes('deposit') || h.includes('income'));
+        let idxOut = header.findIndex(h => h.includes('outward') || h.includes('payment') || h.includes('debit') || h.includes('withdraw') || h.includes('expense'));
         if (idxIn < 0) idxIn = bookName === 'Cash' ? 3 : 5;
         if (idxOut < 0) idxOut = bookName === 'Cash' ? 4 : 6;
 
-        for (let i = 1; i < rows.length; i++) {
+        for (let i = headerIdx + 1; i < rows.length; i++) {
           const r = rows[i] || [];
           const part = String(r[idxPart] || '').trim();
           const inw = toNum(r[idxIn]);
           const outw = toNum(r[idxOut]);
 
           if (part.toLowerCase().includes('opening balance')) {
-            opening = inw || outw || toNum(r[r.length - 1]);
-            if (i === 1) dataStartRow = 3;
+            const balCell = idxBal >= 0 ? toNum(r[idxBal]) : 0;
+            const lastNumeric = r.slice().reverse().map(toNum).find(v => v > 0) || 0;
+            opening = inw || outw || balCell || lastNumeric;
+            if (i === headerIdx + 1) dataStartRow = headerIdx + 3;
             continue;
           }
           if (!part && !inw && !outw) continue;
@@ -3953,37 +3978,107 @@
       function parseChequeRows(rows) {
         const cheques = [];
         if (!Array.isArray(rows) || rows.length <= 1) return cheques;
-        const header = rows[0].map(h => String(h || '').trim().toLowerCase());
-        chequeSheetHasSNo = header[0] && (header[0].includes('s no') || header[0].includes('sl') || header[0] === '#');
 
-        const idxDate = header.findIndex(h => h.includes('date') && !h.includes('clear'));
-        const idxType = header.findIndex(h => h === 'type' || h.includes('mode'));
-        const idxNo = header.findIndex(h => h.includes('cheque') || h.includes('ref') || h.includes('utr'));
-        const idxPayee = header.findIndex(h => h.includes('payee') || h.includes('name') || h.includes('party') || h.includes('beneficiary'));
-        const idxPurpose = header.findIndex(h => h.includes('remark') || h.includes('purpose') || h.includes('detail'));
-        const idxAmt = header.findIndex(h => h.includes('amount'));
-        const idxCleared = header.findIndex(h => h.includes('clear') && h.includes('date'));
-        const idxStatus = header.findIndex(h => h.includes('status'));
+        // Locate the actual header row within the first 5 rows
+        let headerIdx = 0;
+        for (let rIdx = 0; rIdx < Math.min(5, rows.length); rIdx++) {
+          const rowLower = (rows[rIdx] || []).map(c => String(c || '').trim().toLowerCase());
+          const hits = rowLower.filter(h =>
+            h.includes('date') || h.includes('cheque') || h.includes('chq') ||
+            h.includes('payee') || h.includes('name') || h.includes('party') ||
+            h.includes('amount') || h.includes('amt') || h.includes('status') ||
+            h.includes('favour') || h.includes('particular')
+          ).length;
+          if (hits >= 2) {
+            headerIdx = rIdx;
+            break;
+          }
+        }
 
-        const dCol = idxDate >= 0 ? idxDate : (chequeSheetHasSNo ? 1 : 0);
-        const nCol = idxNo >= 0 ? idxNo : (chequeSheetHasSNo ? 2 : 1);
-        const pCol = idxPayee >= 0 ? idxPayee : (chequeSheetHasSNo ? 3 : 2);
-        const aCol = idxAmt >= 0 ? idxAmt : (chequeSheetHasSNo ? 4 : 3);
-        const rCol = idxPurpose >= 0 ? idxPurpose : (chequeSheetHasSNo ? 5 : 4);
-        const sCol = idxStatus >= 0 ? idxStatus : (chequeSheetHasSNo ? 6 : 5);
-        const cCol = idxCleared >= 0 ? idxCleared : (chequeSheetHasSNo ? 7 : 6);
+        const header = (rows[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
+        chequeSheetHasSNo = Boolean(header[0] && (header[0].includes('s no') || header[0].includes('s.no') || header[0].includes('sl') || header[0] === '#'));
 
-        chequeDataStartRow = 2;
-        for (let i = 1; i < rows.length; i++) {
+        const idxDate = header.findIndex(h => h.includes('date') && !h.includes('clear') && !h.includes('pass'));
+        const idxType = header.findIndex(h => h === 'type' || h.includes('mode') || h.includes('method'));
+        const idxNo = header.findIndex(h =>
+          (h.includes('cheque') || h.includes('chq') || h.includes('ref') || h.includes('utr') || h.includes('inst') || h.includes('number') || /\bno\.?$/.test(h)) &&
+          !h.includes('s no') && !h.includes('s.no') && !h.includes('sl') && !h.includes('serial')
+        );
+        const idxPayee = header.findIndex(h =>
+          h.includes('payee') || h.includes('name') || h.includes('party') ||
+          h.includes('beneficiary') || h.includes('favour') || h.includes('favor') ||
+          h.includes('given') || h.includes('particular') || h === 'to' || h.includes('paid to')
+        );
+        const idxPurpose = header.findIndex(h =>
+          h.includes('remark') || h.includes('purpose') || h.includes('detail') ||
+          h.includes('reason') || h.includes('desc') || h.includes('note') || h.includes('narration')
+        );
+        const idxAmt = header.findIndex(h =>
+          h.includes('amount') || h.includes('amt') || h.includes('₹') ||
+          h.includes('rs') || h.includes('inr') || h.includes('value') || h.includes('sum')
+        );
+        const idxCleared = header.findIndex(h => (h.includes('clear') || h.includes('pass')) && h.includes('date'));
+        const idxStatus = header.findIndex(h => h.includes('status') || h.includes('state') || (h.includes('clear') && !h.includes('date')));
+
+        // Default column order matches sheet layout: S No, Date, Payee/Name, Cheque No, Amount, Remarks, Status, Cleared Date
+        let dCol = idxDate >= 0 ? idxDate : (chequeSheetHasSNo ? 1 : 0);
+        let pCol = idxPayee >= 0 ? idxPayee : (chequeSheetHasSNo ? 2 : 1);
+        let nCol = idxNo >= 0 ? idxNo : (chequeSheetHasSNo ? 3 : 2);
+        let aCol = idxAmt >= 0 ? idxAmt : (chequeSheetHasSNo ? 4 : 3);
+        let rCol = idxPurpose >= 0 ? idxPurpose : (chequeSheetHasSNo ? 5 : 4);
+        let sCol = idxStatus >= 0 ? idxStatus : (chequeSheetHasSNo ? 6 : 5);
+        let cCol = idxCleared >= 0 ? idxCleared : (chequeSheetHasSNo ? 7 : 6);
+
+        // Content-based sanity checks in case headers are blank or non-standard
+        const sampleRows = rows.slice(headerIdx + 1, headerIdx + 15).filter(r => Array.isArray(r) && r.some(c => String(c || '').trim()));
+        if (sampleRows.length > 0) {
+          const looksLikeRef = (v) => {
+            const s = String(v || '').trim();
+            return /^\d{4,12}$/.test(s) || /^(?:chq|neft|utr|rtgs)/i.test(s);
+          };
+          const looksLikeName = (v) => {
+            const s = String(v || '').trim();
+            return /[a-zA-Z]{2,}/.test(s) && !/^(?:chq|neft|utr|rtgs|pending|cleared)$/i.test(s);
+          };
+
+          // Auto-swap Payee and Cheque No if their content is reversed
+          const nLooksName = sampleRows.filter(r => looksLikeName(r[nCol])).length;
+          const pLooksRef = sampleRows.filter(r => looksLikeRef(r[pCol])).length;
+          if (nLooksName > 0 && pLooksRef > 0 && nLooksName >= sampleRows.filter(r => looksLikeRef(r[nCol])).length) {
+            const tmp = nCol;
+            nCol = pCol;
+            pCol = tmp;
+          }
+
+          // Auto-locate Amount column if the detected aCol has all zeros
+          const aHasPositive = sampleRows.some(r => toNum(r[aCol]) > 0);
+          if (!aHasPositive) {
+            const maxCols = Math.max(...sampleRows.map(r => r.length));
+            const reserved = new Set([chequeSheetHasSNo ? 0 : -1, dCol, pCol, nCol, cCol, idxType]);
+            for (let col = 0; col < maxCols; col++) {
+              if (reserved.has(col)) continue;
+              const vals = sampleRows.map(r => String(r[col] || '').trim()).filter(Boolean);
+              if (vals.length === 0) continue;
+              const numericCount = vals.filter(v => !/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(v) && toNum(v) > 0).length;
+              if (numericCount >= Math.ceil(vals.length * 0.5)) {
+                aCol = col;
+                break;
+              }
+            }
+          }
+        }
+
+        chequeDataStartRow = headerIdx + 2;
+        for (let i = headerIdx + 1; i < rows.length; i++) {
           const r = rows[i] || [];
           const payee = String(r[pCol] || '').trim();
           const refNo = String(r[nCol] || '').trim();
           const amt = toNum(r[aCol]);
           if (!payee && !refNo && !amt) continue;
-          if (payee.toLowerCase() === 'total') continue;
+          if (payee.toLowerCase() === 'total' || refNo.toLowerCase() === 'total') continue;
 
           const explicitType = idxType >= 0 ? r[idxType] : '';
-          const remarks = String(r[rCol] || '').trim();
+          const remarks = rCol !== aCol ? String(r[rCol] || '').trim() : '';
           const statusRaw = String(r[sCol] || '').trim().toLowerCase();
 
           cheques.push({
